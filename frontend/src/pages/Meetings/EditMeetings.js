@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const EditMeetings = () => {
+    const url = process.env.REACT_APP_HOSTED_URL;
     const { id } = useParams();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
@@ -29,9 +30,9 @@ const EditMeetings = () => {
     const fetchMeetingData = async (signal) => {
         try {
             const [taskRes, clientRes, advisorRes] = await Promise.all([
-                axios.get(`http://localhost:8000/tasks/${id}/editTasks`, { signal }),
-                axios.get("http://localhost:8000/clients", { signal }),
-                axios.get("http://localhost:8000/advisors", { signal }),
+                axios.get(`${url}/tasks/${id}/editTasks`, { signal }),
+                axios.get(`${url}/clients`, { signal }),
+                axios.get(`${url}/advisors`, { signal }),
             ]);
 
             const taskData = taskRes.data;
@@ -100,7 +101,7 @@ const EditMeetings = () => {
         };
 
         try {
-            await axios.patch(`http://localhost:8000/tasks/${id}/editTasks`, updatedData);
+            await axios.patch(`${url}/tasks/${id}/editTasks`, updatedData);
             alert("Meeting data updated successfully!");
             navigate("/tasks");
         } catch (error) {

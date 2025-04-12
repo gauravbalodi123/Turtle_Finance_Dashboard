@@ -9,6 +9,7 @@ import { FaEdit, FaTrash } from "react-icons/fa";
 import SearchFilter from '../../components/SmallerComponents/SearchFilter';
 
 const AllMeetings = () => {
+    const url = process.env.REACT_APP_HOSTED_URL;
     const [rowWiseTasks, setRowWiseTasks] = useState([]);
     const [filteredRowWiseTasks, setFilteredRowWiseTasks] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -18,8 +19,9 @@ const AllMeetings = () => {
     const [taskStats, setTaskStats] = useState({
         overdue: 0,
         pending: 0,
-        inProgress: 0,
+        completed: 0,
     });
+    
 
 
 
@@ -29,13 +31,13 @@ const AllMeetings = () => {
 
     const fetchTasks = async () => {
         try {
-            const res = await axios.get("http://localhost:8000/rowwisetasks");
+            const res = await axios.get(`${url}/rowwisetasks`);
             const reversedData = res.data.reverse();
 
             const counts = {
                 overdue: 0,
                 pending: 0,
-                inProgress: 0,
+                completed: 0,
             };
 
             const today = new Date();
@@ -44,10 +46,10 @@ const AllMeetings = () => {
                     const dueDate = task.dueDate ? new Date(task.dueDate) : null;
                     const status = task.status?.toLowerCase();
 
-                    if (dueDate && dueDate < today && status !== "overdue") {
+                    if (dueDate && dueDate < today && status !== "overdue" && status !=="completed" ) {
                         // Update status in backend
                         try {
-                            await axios.patch(`http://localhost:8000/rowwisetasks/${task._id}/editRowWiseTasks`, {
+                            await axios.patch(`${url}/rowwisetasks/${task._id}/editRowWiseTasks`, {
                                 status: "Overdue",
                             });
                             task.status = "Overdue";
@@ -59,7 +61,7 @@ const AllMeetings = () => {
                         // Count based on current status
                         if (status === "overdue") counts.overdue++;
                         else if (status === "pending") counts.pending++;
-                        else if (status === "in progress" || status === "inprogress") counts.inProgress++;
+                        else if (status === "completed") counts.completed++;
                     }
 
                     return task;
@@ -81,7 +83,7 @@ const AllMeetings = () => {
     const handleDelete = async (id) => {
         setLoadingId(id);
         try {
-            await axios.delete(`http://localhost:8000/rowwisetasks/${id}`);
+            await axios.delete(`${url}/rowwisetasks/${id}`);
             alert("Row-wise task has been deleted successfully");
             setRowWiseTasks((currTasks) => currTasks.filter((task) => task._id !== id));
         } catch (e) {
@@ -89,6 +91,7 @@ const AllMeetings = () => {
             alert("Error deleting the row-wise task");
         } finally {
             setLoadingId(null);
+            
         }
     };
 
@@ -112,6 +115,14 @@ const AllMeetings = () => {
     }, [columnFilter, rowWiseTasks]);
 
     const columns = [
+        {
+            accessorKey: "title",
+            header: "Title",
+            enableResizing: true,
+            size: 400,
+            minSize: 300,
+            cell: ({ row }) => row.original.title || "No Title",
+        },
         {
             accessorKey: "actionItems",
             header: "Action Items",
@@ -224,9 +235,9 @@ const AllMeetings = () => {
 
                         <div className="col-12 col-lg-4 text-center text-md-start">
                             <div className={`card p-3 ${styles}`}>
-                                <h4>In Progress</h4>
-                                <p>Tasks currently being worked on</p>
-                                <h2 className='m-0'>{taskStats.inProgress}</h2>
+                                <h4>Completed</h4>
+                                <p>Tasks which are done</p>
+                                <h2 className='m-0'>{taskStats.completed}</h2>
                             </div>
                         </div>
 

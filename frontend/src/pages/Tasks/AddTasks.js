@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const AddTasks = () => {
+    const url = process.env.REACT_APP_HOSTED_URL;
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [clients, setClients] = useState([]);
@@ -25,8 +26,8 @@ const AddTasks = () => {
         const fetchDropdownData = async () => {
             try {
                 const [clientRes, advisorRes] = await Promise.all([
-                    axios.get("http://localhost:8000/clients", { signal: controller.signal }),
-                    axios.get("http://localhost:8000/advisors", { signal: controller.signal }),
+                    axios.get(`${url}/clients`, { signal: controller.signal }),
+                    axios.get(`${url}/advisors`, { signal: controller.signal }),
                 ]);
                 setClients(clientRes.data);
                 setAdvisors(advisorRes.data);
@@ -47,10 +48,10 @@ const AddTasks = () => {
         return value === "" ? null : value;
     };
 
-    const getArrayFromInput = (ref) => {
-        const value = ref.current?.value?.trim();
-        return value === "" ? [] : value.split(",").map((item) => item.trim());
-    };
+    // const getArrayFromInput = (ref) => {
+    //     const value = ref.current?.value?.trim();
+    //     return value === "" ? [] : value.split(",").map((item) => item.trim());
+    // };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -69,7 +70,7 @@ const AddTasks = () => {
         };
 
         try {
-            await axios.post("http://localhost:8000/rowwisetasks/addRowWiseTask", newData);
+            await axios.post(`${url}/rowwisetasks/addRowWiseTask`, newData);
             alert("Task added successfully!");
             navigate("/rowwisetasks");
         } catch (error) {

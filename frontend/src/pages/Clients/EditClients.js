@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const EditClients = () => {
+    const url = process.env.REACT_APP_HOSTED_URL;
     const { id } = useParams();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
@@ -29,7 +30,7 @@ const EditClients = () => {
 
     const fetchClientData = async signal => {
         try {
-            const response = await axios.get(`http://localhost:8000/clients/${id}/editClients`, { signal });
+            const response = await axios.get(`${url}/clients/${id}/editClients`, { signal });
             const data = response.data;
 
             const formatDate = (isoDate) => {
@@ -114,7 +115,7 @@ const EditClients = () => {
         
 
         try {
-            await axios.patch(`http://localhost:8000/clients/${id}/editClients`, updatedData);
+            await axios.patch(`${url}/clients/${id}/editClients`, updatedData);
             alert("Client data updated successfully!");
             navigate("/clients");
         } catch (error) {

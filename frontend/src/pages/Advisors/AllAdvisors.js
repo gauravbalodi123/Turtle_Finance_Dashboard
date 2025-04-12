@@ -8,8 +8,9 @@ import styles from '../../styles/Advisors/AllAdvisors.module.css'
 import SearchFilter from '../../components/SmallerComponents/SearchFilter'
 import { FaEdit, FaTrash } from "react-icons/fa";
 
-const AllAdvisors = () => {
 
+const AllAdvisors = () => {
+    const url = process.env.REACT_APP_HOSTED_URL;
     const [advisors, setAdvisors] = useState([]);
     const [filteredAdvisors, setFilteredAdvisors] = useState([]);// ✅ New state for filtered data
     const [isLoading, setIsLoading] = useState(true);
@@ -26,7 +27,10 @@ const AllAdvisors = () => {
 
     const fetchAdvisors = async () => {
         try {
-            const res = await axios.get("http://localhost:8000/advisors");
+            // const res = await axios.get("http://localhost:8000/advisors");
+            // const res = await axios.get(`${url}/advisors`);
+            const res = await axios.get(`${url}/advisors`);
+            // console.log(`${url}/advisors`);
             const reversedData = res.data.reverse();
             setAdvisors(reversedData);
             setFilteredAdvisors(res.data);
@@ -44,7 +48,7 @@ const AllAdvisors = () => {
         setLoadingId(id);
         try {
 
-            await axios.delete(`http://localhost:8000/advisors/${id}`)
+            await axios.delete(`${url}/advisors/${id}`)
             alert("Advisor has been deleted successfully");
             setAdvisors((currAdvisor) => currAdvisor.filter((advisor) => advisor._id !== id));
         }

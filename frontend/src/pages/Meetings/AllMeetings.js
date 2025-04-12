@@ -11,7 +11,7 @@ import TaskModal from "../../components/SmallerComponents/TaskModal";
 
 
 const AllMeetings = () => {
-
+    const url = process.env.REACT_APP_HOSTED_URL;
     const [tasks, setTasks] = useState([]);
     const [filteredTasks, setFilteredTasks] = useState([]); // ✅ New state for filtered data
     const [isLoading, setIsLoading] = useState(true);
@@ -40,7 +40,7 @@ const AllMeetings = () => {
 
     const fetchTasks = async () => {
         try {
-            const res = await axios.get("http://localhost:8000/tasks");
+            const res = await axios.get(`${url}/tasks`);
             const reversedData = res.data.reverse();
 
             const counts = {
@@ -58,7 +58,7 @@ const AllMeetings = () => {
                     if (dueDate && dueDate < today && status !== "overdue") {
                         // Update to overdue in backend
                         try {
-                            await axios.patch(`http://localhost:8000/tasks/${task._id}/editTasks`, {
+                            await axios.patch(`${url}/tasks/${task._id}/editTasks`, {
                                 status: "Overdue",
                             });
                             task.status = "Overdue";
@@ -92,7 +92,7 @@ const AllMeetings = () => {
         setLoadingId(id);
         try {
 
-            await axios.delete(`http://localhost:8000/tasks/${id}`)
+            await axios.delete(`${url}/tasks/${id}`)
             alert("task has been deleted successfully");
             setTasks((currTasks) => currTasks.filter((task) => task._id !== id));
         }

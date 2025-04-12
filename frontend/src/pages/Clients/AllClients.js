@@ -9,6 +9,7 @@ import SearchFilter from "../../components/SmallerComponents/SearchFilter";
 import { FaEdit, FaTrash } from "react-icons/fa";
 
 const AllClients = () => {
+    const url = process.env.REACT_APP_HOSTED_URL;
     const [clients, setClients] = useState([]);
     const [filteredClients, setFilteredClients] = useState([]); // ✅ New state for filtered data
     const [isLoading, setIsLoading] = useState(true);
@@ -22,7 +23,7 @@ const AllClients = () => {
 
     const fetchClients = async () => {
         try {
-            const res = await axios.get("http://localhost:8000/clients");
+            const res = await axios.get(`${url}/clients`);
             const reversedData = res.data.reverse();
             setClients(reversedData);
             setFilteredClients(res.data); // ✅ Initialize filtered data
@@ -38,7 +39,7 @@ const AllClients = () => {
         setLoadingId(id);
         try {
 
-            await axios.delete(`http://localhost:8000/clients/${id}`)
+            await axios.delete(`${url}/clients/${id}`)
             alert("Client has been deleted successfully");
             setClients((currClients) => currClients.filter((client) => client._id !== id));
         }

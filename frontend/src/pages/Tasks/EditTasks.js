@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const EditTasks = () => {
+    const url = process.env.REACT_APP_HOSTED_URL;
     const { id } = useParams();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
@@ -24,9 +25,9 @@ const EditTasks = () => {
     const fetchTaskData = async (signal) => {
         try {
             const [taskRes, clientRes, advisorRes] = await Promise.all([
-                axios.get(`http://localhost:8000/rowwisetasks/${id}/editRowWiseTasks`, { signal }),
-                axios.get("http://localhost:8000/clients", { signal }),
-                axios.get("http://localhost:8000/advisors", { signal }),
+                axios.get(`${url}/rowwisetasks/${id}/editRowWiseTasks`, { signal }),
+                axios.get(`${url}/clients`, { signal }),
+                axios.get(`${url}/advisors`, { signal }),
             ]);
 
             const taskData = taskRes.data;
@@ -88,7 +89,7 @@ const EditTasks = () => {
         };
 
         try {
-            await axios.patch(`http://localhost:8000/rowwisetasks/${id}/editRowWiseTasks`, updatedData);
+            await axios.patch(`${url}/rowwisetasks/${id}/editRowWiseTasks`, updatedData);
             alert("RowWiseTask updated successfully!");
             navigate("/rowwisetasks");
         } catch (error) {
