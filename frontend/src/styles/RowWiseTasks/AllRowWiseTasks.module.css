@@ -1,0 +1,16 @@
+h2.taskHeaderItem{
+    margin: 0;
+    font-weight: 500;
+}
+
+p.taskHeaderItem{
+    margin: 0;
+    font-size: 1rem;
+    color: #909cad;
+    font-weight: 500;
+
+}
+
+.rowWiseTasksPageTableWrapper .custom-style-table thead th {
+    color: #8d9aaa ;
+}

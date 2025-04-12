@@ -1,0 +1,62 @@
+const { Client } = require("@notionhq/client");
+
+const notion = new Client({ auth: "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" });
+
+async function fetchAllPages(databaseId) {
+    let allPages = [];
+    let cursor = undefined;
+
+    try {
+        do {
+            // Fetch pages from the database with pagination
+            const response = await notion.databases.query({ 
+                database_id: databaseId, 
+                start_cursor: cursor 
+            });
+
+            allPages = allPages.concat(response.results);
+            cursor = response.next_cursor; // Move to the next set if available
+
+        } while (cursor); // Loop until all pages are fetched
+
+        console.log(`✅ Fetched ${allPages.length} pages\n`);
+
+        // Display fields for each page
+        for (const page of allPages) {
+            console.log(`🔹 Page ID: ${page.id}`);
+
+            // Extract and display page properties (fields)
+            const properties = page.properties;
+            for (const [key, value] of Object.entries(properties)) {
+                console.log(`   - ${key}: ${extractPropertyValue(value)}`);
+            }
+
+            console.log("\n"); // Add space for better readability
+        }
+
+    } catch (error) {
+        console.error("❌ Error Fetching Pages:", error);
+    }
+}
+
+// Function to extract property values based on their type
+function extractPropertyValue(property) {
+    switch (property.type) {
+        case 'title': return property.title.map(t => t.plain_text).join(", ");
+        case 'rich_text': return property.rich_text.map(t => t.plain_text).join(", ");
+        case 'number': return property.number;
+        case 'select': return property.select ? property.select.name : "None";
+        case 'multi_select': return property.multi_select.map(s => s.name).join(", ");
+        case 'date': return property.date ? property.date.start : "None";
+        case 'checkbox': return property.checkbox ? "Checked" : "Unchecked";
+        case 'url': return property.url;
+        case 'email': return property.email;
+        case 'phone_number': return property.phone_number;
+        case 'formula': return property.formula ? property.formula.string : "None";
+        default: return "Unknown Type";
+    }
+}
+
+// Replace with your actual database ID
+const databaseId = "95a2d0f29c6844e9bab0b563496e2752"; 
+fetchAllPages(databaseId);
