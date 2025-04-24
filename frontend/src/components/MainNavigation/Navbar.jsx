@@ -11,7 +11,7 @@ import { useNavigate } from "react-router-dom";
 const Navbar = ({ isSidebarOpen, toggleSidebar, navbarSmallscreen, navbarmdscreenShow, navbarmdscreenHide }) => {
   
   axios.defaults.withCredentials = true;
-  const url = "http://localhost:8000";
+  const url = import.meta.env.VITE_URL;
   const navigate = useNavigate();
 
   const handleLogout = async () => {
