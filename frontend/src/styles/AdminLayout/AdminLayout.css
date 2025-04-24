@@ -1,0 +1,109 @@
+body{
+    background-color: #f8fafc !important;
+    padding: 0;
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+  }
+  
+  /* Main wrapper */
+  .app-wrapper {
+    display: flex;
+    min-height: 100vh;
+    width: 100%;
+    position: relative;
+    overflow-x: hidden;
+    overflow-y: hidden;
+  }
+  
+  /* Sidebar container */
+  /* .sidebar-container {
+    width: 280px;
+    height: 100vh;
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 1000;
+    transition: transform 0.3s ease-in-out;
+  } */
+  
+  /* Main content wrapper navbar and main content*/
+  .main-content-wrapper {
+    min-height: 100vh;
+    /* transition: margin-left 4s ease-in-out; */
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+    overflow-y: hidden;
+  }
+  
+  /* Mobile styles */
+  @media screen and (max-width: 767.98px) {
+    
+    .main-content-wrapper {
+      margin-left: 0;
+      width: 100%;
+    }
+    .navbar.navbarSmallscreen {
+      position: fixed;
+      left: 0;
+      width: 100vw;
+      top: 0;
+      z-index: 1030;
+    }
+  
+    .content-area {
+      flex: 1;
+      padding: 1rem;
+      background-color: #f8fafc ;
+      /* background-color: brown; */
+      overflow-y: visible;
+      overflow-x: hidden;
+      width: 100%;
+      margin-top: 10vh; 
+    }
+  
+  }
+  
+  /* Desktop styles */
+  @media screen and (min-width: 768px) {
+  
+    .navbar.navbarmdscreenHide {
+      position: fixed;
+      left: 100px;
+      width: calc(100vw - 100px);
+      top: 0;
+      z-index: 1030;
+    }
+    .content-area.contentAreaMdHide{
+      flex: 1;
+      padding: 1rem;
+      background-color: #f8fafc ;
+      overflow-y: visible;
+      overflow-x: hidden;
+      width: calc(100vw - 100px);
+      margin-left: 100px;
+      /* transition: margin-left 4s ease-in-out; */
+      margin-top: 10vh; 
+  
+    }
+  
+    .navbar.navbarmdscreenShow {
+      position: fixed;
+      left: 280px;
+      width: calc(100vw - 280px);
+      top: 0;
+      z-index: 1030;
+    }
+    .content-area.contentAreaMdOpen{
+      flex: 1;
+      padding: 1rem;
+      background-color: #f8fafc ;
+      overflow-y: visible;
+      overflow-x: hidden;
+      width: calc(100vw - 280px);
+      margin-left: 280px;
+      /* transition: margin-left 4s ease-in-out; */
+      margin-top: 10vh; 
+    }
+    
+  }

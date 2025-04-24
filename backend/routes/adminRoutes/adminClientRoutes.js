@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const Client = require('../models/client');
-const { protect, authorizeRoles } = require('../middleware/authMiddleware'); // Import middleware
+const Client = require('../../models/client');
+const { protect, authorizeRoles } = require('../../middleware/authMiddleware'); // Import middleware
 
 // GET all clients (protected, only admins can access)
-router.get("/admin/clients", protect, authorizeRoles('admin'), async (req, res) => {
+router.get("/clients", protect, authorizeRoles('admin'), async (req, res) => {
     try {
         const fetchAllClients = await Client.find({});
         res.status(200).json(fetchAllClients);
@@ -14,7 +14,7 @@ router.get("/admin/clients", protect, authorizeRoles('admin'), async (req, res) 
 });
 
 // POST add a new client (protected, only admins can access)
-router.post('/admin/addClient', protect, authorizeRoles('admin'), async (req, res) => {
+router.post('/addClient', protect, authorizeRoles('admin'), async (req, res) => {
     try {
         const clientData = req.body;
         await Client.create(clientData);
@@ -25,7 +25,7 @@ router.post('/admin/addClient', protect, authorizeRoles('admin'), async (req, re
 });
 
 // GET client details for editing (protected, only admins can access)
-router.get('/admin/clients/:id/editClients', protect, authorizeRoles('admin'), async (req, res) => {
+router.get('/clients/:id/editClients', protect, authorizeRoles('admin'), async (req, res) => {
     try {
         const { id } = req.params;
         const client = await Client.findById(id);
@@ -36,7 +36,7 @@ router.get('/admin/clients/:id/editClients', protect, authorizeRoles('admin'), a
 });
 
 // PATCH update client details (protected, only admins can access)
-router.patch('/admin/clients/:id/editClients', protect, authorizeRoles('admin'), async (req, res) => {
+router.patch('/clients/:id/editClients', protect, authorizeRoles('admin'), async (req, res) => {
     try {
         const { id } = req.params;
         const clientData = req.body;
@@ -69,7 +69,7 @@ router.patch('/admin/clients/:id/editClients', protect, authorizeRoles('admin'),
 });
 
 // DELETE client (protected, only admins can access)
-router.delete('/admin/clients/:id/', protect, authorizeRoles('admin'), async (req, res) => {
+router.delete('/clients/:id/', protect, authorizeRoles('admin'), async (req, res) => {
     const { id } = req.params;
     const deleteClient = await Client.findByIdAndDelete(id);
     if (!deleteClient) {

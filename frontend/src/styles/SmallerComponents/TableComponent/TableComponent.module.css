@@ -1,0 +1,33 @@
+table {
+    table-layout: fixed; /* Prevents column shrinking */
+}
+
+th, td {
+    /* white-space: nowrap;  */
+    text-align: left;
+    word-break: break-word;
+    vertical-align: middle;
+    font-size: 0.9rem;
+}
+
+.resizer {
+    width: 4px;
+    height: 100%;
+    background: #2be3b8;
+    opacity: 0;
+    cursor: col-resize;
+    position: absolute;
+    top: 0;
+    right: 0;
+    transition: opacity 0.2s;
+    user-select: none;
+}
+
+
+*:hover > .resizer{
+    opacity: 1;
+}
+
+.resizing {
+    background: #2eff31;
+}

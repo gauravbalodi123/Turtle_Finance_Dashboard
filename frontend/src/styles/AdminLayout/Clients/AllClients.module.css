@@ -1,0 +1,94 @@
+body{
+    margin: 0;
+    padding: 0;
+}
+
+h2.taskHeaderItem{
+    margin: 0;
+    font-weight: 500;
+}
+
+p.taskHeaderItem{
+    margin: 0;
+    font-size: 1rem;
+    color: #909cad;
+    font-weight: 500;
+
+}
+
+/* AllClients.module.css */
+
+/* Only affects tables inside the Clients page */
+.clientsPageTableWrapper .custom-style-table thead th {
+    color: #8d9aaa ;
+}
+
+/* Subscription sattus */
+
+.clientsPageTableWrapper .custom-style-table tr .active-status {
+    color: #21a752;
+    background-color: #def6e7;
+    border-radius: 24px;
+    padding: 5px 15px;
+}
+
+.clientsPageTableWrapper .custom-style-table tr .expired-status {
+    color: #ef4444 ;
+    background-color: #fde3e3;
+    border-radius: 24px;
+    padding: 5px 15px;
+}
+
+.clientsPageTableWrapper .custom-style-table tr .renewal-status {
+    color: #d97808;
+    background-color: #fef1db;
+    border-radius: 24px;
+    padding: 5px 15px;
+}
+
+
+/* Onboarding status */
+
+.clientsPageTableWrapper .custom-style-table tr .not-started{
+    color: red;
+    background-color: lightcoral;
+    border-radius: 24px;
+    padding: 5px 15px;
+}
+
+.clientsPageTableWrapper .custom-style-table tr .ria-allocated{
+    color: yellow;
+    background-color: rgb(186, 186, 59);
+    border-radius: 24px;
+    padding: 5px 15px;
+}
+
+.clientsPageTableWrapper .custom-style-table tr .payment-received{
+    color: green;
+    background-color: lawngreen;
+    border-radius: 24px;
+    padding: 5px 15px;
+}
+
+.clientsPageTableWrapper .custom-style-table tr .risk-profile{
+    color: rgb(20, 238, 20);
+    background-color: lightgreen;
+    border-radius: 24px;
+    padding: 5px 15px;
+}
+
+.clientsPageTableWrapper .custom-style-table tr .kick-off{
+    color: blue;
+    background-color: lightblue;
+    border-radius: 24px;
+    padding: 5px 15px;
+}
+
+.clientsPageTableWrapper .custom-style-table tr .contract-signed{
+    color: rgb(96, 228, 246);
+    background-color: darkolivegreen;
+    border-radius: 24px;
+    padding: 5px 15px;
+}
+
+

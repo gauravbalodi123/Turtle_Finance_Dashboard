@@ -1,0 +1,81 @@
+import React, { useEffect, useRef, useState } from "react";
+// import Sidebar from "./components/MainNavigation/Sidebar";
+import Sidebar from "../components/MainNavigation/Sidebar"
+import Navbar from "../components/MainNavigation/Navbar";
+import AdminRoutes from "../routes/AdminRoutes"
+// import { Outlet } from "react-router-dom";
+import bootstrap from "bootstrap/dist/js/bootstrap.bundle.min.js";
+import '../styles/AdminLayout/AdminLayout.css'
+// import bootstrap from "../../node_modules/bootstrap/dist/js/bootstrap.bundle";
+
+// Make Bootstrap globally available
+window.bootstrap = bootstrap;
+
+const AdminLayout = () => {
+    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const sidebarRef = useRef(null);
+    const offcanvasRef = useRef(null);
+
+    useEffect(() => {
+        const sidebarEl = sidebarRef.current;
+        if (!window.bootstrap || !sidebarEl) return;
+
+        // Initialize Bootstrap Offcanvas
+        offcanvasRef.current = new window.bootstrap.Offcanvas(sidebarEl);
+
+        // Event listeners for sidebar visibility
+        const handleShown = () => setIsSidebarOpen(true);
+        const handleHidden = () => setIsSidebarOpen(false);
+
+        sidebarEl.addEventListener("shown.bs.offcanvas", handleShown);
+        sidebarEl.addEventListener("hidden.bs.offcanvas", handleHidden);
+
+        // Cleanup listeners
+        return () => {
+            sidebarEl.removeEventListener("shown.bs.offcanvas", handleShown);
+            sidebarEl.removeEventListener("hidden.bs.offcanvas", handleHidden);
+        };
+    }, []);
+
+    const toggleSidebar = () => {
+        if (!offcanvasRef.current) {
+            console.warn("⛔ Offcanvas not initialized yet");
+            return;
+        }
+
+        isSidebarOpen
+            ? offcanvasRef.current.hide()
+            : offcanvasRef.current.show();
+    };
+
+    return (
+        <div className="app-wrapper ">
+
+            <Sidebar
+                sidebarRef={sidebarRef}
+                isSidebarOpen={isSidebarOpen}
+                toggleSidebar={toggleSidebar}
+            />
+
+            <div className="main-content-wrapper ">
+
+                <Navbar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar}
+                    navbarSmallscreen="navbarSmallscreen"
+                    navbarmdscreenShow="navbarmdscreenShow"
+                    navbarmdscreenHide="navbarmdscreenHide"
+                    contentArea="contentArea"
+                />
+
+                <div className={`content-area ${isSidebarOpen ? "contentAreaMdOpen" : "contentAreaMdHide"}`}>
+                    <AdminRoutes />
+                </div>
+
+
+            </div>
+        </div>
+    );
+};
+
+
+
+export default AdminLayout;

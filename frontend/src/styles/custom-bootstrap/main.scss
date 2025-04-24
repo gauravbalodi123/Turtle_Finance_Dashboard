@@ -1,0 +1,246 @@
+// STEP 1: Import Bootstrap functions and variables first
+@import "../../../node_modules/bootstrap/scss/functions";
+@import "../../../node_modules/bootstrap/scss/variables";
+
+// STEP 2: Your custom color variables
+$turtle-back: #f8fafc;
+$turtle-btn-bg: #2be3b8;
+$turtle-primary: #2be3b8;
+$turtle-primary-light: #c2f8ef;
+$turtle-btn-text: #fff;
+$turtle-offcanvas-bg: #fff;
+$offcanvas-horizontal-width: 280px;
+$turtle-secondary:#adb5bd;
+
+
+
+$pagination-padding: 0.9rem;
+$pagination-border-radius: 50%; // circle
+$pagination-border-width: 0; // removes outer borders
+
+$pagination-color: #2be3b8;
+$pagination-bg: transparent;
+
+$pagination-hover-color: #fff;
+$pagination-hover-bg: #2be3b8;
+
+$pagination-active-color: #fff;
+$pagination-active-bg: #2be3b8;
+$pagination-active-border-color: transparent;
+
+$pagination-focus-color: transparent  ; 
+$pagination-focus-bg:   transparent ;          
+$pagination-focus-box-shadow:   none;   
+ 
+
+
+$pagination-disabled-color: #a9a7a7;
+$pagination-disabled-bg: transparent;
+
+// Optional: adjust font size or spacing
+$pagination-font-size: 1rem;
+
+
+// STEP 3: Merge theme colors
+$theme-colors: map-merge($theme-colors,
+    ("turtle": $turtle-back,
+      "turtle-aqua": $turtle-btn-bg,
+      "turtle-primary":$turtle-primary,
+      "turtle-primary-light":$turtle-primary-light,
+      "turtle-secondary":$turtle-secondary,
+       ));
+
+
+// STEP 4: Import the rest of Bootstrap
+@import "../../../node_modules/bootstrap/scss/bootstrap";
+
+// STEP 5: Your custom styles
+.btn-custom-turtle-background {
+  --bs-btn-bg: #{$turtle-btn-bg};
+  --bs-btn-active-color: #fff;
+  --bs-btn-color: #{$turtle-btn-text};
+  --bs-btn-border-color: #{$turtle-btn-bg};
+  --bs-btn-hover-bg: #{$turtle-btn-bg};
+  --bs-btn-hover-border-color: #{$turtle-btn-bg};
+  --bs-btn-active-bg: #{$turtle-btn-bg};
+  --bs-btn-hover-color: #{$turtle-btn-text};
+  --bs-btn-active-border-color: #{$turtle-btn-bg};
+}
+
+.btn-turtle-primary {
+  --bs-btn-bg: #{$turtle-btn-bg};
+  --bs-btn-active-color: #fff;
+  --bs-btn-color: #{$turtle-btn-text};
+  --bs-btn-border-color: #{$turtle-btn-bg};
+  --bs-btn-hover-bg: #{$turtle-btn-bg};
+  --bs-btn-hover-border-color: #{$turtle-btn-bg};
+  --bs-btn-active-bg: #{$turtle-btn-bg};
+  --bs-btn-hover-color: #{$turtle-btn-text};
+  --bs-btn-active-border-color: #{$turtle-btn-bg};
+}
+
+.btn-outline-turtle-primary {
+  --bs-btn-color: #000;
+  --bs-btn-border-color: #2be3b8;
+  --bs-btn-hover-color: #000;
+  --bs-btn-hover-bg: transparent;
+  --bs-btn-hover-border-color: #2be3b8;
+  --bs-btn-focus-shadow-rgb: 43, 227, 184;
+  --bs-btn-active-color: #000;
+  --bs-btn-active-bg: transparent;
+  --bs-btn-active-border-color: #2be3b8;
+  --bs-btn-active-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+  --bs-btn-disabled-color: #2be3b8;
+  --bs-btn-disabled-bg: transparent;
+  --bs-btn-disabled-border-color: #2be3b8;
+  --bs-gradient: none;
+
+}
+
+.btn-outline-turtle-secondary {
+  --bs-btn-color: #000;
+  --bs-btn-border-color: #adb5bd;
+  --bs-btn-hover-color: #000;
+  --bs-btn-hover-bg: transparent;
+  --bs-btn-hover-border-color: #adb5bd;
+  --bs-btn-active-color: #000;
+  --bs-btn-active-bg: transparent;
+  --bs-btn-active-border-color: #adb5bd;
+  --bs-btn-disabled-color: #adb5bd;
+  --bs-btn-disabled-bg: transparent;
+  --bs-btn-disabled-border-color: #adb5bd;
+  --bs-gradient: none;
+
+}
+
+
+.navbar {
+  height: 10vh;
+  border-bottom: 1px solid #dee2e6;
+  box-sizing: border-box;
+}
+
+.navbar.fixed-top-custom {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 280px;
+  width: calc(100vw - 280px);
+  z-index: 1030;
+}
+
+/* Sidebar default styles */
+.offcanvas {
+  overflow-x: hidden;
+
+  &.offcanvas-start {
+    top: 0;
+    left: 0;
+    height: 100vh;
+    border-right: none;
+    background-color: $turtle-offcanvas-bg !important;
+  }
+}
+
+/* On medium and up, manually control width instead of translateX */
+@media (min-width: 767.98px) {
+  .offcanvas-md {
+    transform: none !important; // prevent offcanvas default behavior
+    visibility: visible;
+    position: fixed;
+    z-index: 1040;
+  }
+
+  .offcanvas-md:not(.show) {
+    width: 100px;
+  }
+
+  .offcanvas-md.show {
+    width: 280px;
+  }
+
+  body {
+    overflow: auto; // prevent scroll lock
+  }
+}
+
+/* On small screens, restore Bootstrap behavior */
+@media (max-width: 767.98px) {
+  .offcanvas-sm {
+
+
+    &.show {
+      transform: translateX(0);
+      visibility: visible;
+    }
+
+    &:not(.show) {
+      transform: translateX(-100%);
+      visibility: hidden;
+    }
+  }
+}
+
+
+.dropdown-menu {
+  --bs-dropdown-link-active-bg: $turtle-primary;
+  --bs-dropdown-link-hover-bg: "";
+  --bs-dropdown-link-active-color: #000;
+}
+
+
+.input-group-text-search {
+  @extend .input-group-text;
+
+  background-color: #f8fafc;
+  border: 1px solid $turtle-secondary;
+  border-right: 0; // clean removal of right border
+  border-radius: 6px 0 0 6px; // rounded left side only
+  padding: 0.4rem 0.75rem; // smaller padding for compact height
+  padding-right: 0px;
+  font-size: 0.9rem;
+}
+
+.form-control-search {
+  @extend .form-control;
+  
+  background-color: #f8fafc;
+  border: 1px solid $turtle-secondary;
+  border-left: 0; // removes overlapping border
+  border-radius: 0 6px 6px 0; // rounded right side only
+  padding: 0.4rem 0.75rem; // match input group text
+  padding-left: 10px;
+  font-size: 0.9rem;
+
+  &:focus {
+    color: var(--bs-body-color);
+    background-color: #f8fafc;
+    border-color: $turtle-secondary;
+    outline: 0;
+    box-shadow: none;
+  }
+}
+
+
+
+.table-custom {
+  @extend .table;
+  @extend .table-hover;
+
+  --bs-table-hover-bg: #e2f7f3;
+
+  .table-hover {
+    border-radius: 50px;
+  }
+
+}
+
+.pagination .page-item {
+  margin-right: 0.3rem; // or use gap-like spacing
+}
+
+.pagination .page-item:last-child {
+  margin-right: 0; // remove margin from last item
+}
+
+
