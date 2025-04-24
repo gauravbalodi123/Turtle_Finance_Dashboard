@@ -16,8 +16,8 @@ const sendTokenResponse = (user, res) => {
 
   res.cookie('token', token, {
     httpOnly: true,
-    secure: false,          // ⚠️ must be false for localhost (no https)
-    sameSite: 'Lax',        // 'Lax' is fine for most local setups
+    secure: true,          // ⚠️ must be false for localhost (no https)
+    sameSite: 'None',        // 'Lax' is fine for most local setups
     maxAge: 24 * 60 * 60 * 1000, // 1 day
   });
 

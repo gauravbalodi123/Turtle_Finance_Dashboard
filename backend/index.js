@@ -23,7 +23,7 @@ mongoose.connect(process.env.DB_URL)
 // Middleware configuration
 app.use(express.json());  // Only use once
 app.use(cors({
-  origin: 'http://localhost:5173',  // Replace with your frontend's origin
+  origin: process.env.CORS_URL,  // Replace with your frontend's origin
   credentials: true
 }));
 
