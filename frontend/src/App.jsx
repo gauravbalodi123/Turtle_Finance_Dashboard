@@ -1,18 +1,20 @@
 import React from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom"; // Add Navigate here
 
-// import AdminRoutes from './routes/AdminRoutes'
 import LoginPage from "./pages/LoginPage";
 import AdminPrivateRoutes from "../ProtectedRoutes/AdminPrivateRoutes";
-// Layouts with Routes inside
 import AdminLayout from "./layouts/AdminLayout";
-// import ClientLayout from "./layouts/ClientLayout";
-// import AdvisorLayout from "./layouts/AdvisorLayout";
 
 const App = () => {
   return (
-
     <Routes>
+      {/* Redirect from root to /login */}
+      <Route path="/" element={<Navigate to="/login" replace />} />
+
+      {/* Login Route */}
+      <Route path="/login" element={<LoginPage />} />
+
+      {/* Admin Protected Routes */}
       <Route
         path="/adminautharized/*"
         element={
@@ -21,13 +23,7 @@ const App = () => {
           </AdminPrivateRoutes>
         }
       />
-
-
-
-
-      <Route path="login" element={<LoginPage />} />
     </Routes>
-
   );
 };
 
