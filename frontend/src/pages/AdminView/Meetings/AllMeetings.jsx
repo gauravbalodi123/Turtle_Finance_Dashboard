@@ -14,6 +14,9 @@ import { RiDeleteBin6Line } from "react-icons/ri";
 import { PiClipboardTextLight } from "react-icons/pi";
 import { GrNotes } from "react-icons/gr";
 import { RiStickyNoteAddLine } from "react-icons/ri";
+import { FaRegEye } from "react-icons/fa";
+import { FaDownload } from "react-icons/fa6";
+import DeleteModal from "../../../components/SmallerComponents/DeleteModal";
 
 
 const AllMeetings = () => {
@@ -33,6 +36,7 @@ const AllMeetings = () => {
         pending: 0,
         inProgress: 0,
     });
+    const [targetId, setTargetId] = useState(null);
 
 
     const handleOpenModal = (title, content) => {
@@ -94,23 +98,22 @@ const AllMeetings = () => {
     };
 
 
-    const handleDelete = async (id) => {
+    const handleDelete = async () => {
+        if (!targetId) return;
 
-        setLoadingId(id);
+        setLoadingId(targetId);
         try {
-
-            await axios.delete(`${url}/admin/tasks/${id}`)
-            alert("task has been deleted successfully");
-            setTasks((currTasks) => currTasks.filter((task) => task._id !== id));
-        }
-        catch (e) {
+            await axios.delete(`${url}/admin/tasks/${targetId}`);
+            setTasks((currTasks) => currTasks.filter((task) => task._id !== targetId));
+        } catch (e) {
             console.log(e);
-            alert("error deleting the task")
-        }
-        finally {
+            alert("Error deleting the task");
+        } finally {
             setLoadingId(null);
+            setTargetId(null); // Reset the target after deletion
         }
-    }
+    };
+
 
 
     useEffect(() => {
@@ -137,76 +140,30 @@ const AllMeetings = () => {
             accessorKey: "title",
             header: "Title",
             enableResizing: true,
-            size: 400,
-            minSize: 300,
+            size: 200,
+            minSize: 200,
         },
         {
             accessorKey: "client.fullName",
             header: "Client Name",
             enableResizing: true,
-            size: 200,
-            minSize: 150,
+            size: 140,
+            minSize: 100,
             cell: ({ row }) => row.original.client?.fullName || "N/A",
-        },
-        {
-            accessorKey: "client.email",
-            header: "Client Email",
-            enableResizing: true,
-            size: 220,
-            minSize: 180,
-            cell: ({ row }) => row.original.client?.email || "N/A",
         },
         {
             accessorKey: "advisor.advisorFullName",
             header: "Advisor Name",
             enableResizing: true,
-            size: 200,
-            minSize: 150,
+            size: 140,
+            minSize: 100,
             cell: ({ row }) => row.original.advisor?.advisorFullName || "N/A",
-        },
-        {
-            accessorKey: "advisor.email",
-            header: "Advisor Email",
-            enableResizing: true,
-            size: 220,
-            minSize: 180,
-            cell: ({ row }) => row.original.advisor?.email || "N/A",
-        },
-        {
-            accessorKey: "transcriptUrl",
-            header: "Transcript URL",
-            enableResizing: true,
-            size: 250,
-            minSize: 150,
-            cell: ({ row }) =>
-                row.original.transcriptUrl ? (
-                    <a href={row.original.transcriptUrl} target="_blank" rel="noopener noreferrer" className="text-decoration-none text-turtle-primary">
-                        View Transcript
-                    </a>
-                ) : (
-                    "N/A"
-                ),
-        },
-        {
-            accessorKey: "videoUrl",
-            header: "Video URL",
-            enableResizing: true,
-            size: 250,
-            minSize: 150,
-            cell: ({ row }) =>
-                row.original.videoUrl ? (
-                    <a href={row.original.videoUrl} target="_blank" rel="noopener noreferrer " className="text-decoration-none text-turtle-primary">
-                        Download Video
-                    </a>
-                ) : (
-                    "N/A"
-                ),
         },
         {
             accessorKey: "date",
             header: "Meeting Date",
             enableResizing: true,
-            size: 150,
+            size: 140,
             minSize: 120,
             cell: ({ row }) =>
                 row.original.date ? new Date(row.original.date).toLocaleDateString("en-GB") : "N/A",
@@ -215,15 +172,15 @@ const AllMeetings = () => {
             accessorKey: "meetingNumber",
             header: "Meeting Number",
             enableResizing: true,
-            size: 200,
+            size: 160,
             minSize: 120,
         },
         {
             accessorKey: "actionItems",
             header: "Action Items",
             enableResizing: true,
-            size: 200,
-            minSize: 150,
+            size: 130,
+            minSize: 100,
             cell: ({ row }) => (
                 <a
                     className="text-turtle-primary text-decoration-none d-flex align-items-center gap-2 fs-6 cursor-pointer" role="button"
@@ -238,8 +195,8 @@ const AllMeetings = () => {
             accessorKey: "detailedNotes",
             header: "Detailed Notes",
             enableResizing: true,
-            size: 200,
-            minSize: 150,
+            size: 140,
+            minSize: 100,
             cell: ({ row }) => (
                 <a
                     className="text-turtle-primary text-decoration-none d-flex align-items-center gap-2 fs-6 " role="button"
@@ -254,8 +211,8 @@ const AllMeetings = () => {
             accessorKey: "summary",
             header: "Summary",
             enableResizing: true,
-            size: 200,
-            minSize: 150,
+            size: 150,
+            minSize: 100,
             cell: ({ row }) => (
                 <a
                     className="text-turtle-primary text-decoration-none d-flex align-items-center gap-2 fs-6 " role="button"
@@ -270,30 +227,65 @@ const AllMeetings = () => {
             accessorKey: "status",
             header: "Status",
             enableResizing: true,
-            size: 120,
+            size: 100,
             minSize: 100,
         },
         {
             accessorKey: "_id",
             header: "Action",
             enableResizing: false,
-            size: 150,
-            minSize: 120,
+            size: 200,
+            minSize: 200,
             cell: ({ row }) => (
-                <div className="d-flex gap-2">
-                    <Link to={`/adminautharized/admin/tasks/${row.original._id}/editTasks`} className="btn  p-2  btn-outline-turtle-secondary">
-                        <FaRegEdit className="d-block fs-6" />
-                    </Link>
-                    <button
-                        onClick={() => handleDelete(row.original._id)}
-                        disabled={loadingId === row.original._id}
-                        className="btn p-2   btn-outline-turtle-secondary "
-                    >
-                        {loadingId === row.original._id ? "Deleting..." : <RiDeleteBin6Line className="d-block fs-6" />}
-                    </button>
+                <div className="d-flex  gap-2">
+                    <div className="d-flex gap-2">
+                        <Link
+                            to={`/adminautharized/admin/tasks/${row.original._id}/editTasks`}
+                            className="btn p-2 btn-outline-turtle-secondary"
+                        >
+                            <FaRegEdit className="d-block fs-6" />
+                        </Link>
+                        <button
+                            type="button"
+                            className="btn p-2 btn-outline-turtle-secondary"
+                            data-bs-toggle="modal"
+                            data-bs-target="#deleteModal"
+                            onClick={() => setTargetId(row.original._id)}
+                            disabled={loadingId === row.original._id}
+                        >
+                            {loadingId === row.original._id ? "Deleting..." : <RiDeleteBin6Line className="d-block fs-6" />}
+                        </button>
+                    </div>
+                    <div className="d-flex gap-2">
+                        {row.original.transcriptUrl ? (
+                            <a
+                                href={row.original.transcriptUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="btn p-2 btn-outline-turtle-secondary"
+                            >
+                                <FaRegEye className="d-block fs-6" />
+                            </a>
+                        ) : (
+                            <span className="small text-muted">Transcript: N/A</span>
+                        )}
+                        {row.original.videoUrl ? (
+                            <a
+                                href={row.original.videoUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="btn p-2 btn-outline-turtle-secondary"
+                            >
+                                <FaDownload className="d-block fs-6" />
+                            </a>
+                        ) : (
+                            <span className="small text-muted">Video: N/A</span>
+                        )}
+                    </div>
                 </div>
             ),
-        },
+        }
+
     ];
 
 
@@ -406,6 +398,14 @@ const AllMeetings = () => {
                 onHide={() => setShowModal(false)}
                 title={modalTitle}
                 content={modalContent}
+            />
+
+            <DeleteModal
+                modalId="deleteModal"
+                headerText="Confirm Deletion"
+                bodyContent="Are you sure you want to delete this Meeting?"
+                confirmButtonText="Delete"
+                onConfirm={() => handleDelete(targetId)}
             />
 
         </div>

@@ -85,7 +85,7 @@ const AddTasks = () => {
     return (
         <Fragment>
             <div className="container my-4">
-                <div className="card shadow p-4">
+                <div className="card  p-4">
                     <h2 className="mb-4">Add Task</h2>
 
                     <form onSubmit={handleSubmit}>

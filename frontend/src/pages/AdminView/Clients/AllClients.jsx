@@ -10,6 +10,7 @@ import SearchFilter from "../../../components/SmallerComponents/SearchFilter";
 import { IoFilter } from "react-icons/io5";
 import { FaRegEdit } from "react-icons/fa";
 import { RiDeleteBin6Line } from "react-icons/ri";
+import DeleteModal from "../../../components/SmallerComponents/DeleteModal";
 
 const AllClients = () => {
     axios.defaults.withCredentials = true
@@ -21,6 +22,8 @@ const AllClients = () => {
     const [loadingId, setLoadingId] = useState(null);
     const [error, setError] = useState(null);
     const [columnFilter, setColumnFilter] = useState(""); // ✅ Search filter state
+    const [targetId, setTargetId] = useState(null);
+
 
     useEffect(() => {
         fetchClients();
@@ -39,23 +42,41 @@ const AllClients = () => {
         }
     };
 
-    const handleDelete = async (id) => {
+    // const handleDelete = async (id) => {
 
-        setLoadingId(id);
+    //     setLoadingId(id);
+    //     try {
+
+    //         await axios.delete(`${url}/admin/clients/${id}`)
+    //         alert("Client has been deleted successfully");
+    //         setClients((currClients) => currClients.filter((client) => client._id !== id));
+    //     }
+    //     catch (e) {
+    //         console.log(e);
+    //         alert("error deleting the client")
+    //     }
+    //     finally {
+    //         setLoadingId(null);
+    //     }
+    // }
+
+    const handleDelete = async () => {
+        if (!targetId) return;
+        setLoadingId(targetId);
+
         try {
-
-            await axios.delete(`${url}/admin/clients/${id}`)
-            alert("Client has been deleted successfully");
-            setClients((currClients) => currClients.filter((client) => client._id !== id));
-        }
-        catch (e) {
-            console.log(e);
-            alert("error deleting the client")
-        }
-        finally {
+            await axios.delete(`${url}/admin/clients/${targetId}`);
+            setClients((currClients) =>
+                currClients.filter((client) => client._id !== targetId)
+            );
+        } catch (e) {
+            console.error(e);
+            alert("Error deleting the client");
+        } finally {
             setLoadingId(null);
+            setTargetId(null); // Clear after delete
         }
-    }
+    };
 
 
     // ✅ Filter logic: Runs whenever columnFilter or clients change
@@ -79,16 +100,16 @@ const AllClients = () => {
     }, [columnFilter, clients]);
 
     const columns = [
-        { accessorKey: "fullName", header: "Full Name", enableResizing: true, size: 250, minSize: 150 },
-        { accessorKey: "salutation", header: "Salutation", enableResizing: true, size: 180, minSize: 80 },
-        { accessorKey: "leadSourceId", header: "Lead Source ID", enableResizing: true, size: 200, minSize: 120 },
-        { accessorKey: "leadSource", header: "Lead Source", enableResizing: true, size: 180, minSize: 140 },
+        { accessorKey: "fullName", header: "Full Name", enableResizing: true, size: 170, minSize: 150 },
+        { accessorKey: "salutation", header: "Salutation", enableResizing: true, size: 120, minSize: 80 },
+        { accessorKey: "leadSourceId", header: "Lead Source ID", enableResizing: true, size: 150, minSize: 120 },
+        { accessorKey: "leadSource", header: "Lead Source", enableResizing: true, size: 130, minSize: 140 },
         {
             accessorKey: "subscriptionStatus",
             header: "Subscription Status",
             enableResizing: true,
-            size: 200,
-            minSize: 160,
+            size: 170,
+            minSize: 100,
             cell: ({ getValue }) => {
                 const value = getValue();
                 let statusClass = "";
@@ -101,15 +122,15 @@ const AllClients = () => {
             }
         },
         { accessorKey: "gender", header: "Gender", enableResizing: true, size: 100, minSize: 80 },
-        { accessorKey: "countryCode", header: "Country Code", enableResizing: true, size: 160, minSize: 130 },
-        { accessorKey: "phone", header: "Phone", enableResizing: true, size: 160, minSize: 130 },
-        { accessorKey: "email", header: "Email", enableResizing: true, size: 250, minSize: 200 },
-        { accessorKey: "address", header: "Address", enableResizing: true, size: 300, minSize: 200 },
+        { accessorKey: "countryCode", header: "Country Code", enableResizing: true, size: 140, minSize: 130 },
+        { accessorKey: "phone", header: "Phone", enableResizing: true, size: 110, minSize: 100 },
+        { accessorKey: "email", header: "Email", enableResizing: true, size: 200, minSize: 200 },
+        { accessorKey: "address", header: "Address", enableResizing: true, size: 180, minSize: 150 },
         {
             accessorKey: "subscriptionDate",
             header: "Subscription Date",
             enableResizing: true,
-            size: 180,
+            size: 160,
             minSize: 140,
             cell: ({ row }) =>
                 row.original.subscriptionDate
@@ -120,7 +141,7 @@ const AllClients = () => {
             accessorKey: "subscriptionDue",
             header: "Subscription Due",
             enableResizing: true,
-            size: 180,
+            size: 160,
             minSize: 140,
             cell: ({ row }) =>
                 row.original.subscriptionDue
@@ -131,7 +152,7 @@ const AllClients = () => {
             accessorKey: "riskProfileDate",
             header: "Risk Profile Date",
             enableResizing: true,
-            size: 180,
+            size: 160,
             minSize: 140,
             cell: ({ row }) =>
                 row.original.riskProfileDate
@@ -142,7 +163,7 @@ const AllClients = () => {
             accessorKey: "kickOffDate",
             header: "Kick Off Date",
             enableResizing: true,
-            size: 180,
+            size: 140,
             minSize: 140,
             cell: ({ row }) =>
                 row.original.kickOffDate
@@ -153,8 +174,8 @@ const AllClients = () => {
             accessorKey: "onboardingStatus",
             header: "Onboarding Status",
             enableResizing: true,
-            size: 200,
-            minSize: 160,
+            size: 170,
+            minSize: 100,
             cell: ({ getValue }) => {
                 const status = getValue();
                 let className = "";
@@ -173,28 +194,41 @@ const AllClients = () => {
             accessorKey: "dob",
             header: "Date of Birth",
             enableResizing: true,
-            size: 180,
+            size: 140,
             minSize: 140,
             cell: ({ row }) =>
                 row.original.dob ? new Date(row.original.dob).toLocaleDateString("en-GB") : "N/A",
         },
-        { accessorKey: "companyName", header: "Company Name", enableResizing: true, size: 250, minSize: 200 },
+        { accessorKey: "companyName", header: "Company Name", enableResizing: true, size: 150, minSize: 150 },
         {
             accessorKey: "_id",
             header: "Action",
             enableResizing: false,
-            size: 150,
-            minSize: 120,
+            size: 90,
+            minSize: 90,
             cell: ({ row }) => (
                 <div className="d-flex gap-2">
-                    <Link to={`/adminautharized/admin/clients/${row.original._id}/editClients`} className="btn  p-2  btn-outline-turtle-secondary">
+                    <Link
+                        to={`/adminautharized/admin/clients/${row.original._id}/editClients`}
+                        className="btn p-2 btn-outline-turtle-secondary"
+                    >
                         <FaRegEdit className="d-block fs-6" />
                     </Link>
-                    <button onClick={() => { handleDelete(row.original._id) }} disabled={loadingId === row.original._id} className="btn  p-2  btn-outline-turtle-secondary">
+
+
+                    <button
+                        type="button"
+                        className="btn p-2 btn-outline-turtle-secondary"
+                        data-bs-toggle="modal"
+                        data-bs-target="#deleteModal"
+                        onClick={() => setTargetId(row.original._id)}
+                        disabled={loadingId === row.original._id}
+                    >
                         {loadingId === row.original._id ? "Deleting..." : <RiDeleteBin6Line className="d-block fs-6" />}
                     </button>
                 </div>
             ),
+
         },
     ];
 
@@ -202,16 +236,15 @@ const AllClients = () => {
     return (
         <div className="container-fluid ">
             <div className='d-flex align-items-center justify-content-between'>
-                <div className='d-flex align-items-center justify-content-start mb-3 '>
+                <div className='d-flex align-items-center justify-content-between mb-3 '>
                     <div>
                         <h4 className={`  ${styles.taskHeaderItem} fw-bold mb-1`}>Clients</h4>
                         <p className={`  ${styles.taskHeaderItem}`}>View and manage all client accounts and memberships.</p>
                     </div>
-
                 </div>
 
-                <Link to="addTask">
-                    <button className="btn btn-custom-turtle-background d-none">Create New Task</button>
+                <Link to="addClients">
+                    <button className="btn btn-custom-turtle-background">Create New Client</button>
                 </Link>
             </div>
 
@@ -281,6 +314,16 @@ const AllClients = () => {
                                 pageSize={10}
                                 className={`${styles["custom-style-table"]}`}
                             />
+
+                            <DeleteModal
+                                modalId="deleteModal"
+                                headerText="Confirm Deletion"
+                                bodyContent="Are you sure you want to delete this client?"
+                                confirmButtonText="Delete"
+                                onConfirm={() => handleDelete(targetId)}
+                            />
+
+
                         </div>
 
                     </div>

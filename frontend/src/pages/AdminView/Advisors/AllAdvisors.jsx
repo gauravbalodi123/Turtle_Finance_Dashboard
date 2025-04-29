@@ -9,6 +9,7 @@ import SearchFilter from '@components/SmallerComponents/SearchFilter'
 import { IoFilter } from "react-icons/io5";
 import { FaRegEdit } from "react-icons/fa";
 import { RiDeleteBin6Line } from "react-icons/ri";
+import DeleteModal from "../../../components/SmallerComponents/DeleteModal";
 
 
 const AllAdvisors = () => {
@@ -18,6 +19,7 @@ const AllAdvisors = () => {
     const [filteredAdvisors, setFilteredAdvisors] = useState([]);// ✅ New state for filtered data
     const [isLoading, setIsLoading] = useState(true);
     const [loadingId, setLoadingId] = useState(null);
+    const [targetId, setTargetId] = useState(null);
     const [error, setError] = useState(null);
     const [columnFilter, setColumnFilter] = useState(""); // ✅ Search filter state
 
@@ -46,23 +48,24 @@ const AllAdvisors = () => {
 
 
 
-    const handleDelete = async (id) => {
+    const handleDelete = async () => {
+        if (!targetId) return;
 
-        setLoadingId(id);
+        setLoadingId(targetId);
         try {
-
-            await axios.delete(`${url}/admin/advisors/${id}`)
-            alert("Advisor has been deleted successfully");
-            setAdvisors((currAdvisor) => currAdvisor.filter((advisor) => advisor._id !== id));
-        }
-        catch (e) {
-            console.log(e);
-            alert("error deleting the advisor")
-        }
-        finally {
+            await axios.delete(`${url}/admin/advisors/${targetId}`);
+            setAdvisors((currAdvisor) =>
+                currAdvisor.filter((advisor) => advisor._id !== targetId)
+            );
+        } catch (e) {
+            console.error(e);
+            alert("Error deleting the advisor");
+        } finally {
             setLoadingId(null);
+            setTargetId(null); // Clear the target after operation
         }
-    }
+    };
+
 
     useEffect(() => {
         if (!columnFilter) {
@@ -89,7 +92,7 @@ const AllAdvisors = () => {
             accessorKey: "advisorFullName",
             header: "Advisor Name",
             enableResizing: true,
-            size: 200,
+            size: 150,
             minSize: 150,
         },
         {
@@ -103,42 +106,42 @@ const AllAdvisors = () => {
             accessorKey: "advisorDomain",
             header: "Domain",
             enableResizing: true,
-            size: 180,
+            size: 120,
             minSize: 120,
         },
         {
             accessorKey: "countryCode",
             header: "Country Code",
             enableResizing: true,
-            size: 150,
+            size: 140,
             minSize: 80,
         },
         {
             accessorKey: "phone",
             header: "Phone",
             enableResizing: true,
-            size: 160,
+            size: 120,
             minSize: 120,
         },
         {
             accessorKey: "email",
             header: "Email",
             enableResizing: true,
-            size: 200,
+            size: 180,
             minSize: 150,
         },
         {
             accessorKey: "address",
             header: "Address",
             enableResizing: true,
-            size: 250,
+            size: 180,
             minSize: 150,
         },
         {
             accessorKey: "dob",
             header: "Date of Birth",
             enableResizing: true,
-            size: 150,
+            size: 140,
             minSize: 120,
             cell: ({ row }) =>
                 row.original.dob ? new Date(row.original.dob).toLocaleDateString("en-GB") : "N/A",
@@ -154,19 +157,31 @@ const AllAdvisors = () => {
             accessorKey: "_id",
             header: "Action",
             enableResizing: false,
-            size: 150,
-            minSize: 120,
+            size: 100,
+            minSize: 80,
             cell: ({ row }) => (
-                <div className="d-flex  gap-2">
-                    <Link to={`/adminautharized/admin/advisors/${row.original._id}/editAdvisors`} className="btn  p-2  btn-outline-turtle-secondary">
+                <div className="d-flex gap-2">
+                    <Link
+                        to={`/adminautharized/admin/advisors/${row.original._id}/editAdvisors`}
+                        className="btn p-2 btn-outline-turtle-secondary"
+                    >
                         <FaRegEdit className="d-block fs-6" />
                     </Link>
-                    <button onClick={() => { handleDelete(row.original._id) }} disabled={loadingId === row.original._id} className="btn  p-2  btn-outline-turtle-secondary">
+
+                    <button
+                        type="button"
+                        className="btn p-2 btn-outline-turtle-secondary"
+                        data-bs-toggle="modal"
+                        data-bs-target="#deleteModal"
+                        onClick={() => setTargetId(row.original._id)}
+                        disabled={loadingId === row.original._id}
+                    >
                         {loadingId === row.original._id ? "Deleting..." : <RiDeleteBin6Line className="d-block fs-6" />}
                     </button>
                 </div>
             ),
-        },
+        }
+
     ];
 
 
@@ -181,7 +196,9 @@ const AllAdvisors = () => {
                     </div>
 
                 </div>
-
+                <Link to="addAdvisor">
+                    <button className="btn btn-custom-turtle-background">Create New Advisor</button>
+                </Link>
 
             </div>
 
@@ -245,6 +262,16 @@ const AllAdvisors = () => {
                                 pageSize={10}
                                 className={`${styles["custom-style-table"]}`}
                             />
+
+                            <DeleteModal
+                                modalId="deleteModal"
+                                headerText="Confirm Deletion"
+                                bodyContent="Are you sure you want to delete this Advisor?"
+                                confirmButtonText="Delete"
+                                onConfirm={() => handleDelete(targetId)}
+                            />
+
+
                         </div>
 
                     </div>

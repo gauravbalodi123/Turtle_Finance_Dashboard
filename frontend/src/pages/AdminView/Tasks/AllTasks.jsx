@@ -12,6 +12,7 @@ import { RiDeleteBin6Line } from "react-icons/ri";
 import { MdOutlineErrorOutline } from "react-icons/md";
 import { GrStatusGood } from "react-icons/gr";
 import { FaRegClock } from "react-icons/fa";
+import DeleteModal from "../../../components/SmallerComponents/DeleteModal";
 
 const AllMeetings = () => {
     axios.defaults.withCredentials = true
@@ -22,6 +23,7 @@ const AllMeetings = () => {
     const [loadingId, setLoadingId] = useState(null);
     const [error, setError] = useState(null);
     const [columnFilter, setColumnFilter] = useState("");
+    const [targetId, setTargetId] = useState(null);
     const [taskStats, setTaskStats] = useState({
         overdue: 0,
         pending: 0,
@@ -86,20 +88,24 @@ const AllMeetings = () => {
 
 
 
-    const handleDelete = async (id) => {
-        setLoadingId(id);
+    const handleDelete = async () => {
+        if (!targetId) return;
+
+        setLoadingId(targetId);
         try {
-            await axios.delete(`${url}/admin/rowwisetasks/${id}`);
-            alert("Row-wise task has been deleted successfully");
-            setRowWiseTasks((currTasks) => currTasks.filter((task) => task._id !== id));
+            await axios.delete(`${url}/admin/rowwisetasks/${targetId}`);
+            setRowWiseTasks((currTasks) =>
+                currTasks.filter((task) => task._id !== targetId)
+            );
         } catch (e) {
             console.log(e);
             alert("Error deleting the row-wise task");
         } finally {
             setLoadingId(null);
-
+            setTargetId(null); // Clear targetId after deletion
         }
     };
+
 
     useEffect(() => {
         if (!columnFilter) {
@@ -125,39 +131,31 @@ const AllMeetings = () => {
             accessorKey: "title",
             header: "Title",
             enableResizing: true,
-            size: 400,
-            minSize: 300,
+            size: 260,
+            minSize: 200,
             cell: ({ row }) => row.original.title || "No Title",
         },
         {
             accessorKey: "actionItems",
             header: "Action Items",
             enableResizing: true,
-            size: 400,
-            minSize: 300,
+            size: 260,
+            minSize: 260,
             cell: ({ row }) => row.original.actionItems || "No Action Items",
         },
         {
             accessorKey: "client.fullName",
             header: "Client Name",
             enableResizing: true,
-            size: 200,
-            minSize: 150,
+            size: 130,
+            minSize: 100,
             cell: ({ row }) => row.original.client?.fullName || "N/A",
-        },
-        {
-            accessorKey: "client.email",
-            header: "Client Email",
-            enableResizing: true,
-            size: 220,
-            minSize: 180,
-            cell: ({ row }) => row.original.client?.email || "N/A",
         },
         {
             accessorKey: "advisor.advisorFullName",
             header: "Advisor Name",
             enableResizing: true,
-            size: 200,
+            size: 150,
             minSize: 150,
             cell: ({ row }) => row.original.advisor?.advisorFullName || "N/A",
         },
@@ -165,7 +163,7 @@ const AllMeetings = () => {
             accessorKey: "date",
             header: "Meeting Date",
             enableResizing: true,
-            size: 150,
+            size: 140,
             minSize: 120,
             cell: ({ row }) =>
                 row.original.date ? new Date(row.original.date).toLocaleDateString("en-GB") : "N/A",
@@ -174,14 +172,14 @@ const AllMeetings = () => {
             accessorKey: "status",
             header: "Status",
             enableResizing: true,
-            size: 120,
+            size: 100,
             minSize: 100,
         },
         {
             accessorKey: "responsiblePerson",
             header: "Responsible Person",
             enableResizing: true,
-            size: 230,
+            size: 180,
             minSize: 150,
             cell: ({ row }) => row.original.responsiblePerson || "N/A",
         },
@@ -189,7 +187,7 @@ const AllMeetings = () => {
             accessorKey: "dueDate",
             header: "Due Date",
             enableResizing: true,
-            size: 150,
+            size: 120,
             minSize: 120,
             cell: ({ row }) =>
                 row.original.dueDate ? new Date(row.original.dueDate).toLocaleDateString("en-GB") : "N/A",
@@ -198,24 +196,29 @@ const AllMeetings = () => {
             accessorKey: "_id",
             header: "Action",
             enableResizing: false,
-            size: 150,
-            minSize: 120,
+            size: 100,
+            minSize: 100,
             cell: ({ row }) => (
                 <div className="d-flex gap-2">
-                    <Link to={`/adminautharized/admin/rowwisetasks/${row.original._id}/editRowWiseTasks`} className="btn   p-2  btn-outline-turtle-secondary ">
+                    <Link
+                        to={`/adminautharized/admin/rowwisetasks/${row.original._id}/editRowWiseTasks`}
+                        className="btn p-2 btn-outline-turtle-secondary"
+                    >
                         <FaRegEdit className="d-block fs-6" />
                     </Link>
                     <button
-                        onClick={() => handleDelete(row.original._id)}
-                        disabled={loadingId === row.original._id}
-                        className="btn  p-2  btn-outline-turtle-secondary "
+                        type="button"
+                        className="btn p-2 btn-outline-turtle-secondary"
+                        data-bs-toggle="modal"
+                        data-bs-target="#deleteModal"
+                        onClick={() => setTargetId(row.original._id)}
                     >
                         {loadingId === row.original._id ? "Deleting..." : <RiDeleteBin6Line className="d-block fs-6" />}
                     </button>
                 </div>
-
             ),
-        },
+        }
+
     ];
 
     return (
@@ -324,6 +327,16 @@ const AllMeetings = () => {
                                 pageSize={10}
                                 className={`${styles["custom-style-table"]}`}
                             />
+
+                            <DeleteModal
+                                modalId="deleteModal"
+                                headerText="Confirm Deletion"
+                                bodyContent="Are you sure you want to delete this Task?"
+                                confirmButtonText="Delete"
+                                onConfirm={() => handleDelete(targetId)}
+                            />
+
+
                         </div>
                     </div>
                 </Fragment>

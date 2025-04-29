@@ -35,6 +35,7 @@ const AdminLayout = () => {
   
 
   const toggleSidebar = () => {
+    
     if (!offcanvasRef.current) {
       console.warn("⛔ Offcanvas not initialized yet");
       return;

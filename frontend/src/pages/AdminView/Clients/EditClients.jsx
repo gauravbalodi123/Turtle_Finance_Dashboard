@@ -38,7 +38,7 @@ const EditClients = () => {
             const formatDate = (isoDate) => {
                 if (!isoDate) return "";
                 const date = new Date(isoDate);
-                return date.toISOString().split("T")[0]; // Convert ISO date to "YYYY-MM-DD"
+                return date.toISOString().split("T")[0]; 
             };
 
             setFormData({
@@ -133,7 +133,7 @@ const EditClients = () => {
     return (
         <Fragment>
             <div className="container my-4">
-                <div className="card shadow p-4">
+                <div className="card  p-4">
                     <h2 className="mb-4">Edit Client</h2>
 
                     <form onSubmit={handleSubmit}>
