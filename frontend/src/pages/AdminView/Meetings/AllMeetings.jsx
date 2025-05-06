@@ -17,6 +17,8 @@ import { RiStickyNoteAddLine } from "react-icons/ri";
 import { FaRegEye } from "react-icons/fa";
 import { FaDownload } from "react-icons/fa6";
 import DeleteModal from "../../../components/SmallerComponents/DeleteModal";
+import ActionItemsModal from "../../../components/SmallerComponents/ActionItemsModal";
+import EditModal from "../../../components/SmallerComponents/EditModal";
 
 
 const AllMeetings = () => {
@@ -28,7 +30,7 @@ const AllMeetings = () => {
     const [loadingId, setLoadingId] = useState(null);
     const [error, setError] = useState(null);
     const [columnFilter, setColumnFilter] = useState(""); // ✅ Search filter state
-    const [showModal, setShowModal] = useState(false);
+    // const [showModal, setShowModal] = useState(false);
     const [modalTitle, setModalTitle] = useState("");
     const [modalContent, setModalContent] = useState("");
     const [meetingStats, setMeetingStats] = useState({
@@ -37,13 +39,65 @@ const AllMeetings = () => {
         inProgress: 0,
     });
     const [targetId, setTargetId] = useState(null);
+    const [deleteType, setDeleteType] = useState(""); // "meeting" or "actionItem"
+    const [currentActionItems, setCurrentActionItems] = useState([]);
+    const [currentTaskId, setCurrentTaskId] = useState(null); // in case you need it
+    const [selectedActionItem, setSelectedActionItem] = useState(null);
+    const [selectedClient, setSelectedClient] = useState('');
+    const [selectedAdvisor, setSelectedAdvisor] = useState('');
+    const [clientsList, setClientsList] = useState([]);
+    const [advisorsList, setAdvisorsList] = useState([]);
+
+
+
 
 
     const handleOpenModal = (title, content) => {
         setModalTitle(title);
         setModalContent(content);
-        setShowModal(true);
     };
+
+    const handleOpenActionItemsModal = async (parentId) => {
+        try {
+            setCurrentTaskId(parentId);
+            const res = await axios.get(`${url}/admin/rowwisetasks/parent/${parentId}`);
+            setCurrentActionItems(res.data || []);
+        } catch (err) {
+            console.error("Failed to fetch action items", err);
+            setCurrentActionItems([]);
+        }
+    };
+
+    const handleEditActionItem = async (itemId) => {
+        try {
+            const res = await axios.get(`${url}/admin/rowwisetasks/${itemId}/editRowWiseTasks`);
+            setSelectedActionItem(res.data || {});
+        } catch (err) {
+            console.error("Failed to fetch action item for edit", err);
+            setSelectedActionItem({});
+        }
+    };
+
+    const handleSaveEditedActionItem = async (updatedData) => {
+        if (!updatedData || !updatedData._id) return;
+
+        try {
+            const { _id, ...updateFields } = updatedData; // <- use updated fields
+
+            await axios.patch(`${url}/admin/rowwisetasks/${_id}/editRowWiseTasks`, updateFields);
+
+            // ✅ After successful save, refresh action items
+            await handleOpenActionItemsModal(currentTaskId);
+
+            // ✅ Close the edit modal
+            const modal = window.bootstrap.Modal.getInstance(document.getElementById("editModal"));
+            if (modal) modal.hide();
+        } catch (err) {
+            console.error("Failed to save edited action item", err);
+        }
+    };
+
+
 
     useEffect(() => {
         fetchTasks();
@@ -53,6 +107,13 @@ const AllMeetings = () => {
         try {
             const res = await axios.get(`${url}/admin/tasks`);
             const reversedData = res.data.reverse();
+
+            // 🔥 Extract unique clients and advisors from this API's data:
+            const uniqueClients = Array.from(new Set(res.data.map(task => task.client?.fullName))).filter(Boolean);
+            setClientsList(uniqueClients);
+
+            const uniqueAdvisors = Array.from(new Set(res.data.map(task => task.advisor?.advisorFullName))).filter(Boolean);
+            setAdvisorsList(uniqueAdvisors);
 
             const counts = {
                 overdue: 0,
@@ -67,7 +128,6 @@ const AllMeetings = () => {
                     const status = task.status?.toLowerCase();
 
                     if (dueDate && dueDate < today && status !== "overdue") {
-                        // Update to overdue in backend
                         try {
                             await axios.patch(`${url}/admin/tasks/${task._id}/editTasks`, {
                                 status: "Overdue",
@@ -90,6 +150,7 @@ const AllMeetings = () => {
             setTasks(updatedTasks);
             setFilteredTasks(updatedTasks);
             setMeetingStats(counts);
+
         } catch (err) {
             setError("Failed to fetch tasks");
         } finally {
@@ -97,22 +158,56 @@ const AllMeetings = () => {
         }
     };
 
+    useEffect(() => {
+        let filtered = tasks;
+
+        if (selectedClient) {
+            filtered = filtered.filter(task => task.client?.fullName === selectedClient);
+        }
+
+        if (selectedAdvisor) {
+            filtered = filtered.filter(task => task.advisor?.advisorFullName === selectedAdvisor);
+        }
+
+        if (columnFilter) {
+            const lowerCaseFilter = columnFilter.toLowerCase();
+            filtered = filtered.filter((task) =>
+                Object.values(task).some(
+                    (value) =>
+                        value &&
+                        value.toString().toLowerCase().includes(lowerCaseFilter)
+                )
+            );
+        }
+
+        setFilteredTasks(filtered);
+    }, [selectedClient, selectedAdvisor, columnFilter, tasks]);
+
+
+
 
     const handleDelete = async () => {
-        if (!targetId) return;
+        if (!targetId || !deleteType) return; // deletetype check karlo delete karne se pehle
 
         setLoadingId(targetId);
         try {
-            await axios.delete(`${url}/admin/tasks/${targetId}`);
-            setTasks((currTasks) => currTasks.filter((task) => task._id !== targetId));
+            if (deleteType === "meeting") {
+                await axios.delete(`${url}/admin/tasks/${targetId}`);
+                setTasks((currTasks) => currTasks.filter((task) => task._id !== targetId));
+            } else if (deleteType === "actionItem") {
+                await axios.delete(`${url}/admin/rowwisetasks/${targetId}`);
+                setCurrentActionItems((curr) => curr.filter((item) => item._id !== targetId)); // you will update your actionItems list
+            }
         } catch (e) {
             console.log(e);
-            alert("Error deleting the task");
+            alert("Error deleting the item");
         } finally {
             setLoadingId(null);
-            setTargetId(null); // Reset the target after deletion
+            setTargetId(null);
+            setDeleteType(""); // yaha deletetype reset karna bhi padega
         }
     };
+
 
 
 
@@ -183,13 +278,16 @@ const AllMeetings = () => {
             minSize: 100,
             cell: ({ row }) => (
                 <a
-                    className="text-turtle-primary text-decoration-none d-flex align-items-center gap-2 fs-6 cursor-pointer" role="button"
-                    onClick={() => handleOpenModal("Action Items", row.original.actionItems || "No Action Items")}
+                    className="text-turtle-primary text-decoration-none d-flex align-items-center gap-2 fs-6 cursor-pointer"
+                    role="button"
+                    data-bs-toggle="modal"
+                    data-bs-target="#actionItemsModal"
+                    onClick={() => handleOpenActionItemsModal(row.original._id)}
                 >
                     <PiClipboardTextLight className="d-block fs-5" />
                     View Items
                 </a>
-            ),
+            )
         },
         {
             accessorKey: "detailedNotes",
@@ -199,12 +297,16 @@ const AllMeetings = () => {
             minSize: 100,
             cell: ({ row }) => (
                 <a
-                    className="text-turtle-primary text-decoration-none d-flex align-items-center gap-2 fs-6 " role="button"
+                    className="text-turtle-primary text-decoration-none d-flex align-items-center gap-2 fs-6 cursor-pointer"
+                    role="button"
+                    data-bs-toggle="modal"
+                    data-bs-target="#taskModal"
                     onClick={() => handleOpenModal("Detailed Notes", row.original.detailedNotes || "No Detailed Notes")}
                 >
                     <GrNotes className="d-block fs-6" />
                     View Notes
                 </a>
+
             ),
         },
         {
@@ -215,20 +317,66 @@ const AllMeetings = () => {
             minSize: 100,
             cell: ({ row }) => (
                 <a
-                    className="text-turtle-primary text-decoration-none d-flex align-items-center gap-2 fs-6 " role="button"
+                    className="text-turtle-primary text-decoration-none d-flex align-items-center gap-2 fs-6 cursor-pointer"
+                    role="button"
+                    data-bs-toggle="modal"
+                    data-bs-target="#taskModal"
                     onClick={() => handleOpenModal("Summary", row.original.summary || "No Summary")}
                 >
                     <RiStickyNoteAddLine className="d-block fs-5" />
                     View Summary
                 </a>
+
             ),
         },
         {
             accessorKey: "status",
             header: "Status",
             enableResizing: true,
-            size: 100,
+            size: 130,
             minSize: 100,
+            cell: ({ row, getValue }) => {
+                const value = getValue();
+                const id = row.original._id;
+
+                const handleStatusChange = async (e) => {
+                    const newStatus = e.target.value;
+                    try {
+                        await axios.patch(`${url}/admin/tasks/${id}/editTasks`, {
+                            status: newStatus,
+                        });
+
+                        console.log("Status updated successfully!");
+
+                        // 👇 Update the tasks array locally
+                        setTasks((prevTasks) =>
+                            prevTasks.map((task) =>
+                                task._id === id ? { ...task, status: newStatus } : task
+                            )
+                        );
+
+                    } catch (error) {
+                        console.error("Error updating status:", error);
+                    }
+                };
+
+                let statusClass = "";
+                if (value === "Completed") statusClass = styles["completed-status"];
+                else if (value === "Pending") statusClass = styles["pending-status"];
+                else if (value === "Overdue") statusClass = styles["overdue-status"];
+
+                return (
+                    <select
+                        className={`form-select form-select-sm ${statusClass}`}
+                        value={value || ""}
+                        onChange={handleStatusChange}
+                    >
+                        <option value="Pending">Pending</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Overdue">Overdue</option>
+                    </select>
+                );
+            }
         },
         {
             accessorKey: "_id",
@@ -250,11 +398,15 @@ const AllMeetings = () => {
                             className="btn p-2 btn-outline-turtle-secondary"
                             data-bs-toggle="modal"
                             data-bs-target="#deleteModal"
-                            onClick={() => setTargetId(row.original._id)}
+                            onClick={() => {
+                                setTargetId(row.original._id);
+                                setDeleteType("meeting"); // 👈 Set type when clicking delete button
+                            }}
                             disabled={loadingId === row.original._id}
                         >
                             {loadingId === row.original._id ? "Deleting..." : <RiDeleteBin6Line className="d-block fs-6" />}
                         </button>
+
                     </div>
                     <div className="d-flex gap-2">
                         {row.original.transcriptUrl ? (
@@ -345,26 +497,43 @@ const AllMeetings = () => {
                         <div className="col-12 col-md-6 d-flex align-items-center gap-3 flex-wrap">
                             <div className="d-flex align-items-center gap-2">
                                 <label className="fw-semibold mb-0">Advisor:</label>
-                                <select className="form-select form-select-sm rounded-3" style={{ width: '150px' }}>
-                                    <option>All Advisors</option>
-                                    {/* Add other options here */}
+                                <select
+                                    className="form-select form-select-sm rounded-3"
+                                    style={{ width: '150px' }}
+                                    value={selectedAdvisor}
+                                    onChange={(e) => setSelectedAdvisor(e.target.value)}
+                                >
+                                    <option value="">All Advisors</option>
+                                    {advisorsList.map((advisor, index) => (
+                                        <option key={index} value={advisor}>
+                                            {advisor}
+                                        </option>
+                                    ))}
                                 </select>
                             </div>
 
                             <div className="d-flex align-items-center gap-2">
                                 <label className="fw-semibold mb-0">Client:</label>
-                                <select className="form-select form-select-sm rounded-3" style={{ width: '150px' }}>
-                                    <option>All Clients</option>
-                                    {/* Add other options here */}
+                                <select
+                                    className="form-select form-select-sm rounded-3"
+                                    style={{ width: '150px' }}
+                                    value={selectedClient}
+                                    onChange={(e) => setSelectedClient(e.target.value)}
+                                >
+                                    <option value="">All Clients</option>
+                                    {clientsList.map((client, index) => (
+                                        <option key={index} value={client}>
+                                            {client}
+                                        </option>
+                                    ))}
                                 </select>
                             </div>
                         </div>
                     </div>
 
 
+
                     <div className={styles.tasksPageTableWrapper}>
-
-
 
                         <div className="table-responsive border border-1 rounded-4 border-secondary-subtle  px-3 bg-light-subtle">
 
@@ -388,25 +557,57 @@ const AllMeetings = () => {
                             />
                         </div>
 
+                        <TaskModal
+                            modalId="taskModal"
+                            headerText={modalTitle}
+                            bodyContent={modalContent}
+                        />
+
+
+                        <DeleteModal
+                            modalId="deleteModal"
+                            headerText="Confirm Deletion"
+                            bodyContent="Are you sure you want to delete this Meeting?"
+                            confirmButtonText="Delete"
+                            onConfirm={() => handleDelete(targetId)}
+                        />
+
+                        <ActionItemsModal
+                            modalId="actionItemsModal"
+                            headerText="Action Items"
+                            actionItems={currentActionItems}
+                            onEdit={handleEditActionItem}
+                            onDelete={(itemId) => {
+                                setTargetId(itemId);
+                                setDeleteType("actionItem");
+                            }}
+                            statusClasses={{
+                                completed: styles["completed-status"],
+                                pending: styles["pending-status"],
+                                overdue: styles["overdue-status"]
+                            }}
+                        />
+
+
+
+
+                        <EditModal
+                            modalId="editModal"
+                            headerText="Edit Action Item"
+                            actionItemData={selectedActionItem || {}}
+                            onSave={handleSaveEditedActionItem}
+                        />
+
+
+
                     </div>
 
                 </Fragment>
             )}
 
-            <TaskModal
-                show={showModal}
-                onHide={() => setShowModal(false)}
-                title={modalTitle}
-                content={modalContent}
-            />
 
-            <DeleteModal
-                modalId="deleteModal"
-                headerText="Confirm Deletion"
-                bodyContent="Are you sure you want to delete this Meeting?"
-                confirmButtonText="Delete"
-                onConfirm={() => handleDelete(targetId)}
-            />
+
+
 
         </div>
     )

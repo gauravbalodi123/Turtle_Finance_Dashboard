@@ -8,8 +8,8 @@ router.get("/rowwisetasks", async (req, res) => {
 
     try {
         const fetchAllRowWiseTasks = await RowwiseTask.find({})
-            .populate("client", "fullName email")   
-            .populate("advisor", "advisorFullName email"); 
+            .populate("client", "fullName email")
+            .populate("advisor", "advisorFullName email");
 
         res.status(200).json(fetchAllRowWiseTasks);
     }
@@ -17,6 +17,18 @@ router.get("/rowwisetasks", async (req, res) => {
         res.status(400).json({ msg: "Oops , Something went Wrong while adding the rowwisetasks" });
     }
 })
+
+router.get('/rowwisetasks/parent/:parentId', async (req, res) => {
+    const { parentId } = req.params;
+    try {
+        const actionItems = await RowwiseTask.find({ parentTaskId: parentId });
+        res.json(actionItems);
+    } catch (err) {
+        res.status(500).json({ message: "Failed to fetch action items" });
+    }
+});
+
+
 
 router.post('/rowwisetasks/addRowWiseTask', async (req, res) => {
     try {

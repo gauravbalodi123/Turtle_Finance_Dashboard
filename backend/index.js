@@ -31,12 +31,12 @@ app.use(cookieParser());  // Should come before routes that need cookies
 app.use(passport.initialize());  // Should come before routes that use passport
 
 // Import the authMiddleware to protect routes
-const { protect } = require('./middleware/authMiddleware');
+// const { protect } = require('./middleware/authMiddleware');
 
 // Apply routes with authMiddleware where needed (e.g., for /admin/clients route)
 app.use('/admin',adminClientRoutes);  // Example of protected route
 app.use('/admin',advisorRoutes);
-app.use('/admin',firefliesRouter);
+app.use(firefliesRouter);
 app.use('/admin',meetingAndTasksRoutes);
 app.use('/admin',rowWiseTaskRoutes);
 

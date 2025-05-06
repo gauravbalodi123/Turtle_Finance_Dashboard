@@ -2,8 +2,8 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const crypto = require("crypto");
 const axios = require("axios");
-const {seedTaskFromTranscript} = require('../tasksSeed')
-const {seedRowWiseTasksFromTranscript} = require('../seedRowWiseTasksFromTranscript')
+const { seedTaskFromTranscript } = require('../tasksSeed')
+const { seedRowWiseTasksFromTranscript } = require('../seedRowWiseTasksFromTranscript')
 require("dotenv").config();
 
 const router = express.Router();
@@ -48,8 +48,14 @@ router.post("/fireflies-webhook-turtlebackend", async (req, res) => {
 
                 console.log("✅ Transcription data for meeting:", meetingId);
                 console.dir(transcriptData, { depth: null, colors: true });
-                await seedTaskFromTranscript(transcriptData);
-                await seedRowWiseTasksFromTranscript(transcriptData);
+
+                const parentTaskId = await seedTaskFromTranscript(transcriptData); 
+
+                if (parentTaskId) {
+                    await seedRowWiseTasksFromTranscript(transcriptData, parentTaskId); 
+                }
+
+
                 return res.status(200).send("Transcript fetched and logged.");
             } catch (error) {
                 console.error("❌ Error during transcript fetch:", error.message);

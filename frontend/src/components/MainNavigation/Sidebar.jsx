@@ -14,7 +14,7 @@ const Sidebar = ({ sidebarRef, isSidebarOpen, toggleSidebar, backdrop, scroll })
   return (
     <aside
       ref={sidebarRef}
-      className={`offcanvas offcanvas-sm offcanvas-md offcanvas-start ${isSidebarOpen ? "show " : ""} ${styles.sidebar}`}
+      className={`offcanvas offcanvas-sm offcanvas-md offcanvas-start border-end ${isSidebarOpen ? "show " : ""} ${styles.sidebar}`}
       tabIndex="-1"
       id="customSidebar"
       data-bs-backdrop="false"

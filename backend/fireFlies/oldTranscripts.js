@@ -9,7 +9,7 @@ const API_KEY = '40fbef4f-c889-4eb2-9e29-8fa464cb255e';
 const API_URL = "https://api.fireflies.ai/graphql";
 
 // MongoDB connect
-mongoose.connect('mongodb://127.0.0.1:27017/turtle-finance-db')
+mongoose.connect("mongodb+srv://Gaurav:SFZJlOsXIpC6CDYt@cluster0.gt8apq8.mongodb.net/turtle-finance-db?retryWrites=true&w=majority&appName=Cluster0")
   .then(() => {
     console.log('✅ Connected to MongoDB');
     fetchTranscripts(); // Only start fetching after DB connection is ready
@@ -43,7 +43,7 @@ const QUERY = `
 `;
 
 const variables = {
-  participantEmail: 'sumanth.koushik@gmail.com', // or use process.env.PARTICIPANT_EMAIL
+  participantEmail:'hariteja.526@gmail.com', // or use process.env.PARTICIPANT_EMAIL
   limit: 1,
   skip: 0,
 };
@@ -70,8 +70,11 @@ async function fetchTranscripts() {
     }
 
     for (const transcript of transcripts) {
-      await seedTaskFromTranscript(transcript);
-      await seedRowWiseTasksFromTranscript(transcript);
+      const parentTaskId = await seedTaskFromTranscript(transcript);
+
+      if (parentTaskId) {
+        await seedRowWiseTasksFromTranscript(transcript, parentTaskId);
+      }
     }
 
     console.log(`✅ Done! Seeded ${transcripts.length} transcript(s) to DB.`);

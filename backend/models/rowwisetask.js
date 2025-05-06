@@ -9,6 +9,11 @@ const RowWiseTaskSchema = new mongoose.Schema(
       unique: true,
       required: true,
     },
+    parentTaskId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Task",
+      required: true,
+    },    
     client: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Client",

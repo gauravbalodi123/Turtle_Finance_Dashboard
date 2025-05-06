@@ -27,23 +27,26 @@ p.taskHeaderItem{
 
 .clientsPageTableWrapper .custom-style-table tr .active-status {
     color: #21a752;
+    font-size: 0.8rem;
     background-color: #def6e7;
     border-radius: 24px;
-    padding: 5px 15px;
+    padding: 2px 10px;
 }
 
 .clientsPageTableWrapper .custom-style-table tr .expired-status {
     color: #ef4444 ;
+    font-size: 0.8rem;
     background-color: #fde3e3;
     border-radius: 24px;
-    padding: 5px 15px;
+    padding: 2px 10px;
 }
 
 .clientsPageTableWrapper .custom-style-table tr .renewal-status {
     color: #d97808;
+    font-size: 0.8rem;
     background-color: #fef1db;
     border-radius: 24px;
-    padding: 5px 15px;
+    padding: 2px 10px;
 }
 
 
@@ -51,44 +54,50 @@ p.taskHeaderItem{
 
 .clientsPageTableWrapper .custom-style-table tr .not-started{
     color: red;
+    font-size: 0.8rem;
     background-color: lightcoral;
     border-radius: 24px;
-    padding: 5px 15px;
+    padding: 2px 10px;
 }
 
 .clientsPageTableWrapper .custom-style-table tr .ria-allocated{
     color: yellow;
+    font-size: 0.8rem;
     background-color: rgb(186, 186, 59);
     border-radius: 24px;
-    padding: 5px 15px;
+    padding: 2px 10px;
 }
 
 .clientsPageTableWrapper .custom-style-table tr .payment-received{
     color: green;
+    font-size: 0.8rem;
     background-color: lawngreen;
     border-radius: 24px;
-    padding: 5px 15px;
+    padding: 2px 10px;
 }
 
 .clientsPageTableWrapper .custom-style-table tr .risk-profile{
     color: rgb(20, 238, 20);
+    font-size: 0.8rem;
     background-color: lightgreen;
     border-radius: 24px;
-    padding: 5px 15px;
+    padding: 2px 10px;
 }
 
 .clientsPageTableWrapper .custom-style-table tr .kick-off{
     color: blue;
+    font-size: 0.8rem;
     background-color: lightblue;
     border-radius: 24px;
-    padding: 5px 15px;
+    padding: 2px 10px;
 }
 
 .clientsPageTableWrapper .custom-style-table tr .contract-signed{
     color: rgb(96, 228, 246);
+    font-size: 0.8rem;
     background-color: darkolivegreen;
     border-radius: 24px;
-    padding: 5px 15px;
+    padding: 2px 10px;
 }
 
 

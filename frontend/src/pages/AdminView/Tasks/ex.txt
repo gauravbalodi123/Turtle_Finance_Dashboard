@@ -1,0 +1,69 @@
+
+    useEffect(() => {
+        fetchTasks();
+        fetchClientsAndAdvisors(); // 🔥 Fetch dropdown lists separately
+    }, []);
+
+
+    const fetchTasks = async () => {
+        try {
+            const res = await axios.get(`${url}/admin/rowwisetasks`);
+            const reversedData = res.data.reverse();
+
+            const counts = {
+                overdue: 0,
+                pending: 0,
+                completed: 0,
+            };
+
+            const today = new Date();
+            const updatedTasks = await Promise.all(
+                reversedData.map(async (task) => {
+                    const dueDate = task.dueDate ? new Date(task.dueDate) : null;
+                    const status = task.status?.toLowerCase();
+
+                    if (dueDate && dueDate < today && status !== "overdue" && status !== "completed") {
+                        try {
+                            await axios.patch(`${url}/admin/rowwisetasks/${task._id}/editRowWiseTasks`, {
+                                status: "Overdue",
+                            });
+                            task.status = "Overdue";
+                            counts.overdue++;
+                        } catch (err) {
+                            console.error(`Failed to update task ${task._id} to overdue`, err);
+                        }
+                    } else {
+                        if (status === "overdue") counts.overdue++;
+                        else if (status === "pending") counts.pending++;
+                        else if (status === "completed") counts.completed++;
+                    }
+
+                    return task;
+                })
+            );
+
+            setRowWiseTasks(updatedTasks);
+            setFilteredRowWiseTasks(updatedTasks);
+            setTaskStats(counts);
+
+        } catch (err) {
+            setError("Failed to fetch rowwisetasks");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const fetchClientsAndAdvisors = async () => {
+        try {
+            const clientsRes = await axios.get(`${url}/admin/clients`);
+            const advisorsRes = await axios.get(`${url}/admin/advisors`);
+
+            const uniqueClients = Array.from(new Set(clientsRes.data.map(c => c.fullName))).filter(Boolean).sort();
+            setClientsList(uniqueClients);
+
+            const uniqueAdvisors = Array.from(new Set(advisorsRes.data.map(a => a.advisorFullName))).filter(Boolean).sort();
+            setAdvisorsList(uniqueAdvisors);
+        } catch (err) {
+            console.error("Failed to fetch clients or advisors", err);
+        }
+    };

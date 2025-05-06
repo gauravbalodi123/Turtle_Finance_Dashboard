@@ -29,7 +29,7 @@ function parseActionItems(rawActionItems) {
     return items;
 }
 
-async function seedRowWiseTasksFromTranscript(transcriptData) {
+async function seedRowWiseTasksFromTranscript(transcriptData,parentTaskId) {
     try {
         const emails = transcriptData.participants || [];
         let matchedClient = null;
@@ -59,6 +59,7 @@ async function seedRowWiseTasksFromTranscript(transcriptData) {
             date: transcriptData.date,
             dueDate: getDueDateSevenDaysLater(transcriptData.date), // ⏳ add dueDate here
             client: matchedClient._id,
+            parentTaskId, 
         };
 
         if (matchedAdvisor) {

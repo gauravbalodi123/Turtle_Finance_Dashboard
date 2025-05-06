@@ -12,7 +12,10 @@ import { RiDeleteBin6Line } from "react-icons/ri";
 import { MdOutlineErrorOutline } from "react-icons/md";
 import { GrStatusGood } from "react-icons/gr";
 import { FaRegClock } from "react-icons/fa";
+import { LuNotebook } from "react-icons/lu";
 import DeleteModal from "../../../components/SmallerComponents/DeleteModal";
+import ShowrowwisetaskModal from "../../../components/SmallerComponents/ShowrowwisetaskModal";
+
 
 const AllMeetings = () => {
     axios.defaults.withCredentials = true
@@ -29,6 +32,12 @@ const AllMeetings = () => {
         pending: 0,
         completed: 0,
     });
+    const [selectedClient, setSelectedClient] = useState('');
+    const [selectedAdvisor, setSelectedAdvisor] = useState('');
+    const [clientsList, setClientsList] = useState([]);
+    const [advisorsList, setAdvisorsList] = useState([]);
+    const [currentItem, setCurrentItem] = useState({});
+
 
 
 
@@ -41,6 +50,13 @@ const AllMeetings = () => {
         try {
             const res = await axios.get(`${url}/admin/rowwisetasks`);
             const reversedData = res.data.reverse();
+
+            // 🔥 Extract unique clients and advisors immediately from raw data:
+            const uniqueClients = Array.from(new Set(res.data.map(task => task.client?.fullName))).filter(Boolean);
+            setClientsList(uniqueClients);
+
+            const uniqueAdvisors = Array.from(new Set(res.data.map(task => task.advisor?.advisorFullName))).filter(Boolean);
+            setAdvisorsList(uniqueAdvisors);
 
             const counts = {
                 overdue: 0,
@@ -55,7 +71,6 @@ const AllMeetings = () => {
                     const status = task.status?.toLowerCase();
 
                     if (dueDate && dueDate < today && status !== "overdue" && status !== "completed") {
-                        // Update status in backend
                         try {
                             await axios.patch(`${url}/admin/rowwisetasks/${task._id}/editRowWiseTasks`, {
                                 status: "Overdue",
@@ -66,7 +81,6 @@ const AllMeetings = () => {
                             console.error(`Failed to update task ${task._id} to overdue`, err);
                         }
                     } else {
-                        // Count based on current status
                         if (status === "overdue") counts.overdue++;
                         else if (status === "pending") counts.pending++;
                         else if (status === "completed") counts.completed++;
@@ -79,12 +93,43 @@ const AllMeetings = () => {
             setRowWiseTasks(updatedTasks);
             setFilteredRowWiseTasks(updatedTasks);
             setTaskStats(counts);
+
         } catch (err) {
             setError("Failed to fetch rowwisetasks");
         } finally {
             setIsLoading(false);
         }
     };
+
+
+
+    useEffect(() => {
+        let filtered = rowWiseTasks;
+
+        if (selectedClient) {
+            filtered = filtered.filter(task => task.client?.fullName === selectedClient);
+        }
+
+        if (selectedAdvisor) {
+            filtered = filtered.filter(task => task.advisor?.advisorFullName === selectedAdvisor);
+        }
+
+        // Also apply column search if user typed something
+        if (columnFilter) {
+            const lowerCaseFilter = columnFilter.toLowerCase();
+            filtered = filtered.filter((task) =>
+                Object.values(task).some(
+                    (value) =>
+                        value &&
+                        value.toString().toLowerCase().includes(lowerCaseFilter)
+                )
+            );
+        }
+
+        setFilteredRowWiseTasks(filtered);
+    }, [selectedClient, selectedAdvisor, columnFilter, rowWiseTasks]);
+
+
 
 
 
@@ -172,8 +217,55 @@ const AllMeetings = () => {
             accessorKey: "status",
             header: "Status",
             enableResizing: true,
-            size: 100,
+            size: 130,
             minSize: 100,
+            cell: ({ row, getValue }) => {
+                const value = getValue();
+                const id = row.original._id;
+
+                const handleStatusChange = async (e) => {
+                    const newStatus = e.target.value;
+                    try {
+                        await axios.patch(`${url}/admin/rowwisetasks/${id}/editRowWiseTasks`, {
+                            status: newStatus,
+                        });
+
+                        console.log("Row-wise Task Status updated successfully!");
+
+                        setRowWiseTasks((prevTasks) =>
+                            prevTasks.map((task) =>
+                                task._id === id ? { ...task, status: newStatus } : task
+                            )
+                        );
+
+                        setFilteredRowWiseTasks((prevTasks) =>
+                            prevTasks.map((task) =>
+                                task._id === id ? { ...task, status: newStatus } : task
+                            )
+                        );
+
+                    } catch (error) {
+                        console.error("Error updating row-wise task status:", error);
+                    }
+                };
+
+                let statusClass = "";
+                if (value === "Completed") statusClass = styles["completed-status"];
+                else if (value === "Pending") statusClass = styles["pending-status"];
+                else if (value === "Overdue") statusClass = styles["overdue-status"];
+
+                return (
+                    <select
+                        className={`form-select form-select-sm ${statusClass}`}
+                        value={value || ""}
+                        onChange={handleStatusChange}
+                    >
+                        <option value="Pending">Pending</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Overdue">Overdue</option>
+                    </select>
+                );
+            }
         },
         {
             accessorKey: "responsiblePerson",
@@ -196,16 +288,34 @@ const AllMeetings = () => {
             accessorKey: "_id",
             header: "Action",
             enableResizing: false,
-            size: 100,
+            size: 140,
             minSize: 100,
             cell: ({ row }) => (
                 <div className="d-flex gap-2">
+                    <button
+                        type="button"
+                        className="btn p-2 btn-outline-turtle-secondary"
+                        data-bs-toggle="modal"
+                        data-bs-target="#showRowWiseTaskModal"
+                        onClick={() => setCurrentItem({
+                            actionItems: row.original.actionItems,
+                            status: row.original.status,
+                            client: row.original.client?.fullName,
+                            advisor: row.original.advisor?.advisorFullName,
+                            responsiblePerson: row.original.responsiblePerson,
+                            dueDate: row.original.dueDate
+                        })}
+                    >
+                        <LuNotebook className="d-block fs-6" />
+                    </button>
+
                     <Link
                         to={`/adminautharized/admin/rowwisetasks/${row.original._id}/editRowWiseTasks`}
                         className="btn p-2 btn-outline-turtle-secondary"
                     >
                         <FaRegEdit className="d-block fs-6" />
                     </Link>
+
                     <button
                         type="button"
                         className="btn p-2 btn-outline-turtle-secondary"
@@ -218,6 +328,7 @@ const AllMeetings = () => {
                 </div>
             ),
         }
+
 
     ];
 
@@ -287,22 +398,41 @@ const AllMeetings = () => {
                     <div className="row my-4">
                         <div className="col-12 col-md-6 d-flex align-items-center gap-3 flex-wrap">
                             <div className="d-flex align-items-center gap-2">
-                                <label className="fw-semibold mb-0">Status:</label>
-                                <select className="form-select form-select-sm rounded-3" style={{ width: '150px' }}>
-                                    <option>All Advisors</option>
-                                    {/* Add other options here */}
+                                <label className="fw-semibold mb-0">Advisor:</label>
+                                <select
+                                    className="form-select form-select-sm rounded-3"
+                                    style={{ width: '150px' }}
+                                    value={selectedAdvisor}
+                                    onChange={(e) => setSelectedAdvisor(e.target.value)}
+                                >
+                                    <option value="">All Advisors</option>
+                                    {advisorsList.map((advisor, index) => (
+                                        <option key={index} value={advisor}>
+                                            {advisor}
+                                        </option>
+                                    ))}
                                 </select>
                             </div>
 
                             <div className="d-flex align-items-center gap-2">
-                                <label className="fw-semibold mb-0">Group By:</label>
-                                <select className="form-select form-select-sm rounded-3" style={{ width: '150px' }}>
-                                    <option>All Clients</option>
-                                    {/* Add other options here */}
+                                <label className="fw-semibold mb-0">Client:</label>
+                                <select
+                                    className="form-select form-select-sm rounded-3"
+                                    style={{ width: '150px' }}
+                                    value={selectedClient}
+                                    onChange={(e) => setSelectedClient(e.target.value)}
+                                >
+                                    <option value="">All Clients</option>
+                                    {clientsList.map((client, index) => (
+                                        <option key={index} value={client}>
+                                            {client}
+                                        </option>
+                                    ))}
                                 </select>
                             </div>
                         </div>
                     </div>
+
 
                     <div className={styles.rowWiseTasksPageTableWrapper}>
 
@@ -335,6 +465,17 @@ const AllMeetings = () => {
                                 confirmButtonText="Delete"
                                 onConfirm={() => handleDelete(targetId)}
                             />
+
+                            <ShowrowwisetaskModal
+                                modalId="showRowWiseTaskModal"
+                                item={currentItem}
+                                statusClasses={{
+                                    completed: styles["completed-status"],
+                                    pending: styles["pending-status"],
+                                    overdue: styles["overdue-status"]
+                                }}
+                            />
+
 
 
                         </div>

@@ -45,8 +45,9 @@ async function seedTaskFromTranscript(transcriptData) {
             newTask.advisor = matchedAdvisor._id;
         }
 
-        await Task.create(newTask);
+        const createdTask = await Task.create(newTask); 
         console.log("✅ Task created from transcript successfully!");
+        return createdTask._id; 
     } catch (err) {
         console.error("❌ Error creating task from transcript:", err.message);
     }

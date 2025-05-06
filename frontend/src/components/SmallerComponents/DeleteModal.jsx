@@ -20,7 +20,7 @@ const DeleteModal = ({
             >
                 <div className="modal-dialog">
                     <div className="modal-content">
-                        <div className="modal-header">
+                        <div className="modal-header border-bottom-0 ">
                             <h1 className="modal-title fs-5" id={`${modalId}Label`}>
                                 {headerText}
                             </h1>
@@ -31,10 +31,12 @@ const DeleteModal = ({
                                 aria-label="Close"
                             ></button>
                         </div>
-                        <div className="modal-body">
+
+                        <div className="modal-body py-0">
                             {bodyContent}
                         </div>
-                        <div className="modal-footer">
+
+                        <div className="modal-footer border-top-0">
                             <button
                                 type="button"
                                 className="btn btn-secondary"

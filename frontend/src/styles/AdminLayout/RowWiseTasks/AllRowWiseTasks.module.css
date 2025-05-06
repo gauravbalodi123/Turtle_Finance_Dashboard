@@ -14,3 +14,31 @@ p.taskHeaderItem{
 .rowWiseTasksPageTableWrapper .custom-style-table thead th {
     color: #8d9aaa ;
 }
+
+.rowWiseTasksPageTableWrapper .custom-style-table tr .pending-status,.rowWiseTasksPageTableWrapper .pending-status{
+    color: #E09238;
+    font-size: 0.8rem;
+    background-color: #FDF3E1;
+    border-radius: 24px;
+    padding: 2px 10px;
+    font-weight: 500;
+}
+
+.rowWiseTasksPageTableWrapper .custom-style-table tr .completed-status,.rowWiseTasksPageTableWrapper .completed-status{
+    color: #16A45E;
+    font-size: 0.8rem;
+    background-color: #def6e7;
+    border-radius: 24px;
+    padding: 2px 10px;
+    font-weight: 500;
+}
+
+.rowWiseTasksPageTableWrapper .custom-style-table tr .overdue-status , .rowWiseTasksPageTableWrapper .overdue-status{
+    color: #f0716d;
+    font-size: 0.8rem;
+    background-color: #fde3e3;
+    border-radius: 24px;
+    padding: 2px 10px;
+    font-weight: 500;
+}
+
