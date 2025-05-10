@@ -263,13 +263,13 @@ const AllMeetings = () => {
             cell: ({ row }) =>
                 row.original.date ? new Date(row.original.date).toLocaleDateString("en-GB") : "N/A",
         },
-        {
-            accessorKey: "meetingNumber",
-            header: "Meeting Number",
-            enableResizing: true,
-            size: 160,
-            minSize: 120,
-        },
+        // {
+        //     accessorKey: "meetingNumber",
+        //     header: "Meeting Number",
+        //     enableResizing: true,
+        //     size: 160,
+        //     minSize: 120,
+        // },
         {
             accessorKey: "actionItems",
             header: "Action Items",
@@ -309,75 +309,75 @@ const AllMeetings = () => {
 
             ),
         },
-        {
-            accessorKey: "summary",
-            header: "Summary",
-            enableResizing: true,
-            size: 150,
-            minSize: 100,
-            cell: ({ row }) => (
-                <a
-                    className="text-turtle-primary text-decoration-none d-flex align-items-center gap-2 fs-6 cursor-pointer"
-                    role="button"
-                    data-bs-toggle="modal"
-                    data-bs-target="#taskModal"
-                    onClick={() => handleOpenModal("Summary", row.original.summary || "No Summary")}
-                >
-                    <RiStickyNoteAddLine className="d-block fs-5" />
-                    View Summary
-                </a>
+        // {
+        //     accessorKey: "summary",
+        //     header: "Summary",
+        //     enableResizing: true,
+        //     size: 150,
+        //     minSize: 100,
+        //     cell: ({ row }) => (
+        //         <a
+        //             className="text-turtle-primary text-decoration-none d-flex align-items-center gap-2 fs-6 cursor-pointer"
+        //             role="button"
+        //             data-bs-toggle="modal"
+        //             data-bs-target="#taskModal"
+        //             onClick={() => handleOpenModal("Summary", row.original.summary || "No Summary")}
+        //         >
+        //             <RiStickyNoteAddLine className="d-block fs-5" />
+        //             View Summary
+        //         </a>
 
-            ),
-        },
-        {
-            accessorKey: "status",
-            header: "Status",
-            enableResizing: true,
-            size: 130,
-            minSize: 100,
-            cell: ({ row, getValue }) => {
-                const value = getValue();
-                const id = row.original._id;
+        //     ),
+        // },
+        // {
+        //     accessorKey: "status",
+        //     header: "Status",
+        //     enableResizing: true,
+        //     size: 130,
+        //     minSize: 100,
+        //     cell: ({ row, getValue }) => {
+        //         const value = getValue();
+        //         const id = row.original._id;
 
-                const handleStatusChange = async (e) => {
-                    const newStatus = e.target.value;
-                    try {
-                        await axios.patch(`${url}/admin/tasks/${id}/editTasks`, {
-                            status: newStatus,
-                        });
+        //         const handleStatusChange = async (e) => {
+        //             const newStatus = e.target.value;
+        //             try {
+        //                 await axios.patch(`${url}/admin/tasks/${id}/editTasks`, {
+        //                     status: newStatus,
+        //                 });
 
-                        console.log("Status updated successfully!");
+        //                 console.log("Status updated successfully!");
 
-                        // 👇 Update the tasks array locally
-                        setTasks((prevTasks) =>
-                            prevTasks.map((task) =>
-                                task._id === id ? { ...task, status: newStatus } : task
-                            )
-                        );
+        //                 // 👇 Update the tasks array locally
+        //                 setTasks((prevTasks) =>
+        //                     prevTasks.map((task) =>
+        //                         task._id === id ? { ...task, status: newStatus } : task
+        //                     )
+        //                 );
 
-                    } catch (error) {
-                        console.error("Error updating status:", error);
-                    }
-                };
+        //             } catch (error) {
+        //                 console.error("Error updating status:", error);
+        //             }
+        //         };
 
-                let statusClass = "";
-                if (value === "Completed") statusClass = styles["completed-status"];
-                else if (value === "Pending") statusClass = styles["pending-status"];
-                else if (value === "Overdue") statusClass = styles["overdue-status"];
+        //         let statusClass = "";
+        //         if (value === "Completed") statusClass = styles["completed-status"];
+        //         else if (value === "Pending") statusClass = styles["pending-status"];
+        //         else if (value === "Overdue") statusClass = styles["overdue-status"];
 
-                return (
-                    <select
-                        className={`form-select form-select-sm ${statusClass}`}
-                        value={value || ""}
-                        onChange={handleStatusChange}
-                    >
-                        <option value="Pending">Pending</option>
-                        <option value="Completed">Completed</option>
-                        <option value="Overdue">Overdue</option>
-                    </select>
-                );
-            }
-        },
+        //         return (
+        //             <select
+        //                 className={`form-select form-select-sm ${statusClass}`}
+        //                 value={value || ""}
+        //                 onChange={handleStatusChange}
+        //             >
+        //                 <option value="Pending">Pending</option>
+        //                 <option value="Completed">Completed</option>
+        //                 <option value="Overdue">Overdue</option>
+        //             </select>
+        //         );
+        //     }
+        // },
         {
             accessorKey: "_id",
             header: "Action",

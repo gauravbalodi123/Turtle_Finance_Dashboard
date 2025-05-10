@@ -43,7 +43,7 @@ const QUERY = `
 `;
 
 const variables = {
-  participantEmail:'hariteja.526@gmail.com', // or use process.env.PARTICIPANT_EMAIL
+  participantEmail:'ahujanit@gmail.com', // or use process.env.PARTICIPANT_EMAIL
   limit: 1,
   skip: 0,
 };

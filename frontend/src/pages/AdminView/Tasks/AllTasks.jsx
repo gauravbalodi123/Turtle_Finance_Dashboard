@@ -15,6 +15,11 @@ import { FaRegClock } from "react-icons/fa";
 import { LuNotebook } from "react-icons/lu";
 import DeleteModal from "../../../components/SmallerComponents/DeleteModal";
 import ShowrowwisetaskModal from "../../../components/SmallerComponents/ShowrowwisetaskModal";
+import * as bootstrap from "bootstrap";  // Correct import
+
+// Attach bootstrap to window (needed because we are using window.bootstrap)
+window.bootstrap = bootstrap;
+
 
 
 const AllMeetings = () => {
@@ -37,6 +42,63 @@ const AllMeetings = () => {
     const [clientsList, setClientsList] = useState([]);
     const [advisorsList, setAdvisorsList] = useState([]);
     const [currentItem, setCurrentItem] = useState({});
+
+
+
+
+
+    useEffect(() => {
+        console.log("[DEBUG] Running tooltip initialization...");
+
+        const initializeTooltips = () => {
+            // First destroy existing tooltips using Bootstrap's dispose method
+            const tooltipElements = Array.from(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipElements.forEach(el => {
+                try {
+                    const existingTooltip = bootstrap.Tooltip.getInstance(el);
+                    if (existingTooltip) {
+                        existingTooltip.dispose();
+                    }
+                } catch (err) {
+                    console.error("[DEBUG] Tooltip dispose error:", err);
+                }
+            });
+
+            console.log("[DEBUG] Reinitializing tooltips...");
+            tooltipElements.forEach(tooltipTriggerEl => {
+                try {
+                    const tooltipInstance = new bootstrap.Tooltip(tooltipTriggerEl);
+                    console.log("[DEBUG] Tooltip initialized:", tooltipInstance);
+                } catch (err) {
+                    console.error("[DEBUG] Tooltip initialization error:", err);
+                }
+            });
+
+            console.log("[DEBUG] Tooltip initialization complete.");
+        };
+
+        // Call it immediately whenever filteredRowWiseTasks changes
+        initializeTooltips();
+
+        // Attach listeners to ALL modals dynamically
+        const allModals = Array.from(document.querySelectorAll('.modal'));
+        const handleModalShow = (event) => {
+            console.log(`[DEBUG] Modal (${event.target.id}) opened, re-initializing tooltips...`);
+            initializeTooltips();
+        };
+
+        allModals.forEach(modal => {
+            modal.addEventListener('shown.bs.modal', handleModalShow);
+        });
+
+        // Cleanup event listeners
+        return () => {
+            allModals.forEach(modal => {
+                modal.removeEventListener('shown.bs.modal', handleModalShow);
+            });
+        };
+
+    }, [filteredRowWiseTasks]);
 
 
 
@@ -172,21 +234,32 @@ const AllMeetings = () => {
     }, [columnFilter, rowWiseTasks]);
 
     const columns = [
-        {
-            accessorKey: "title",
-            header: "Title",
-            enableResizing: true,
-            size: 260,
-            minSize: 200,
-            cell: ({ row }) => row.original.title || "No Title",
-        },
+        // {
+        //     accessorKey: "title",
+        //     header: "Title",
+        //     enableResizing: true,
+        //     size: 260,
+        //     minSize: 200,
+        //     cell: ({ row }) => row.original.title || "No Title",
+        // },
         {
             accessorKey: "actionItems",
             header: "Action Items",
             enableResizing: true,
-            size: 260,
-            minSize: 260,
-            cell: ({ row }) => row.original.actionItems || "No Action Items",
+            size: 200,
+            minSize: 150,
+            cell: ({ row }) => (
+                <div
+                    className={`${styles.customtruncatetwolines}`}
+                    data-bs-toggle="tooltip"
+                    data-bs-placement="top"
+                    data-bs-title={row.original.actionItems || "No Action Items"}
+                    
+                >
+                    {row.original.actionItems || "No Action Items"}
+                </div>
+            )
+
         },
         {
             accessorKey: "client.fullName",
@@ -217,7 +290,7 @@ const AllMeetings = () => {
             accessorKey: "status",
             header: "Status",
             enableResizing: true,
-            size: 130,
+            size: 125,
             minSize: 100,
             cell: ({ row, getValue }) => {
                 const value = getValue();
@@ -271,7 +344,7 @@ const AllMeetings = () => {
             accessorKey: "responsiblePerson",
             header: "Responsible Person",
             enableResizing: true,
-            size: 180,
+            size: 170,
             minSize: 150,
             cell: ({ row }) => row.original.responsiblePerson || "N/A",
         },
@@ -279,8 +352,8 @@ const AllMeetings = () => {
             accessorKey: "dueDate",
             header: "Due Date",
             enableResizing: true,
-            size: 120,
-            minSize: 120,
+            size: 110,
+            minSize: 100,
             cell: ({ row }) =>
                 row.original.dueDate ? new Date(row.original.dueDate).toLocaleDateString("en-GB") : "N/A",
         },

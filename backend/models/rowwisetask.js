@@ -12,7 +12,6 @@ const RowWiseTaskSchema = new mongoose.Schema(
     parentTaskId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Task",
-      required: true,
     },    
     client: {
       type: mongoose.Schema.Types.ObjectId,

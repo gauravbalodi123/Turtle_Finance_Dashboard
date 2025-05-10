@@ -42,3 +42,15 @@ p.taskHeaderItem{
     font-weight: 500;
 }
 
+.customtruncatetwolines {
+    max-width: 240px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2; /*  Show 2 lines before truncating */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-break: break-word;
+    
+}
+
+
