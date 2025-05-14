@@ -50,6 +50,7 @@ p.taskHeaderItem{
     overflow: hidden;
     text-overflow: ellipsis;
     word-break: break-word;
+    cursor: pointer;
     
 }
 

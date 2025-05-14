@@ -5,8 +5,7 @@ import App from './App.jsx';
 import './index.css';
 import './styles/custom-bootstrap/main.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
-import * as bootstrap from 'bootstrap';
-window.bootstrap = bootstrap;
+
 
 
 createRoot(document.getElementById('root')).render(

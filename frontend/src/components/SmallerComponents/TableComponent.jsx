@@ -1,4 +1,4 @@
-import React, { Fragment } from "react";
+import React, { Fragment,useEffect } from "react";
 import {
     useReactTable,
     getCoreRowModel,
@@ -21,6 +21,25 @@ const TableComponent = ({ data, columns, pageSize, className }) => {
         columnResizeMode: "onChange",
         initialState: { pagination: { pageSize } },
     });
+
+    useEffect(() => {
+        const initializeTooltips = () => {
+            const tooltipElements = Array.from(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipElements.forEach(el => {
+                try {
+                    const existingTooltip = bootstrap.Tooltip.getInstance(el);
+                    if (existingTooltip) {
+                        existingTooltip.dispose();
+                    }
+                    new bootstrap.Tooltip(el);
+                } catch (err) {
+                    console.error("Tooltip error:", err);
+                }
+            });
+        };
+
+        initializeTooltips(); // 🛠 Re-initialize tooltips on page change
+    }, [table.getState().pagination.pageIndex, table.getState().pagination.pageSize]);
 
     return (
         <Fragment>

@@ -15,10 +15,8 @@ import { FaRegClock } from "react-icons/fa";
 import { LuNotebook } from "react-icons/lu";
 import DeleteModal from "../../../components/SmallerComponents/DeleteModal";
 import ShowrowwisetaskModal from "../../../components/SmallerComponents/ShowrowwisetaskModal";
-import * as bootstrap from "bootstrap";  // Correct import
+import EditFormModal from "../../../components/SmallerComponents/EditFormModal";
 
-// Attach bootstrap to window (needed because we are using window.bootstrap)
-window.bootstrap = bootstrap;
 
 
 
@@ -44,6 +42,28 @@ const AllMeetings = () => {
     const [currentItem, setCurrentItem] = useState({});
 
 
+
+
+    const [clients, setClients] = useState([]);
+    const [advisors, setAdvisors] = useState([]);
+    const [selectedTaskId, setSelectedTaskId] = useState(null);
+    const [refresh, setRefresh] = useState(false);
+
+    useEffect(() => {
+        const fetchDropdownData = async () => {
+            const [cRes, aRes] = await Promise.all([
+                axios.get(`${url}/admin/clients`),
+                axios.get(`${url}/admin/advisors`)
+            ]);
+            setClients(cRes.data);
+            setAdvisors(aRes.data);
+        };
+        fetchDropdownData();
+    }, []);
+
+    const openEditModal = (taskId) => {
+        setSelectedTaskId(taskId);
+    };
 
 
 
@@ -254,7 +274,7 @@ const AllMeetings = () => {
                     data-bs-toggle="tooltip"
                     data-bs-placement="top"
                     data-bs-title={row.original.actionItems || "No Action Items"}
-                    
+
                 >
                     {row.original.actionItems || "No Action Items"}
                 </div>
@@ -382,12 +402,16 @@ const AllMeetings = () => {
                         <LuNotebook className="d-block fs-6" />
                     </button>
 
-                    <Link
-                        to={`/adminautharized/admin/rowwisetasks/${row.original._id}/editRowWiseTasks`}
+                    <button
+                        type="button"
                         className="btn p-2 btn-outline-turtle-secondary"
+                        data-bs-toggle="modal"
+                        data-bs-target="#editFormModal"
+                        onClick={() => openEditModal(row.original._id)} 
                     >
                         <FaRegEdit className="d-block fs-6" />
-                    </Link>
+                    </button>
+
 
                     <button
                         type="button"
@@ -549,7 +573,13 @@ const AllMeetings = () => {
                                 }}
                             />
 
-
+                            <EditFormModal
+                                id={selectedTaskId}
+                                url={url}
+                                clients={clients}
+                                advisors={advisors}
+                                onSuccess={() => fetchTasks()}
+                            />
 
                         </div>
                     </div>

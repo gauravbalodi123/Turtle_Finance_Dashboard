@@ -1,6 +1,7 @@
 import React, { Fragment, useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+import Select from 'react-select';  // Import react-select
 
 const EditTasks = () => {
     axios.defaults.withCredentials = true
@@ -78,8 +79,8 @@ const EditTasks = () => {
         setLoading(true);
 
         const updatedData = {
-            client: getValueOrNull(clientRef),
-            advisor: getValueOrNull(advisorRef),
+            client: formData.client, // ✅ get from formData
+            advisor: formData.advisor, // ✅ get from formData
             title: getValueOrNull(titleRef),
             // participants: getArrayFromInput(participantsRef),
             date: getValueOrNull(dateRef),
@@ -103,6 +104,17 @@ const EditTasks = () => {
 
     if (!formData) return <p>Loading...</p>;
 
+    // Transform the clients and advisors into the format needed for react-select
+    const clientOptions = clients.map(client => ({
+        value: client._id,
+        label: `${client.fullName} (${client.email})`,
+    }));
+
+    const advisorOptions = advisors.map(advisor => ({
+        value: advisor._id,
+        label: `${advisor.advisorFullName} (${advisor.email})`,
+    }));
+
     return (
         <Fragment>
             <div className="container my-4">
@@ -111,27 +123,40 @@ const EditTasks = () => {
 
                     <form onSubmit={handleSubmit}>
                         <div className="row mb-3">
+                            {/* Client Dropdown */}
                             <div className="col-md-6">
                                 <label className="form-label">Client</label>
-                                <select className="form-select" ref={clientRef} defaultValue={formData.client} required>
-                                    <option value="">Select a client</option>
-                                    {clients.map((client) => (
-                                        <option key={client._id} value={client._id}>
-                                            {client.fullName} ({client.email})
-                                        </option>
-                                    ))}
-                                </select>
+                                <Select
+                                    options={clientOptions}
+                                    value={clientOptions.find(client => client.value === formData.client)}
+                                    onChange={(selectedOption) => {
+                                        setFormData(prev => ({
+                                            ...prev,
+                                            client: selectedOption ? selectedOption.value : "", // Save selected client id into formData
+                                        }));
+                                    }}
+                                    placeholder="Select a client"
+                                    isClearable={true}
+                                />
+
                             </div>
+
+                            {/* Advisor Dropdown */}
                             <div className="col-md-6">
                                 <label className="form-label">Advisor</label>
-                                <select className="form-select" ref={advisorRef} defaultValue={formData.advisor || ""}>
-                                    <option value="">Select a advisor</option>
-                                    {advisors.map((advisor) => (
-                                        <option key={advisor._id} value={advisor._id}>
-                                            {advisor.advisorFullName} ({advisor.email})
-                                        </option>
-                                    ))}
-                                </select>
+                                <Select
+                                    options={advisorOptions}
+                                    value={advisorOptions.find(advisor => advisor.value === formData.advisor)}
+                                    onChange={(selectedOption) => {
+                                        setFormData(prev => ({
+                                            ...prev,
+                                            advisor: selectedOption ? selectedOption.value : "", // Save selected advisor id into formData
+                                        }));
+                                    }}
+                                    placeholder="Select an advisor"
+                                    isClearable={true}
+                                />
+
                             </div>
                         </div>
 
@@ -157,7 +182,7 @@ const EditTasks = () => {
                             </div>
                         </div>
 
-                        
+
 
                         <div className="mb-3">
                             <label className="form-label">Action Items</label>

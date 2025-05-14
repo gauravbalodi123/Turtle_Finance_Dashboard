@@ -24,7 +24,7 @@ const EditModal = ({
             actionItems: actionItemsRef.current.value,
             status: statusRef.current.value,
         };
-        onSave(updatedData); //  send the latest to parent
+        onSave(updatedData); 
     };
 
 
