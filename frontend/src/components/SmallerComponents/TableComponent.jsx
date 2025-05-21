@@ -15,6 +15,7 @@ const TableComponent = ({ data, columns, pageSize, className }) => {
     const table = useReactTable({
         data,
         columns,
+        autoResetPageIndex: false,
         getCoreRowModel: getCoreRowModel(),
         getSortedRowModel: getSortedRowModel(),
         getPaginationRowModel: getPaginationRowModel(),

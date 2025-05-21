@@ -1,9 +1,8 @@
 import React, { Fragment, useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-import Select from 'react-select';  // Import react-select
 
-const EditTasks = () => {
+const EditMeetings = () => {
     axios.defaults.withCredentials = true
     const url = import.meta.env.VITE_URL;
     const { id } = useParams();
@@ -17,17 +16,22 @@ const EditTasks = () => {
     const clientRef = useRef();
     const advisorRef = useRef();
     const titleRef = useRef();
-    // const participantsRef = useRef();
+    const transcriptUrlRef = useRef();
+    const participantsRef = useRef();
+    const videoUrlRef = useRef();
     const dateRef = useRef();
+    const meetingNumberRef = useRef();
     const actionItemsRef = useRef();
+    const detailedNotesRef = useRef();
+    const summaryRef = useRef();
     const responsiblePersonRef = useRef();
     const statusRef = useRef();
     const dueDateRef = useRef();
 
-    const fetchTaskData = async (signal) => {
+    const fetchMeetingData = async (signal) => {
         try {
             const [taskRes, clientRes, advisorRes] = await Promise.all([
-                axios.get(`${url}/admin/rowwisetasks/${id}/editRowWiseTasks`, { signal }),
+                axios.get(`${url}/admin/tasks/${id}/editTasks`, { signal }),
                 axios.get(`${url}/admin/clients`, { signal }),
                 axios.get(`${url}/admin/advisors`, { signal }),
             ]);
@@ -51,52 +55,59 @@ const EditTasks = () => {
             setClients(clientsData);
             setAdvisors(advisorsData);
         } catch (error) {
-            console.error("Error fetching rowwise task or clients data:", error);
+            console.error("Error fetching task or clients data:", error);
         }
     };
 
+
     useEffect(() => {
         const controller = new AbortController();
-        fetchTaskData(controller.signal);
+        fetchMeetingData(controller.signal);
 
         return () => {
             controller.abort();
         };
     }, [id]);
 
+
     const getValueOrNull = (ref) => {
         const value = ref.current?.value?.trim();
         return value === "" ? null : value;
     };
 
-    // const getArrayFromInput = (ref) => {
-    //     const value = ref.current?.value?.trim();
-    //     return value === "" ? [] : value.split(",").map((item) => item.trim());
-    // };
+    const getArrayFromInput = (ref) => {
+        const value = ref.current?.value?.trim();
+        return value === "" ? [] : value.split(",").map((item) => item.trim());
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
 
         const updatedData = {
-            client: formData.client, // ✅ get from formData
-            advisor: formData.advisor, // ✅ get from formData
+            client: getValueOrNull(clientRef),
+            advisor: getValueOrNull(advisorRef),
             title: getValueOrNull(titleRef),
-            // participants: getArrayFromInput(participantsRef),
+            transcriptUrl: getValueOrNull(transcriptUrlRef),
+            participants: getArrayFromInput(participantsRef),
+            videoUrl: getValueOrNull(videoUrlRef),
             date: getValueOrNull(dateRef),
+            meetingNumber: getValueOrNull(meetingNumberRef),
             actionItems: getValueOrNull(actionItemsRef),
+            detailedNotes: getValueOrNull(detailedNotesRef),
+            summary: getValueOrNull(summaryRef),
             responsiblePerson: getValueOrNull(responsiblePersonRef),
             status: getValueOrNull(statusRef),
             dueDate: getValueOrNull(dueDateRef),
         };
 
         try {
-            await axios.patch(`${url}/admin/rowwisetasks/${id}/editRowWiseTasks`, updatedData);
-            alert("RowWiseTask updated successfully!");
-            navigate("/adminautharized/admin/rowwisetasks");
+            await axios.patch(`${url}/admin/tasks/${id}/editTasks`, updatedData);
+            alert("Meeting data updated successfully!");
+            navigate("/adminautharized/admin/tasks");
         } catch (error) {
-            console.log("Error updating task:", error);
-            alert("Failed to update task. Please try again.");
+            console.log("Error updating meeting:", error);
+            alert("Failed to update meeting. Please try again.");
         } finally {
             setLoading(false);
         }
@@ -104,59 +115,36 @@ const EditTasks = () => {
 
     if (!formData) return <p>Loading...</p>;
 
-    // Transform the clients and advisors into the format needed for react-select
-    const clientOptions = clients.map(client => ({
-        value: client._id,
-        label: `${client.fullName} (${client.email})`,
-    }));
-
-    const advisorOptions = advisors.map(advisor => ({
-        value: advisor._id,
-        label: `${advisor.advisorFullName} (${advisor.email})`,
-    }));
-
     return (
         <Fragment>
             <div className="container my-4">
-                <div className="card p-4">
-                    <h2 className="mb-4">Edit Task</h2>
+                <div className=" card p-4">
+                    <h2 className="mb-4">Edit Meeting</h2>
 
                     <form onSubmit={handleSubmit}>
+
                         <div className="row mb-3">
-                            {/* Client Dropdown */}
                             <div className="col-md-6">
                                 <label className="form-label">Client</label>
-                                <Select
-                                    options={clientOptions}
-                                    value={clientOptions.find(client => client.value === formData.client)}
-                                    onChange={(selectedOption) => {
-                                        setFormData(prev => ({
-                                            ...prev,
-                                            client: selectedOption ? selectedOption.value : "", // Save selected client id into formData
-                                        }));
-                                    }}
-                                    placeholder="Select a client"
-                                    isClearable={true}
-                                />
-
+                                <select className="form-select" ref={clientRef} defaultValue={formData.client} required>
+                                    <option value="">Select a client</option>
+                                    {clients.map((client) => (
+                                        <option key={client._id} value={client._id}>
+                                            {client.fullName} ({client.email})
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
-
-                            {/* Advisor Dropdown */}
                             <div className="col-md-6">
                                 <label className="form-label">Advisor</label>
-                                <Select
-                                    options={advisorOptions}
-                                    value={advisorOptions.find(advisor => advisor.value === formData.advisor)}
-                                    onChange={(selectedOption) => {
-                                        setFormData(prev => ({
-                                            ...prev,
-                                            advisor: selectedOption ? selectedOption.value : "", // Save selected advisor id into formData
-                                        }));
-                                    }}
-                                    placeholder="Select an advisor"
-                                    isClearable={true}
-                                />
-
+                                <select className="form-select" ref={advisorRef} defaultValue={formData.advisor}>
+                                    <option value="">Select a advisor</option>
+                                    {advisors.map((advisor) => (
+                                        <option key={advisor._id} value={advisor._id}>
+                                            {advisor.advisorFullName} ({advisor.email})
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
                         </div>
 
@@ -166,27 +154,51 @@ const EditTasks = () => {
                                 <input type="text" className="form-control" ref={titleRef} defaultValue={formData.title || ""} />
                             </div>
                             <div className="col-md-6">
-                                <label className="form-label">Date</label>
-                                <input type="date" className="form-control" ref={dateRef} defaultValue={formData.date} required />
+                                <label className="form-label">Meeting Number</label>
+                                <input type="text" className="form-control" ref={meetingNumberRef} defaultValue={formData.meetingNumber || ""} />
                             </div>
                         </div>
 
                         <div className="row mb-3">
                             <div className="col-md-6">
+                                <label className="form-label">Date</label>
+                                <input type="date" className="form-control" ref={dateRef} defaultValue={formData.date} required />
+                            </div>
+                            <div className="col-md-6">
                                 <label className="form-label">Responsible Person</label>
                                 <input type="text" className="form-control" ref={responsiblePersonRef} defaultValue={formData.responsiblePerson || ""} />
                             </div>
+                        </div>
+
+                        <div className="row mb-3">
                             <div className="col-md-6">
-                                <label className="form-label">Due Date</label>
-                                <input type="date" className="form-control" ref={dueDateRef} defaultValue={formData.dueDate || ""} />
+                                <label className="form-label">Transcript URL</label>
+                                <input type="text" className="form-control" ref={transcriptUrlRef} defaultValue={formData.transcriptUrl || ""} />
+                            </div>
+                            <div className="col-md-6">
+                                <label className="form-label">Video URL</label>
+                                <input type="text" className="form-control" ref={videoUrlRef} defaultValue={formData.videoUrl || ""} />
                             </div>
                         </div>
 
-
+                        <div className="mb-3">
+                            <label className="form-label">Participants (comma-separated emails)</label>
+                            <input type="text" className="form-control" ref={participantsRef} defaultValue={formData.participants?.join(", ") || ""} />
+                        </div>
 
                         <div className="mb-3">
                             <label className="form-label">Action Items</label>
                             <textarea className="form-control" ref={actionItemsRef} rows="4" defaultValue={formData.actionItems || ""}></textarea>
+                        </div>
+
+                        <div className="mb-3">
+                            <label className="form-label">Detailed Notes</label>
+                            <textarea className="form-control" ref={detailedNotesRef} rows="5" defaultValue={formData.detailedNotes || ""}></textarea>
+                        </div>
+
+                        <div className="mb-3">
+                            <label className="form-label">Summary</label>
+                            <textarea className="form-control" ref={summaryRef} rows="5" defaultValue={formData.summary || ""}></textarea>
                         </div>
 
                         <div className="row mb-3">
@@ -212,4 +224,4 @@ const EditTasks = () => {
     );
 };
 
-export default EditTasks;
+export default EditMeetings;

@@ -13,12 +13,12 @@ import { FaRegEdit } from "react-icons/fa";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { PiClipboardTextLight } from "react-icons/pi";
 import { GrNotes } from "react-icons/gr";
-import { RiStickyNoteAddLine } from "react-icons/ri";
 import { FaRegEye } from "react-icons/fa";
 import { FaDownload } from "react-icons/fa6";
 import DeleteModal from "../../../components/SmallerComponents/DeleteModal";
 import ActionItemsModal from "../../../components/SmallerComponents/ActionItemsModal";
 import EditModal from "../../../components/SmallerComponents/EditModal";
+import EditMeetingModal from "./EditMeetingsModal";
 
 
 const AllMeetings = () => {
@@ -49,7 +49,66 @@ const AllMeetings = () => {
     const [advisorsList, setAdvisorsList] = useState([]);
 
 
+    const [clients, setClients] = useState([]);
+    const [advisors, setAdvisors] = useState([]);
+    const [selectedMeetingId, setSelectedMeetingId] = useState(null);
 
+
+    // edit for the meetings modal itself
+
+    useEffect(() => {
+        const fetchDropdownData = async () => {
+            try {
+                const [cRes, aRes] = await Promise.all([
+                    axios.get(`${url}/admin/clients`),
+                    axios.get(`${url}/admin/advisors`)
+                ]);
+                setClients(cRes.data);
+                setAdvisors(aRes.data);
+            } catch (err) {
+                console.error("Failed to fetch dropdown data:", err);
+            }
+        };
+
+        fetchDropdownData();
+    }, []);
+
+    const openEditModal = (meetingId) => {
+        setSelectedMeetingId(meetingId);
+    };
+
+    const handleMeetingUpdate = (updatedMeeting) => {
+        // if (!updatedMeeting || !updatedMeeting.client || !updatedMeeting.advisor) {
+        //     console.warn("Incomplete updatedMeeting:", updatedMeeting);
+        //     return;
+        // }
+
+        const fullClient = clients.find(c => c._id === updatedMeeting.client);
+        const fullAdvisor = advisors.find(a => a._id === updatedMeeting.advisor);
+
+        const enrichedMeeting = {
+            ...updatedMeeting,
+            client: fullClient,
+            advisor: fullAdvisor,
+        };
+
+        setTasks(prev =>
+            prev.map(m => m._id === updatedMeeting._id ? enrichedMeeting : m)
+        );
+
+        setFilteredTasks(prev =>
+            prev.map(m => m._id === updatedMeeting._id ? enrichedMeeting : m)
+        );
+    };
+
+
+
+
+
+
+
+
+    // edit for action items
 
 
     const handleOpenModal = (title, content) => {
@@ -387,12 +446,17 @@ const AllMeetings = () => {
             cell: ({ row }) => (
                 <div className="d-flex  gap-2">
                     <div className="d-flex gap-2">
-                        <Link
-                            to={`/adminautharized/admin/tasks/${row.original._id}/editTasks`}
+                        <button
+                            type="button"
                             className="btn p-2 btn-outline-turtle-secondary"
+                            data-bs-toggle="modal"
+                            data-bs-target="#editMeetingModal"
+                            onClick={() => openEditModal(row.original._id)}
                         >
                             <FaRegEdit className="d-block fs-6" />
-                        </Link>
+                        </button>
+
+
                         <button
                             type="button"
                             className="btn p-2 btn-outline-turtle-secondary"
@@ -408,6 +472,7 @@ const AllMeetings = () => {
                         </button>
 
                     </div>
+
                     <div className="d-flex gap-2">
                         {row.original.transcriptUrl ? (
                             <a
@@ -588,15 +653,20 @@ const AllMeetings = () => {
                             }}
                         />
 
-
-
-
                         <EditModal
                             modalId="editModal"
                             headerText="Edit Action Item"
                             actionItemData={selectedActionItem || {}}
                             onSave={handleSaveEditedActionItem}
                         />
+
+                        <EditMeetingModal
+                            meetingId={selectedMeetingId}
+                            clients={clients}
+                            advisors={advisors}
+                            onSuccess={handleMeetingUpdate}
+                        />
+
 
 
 

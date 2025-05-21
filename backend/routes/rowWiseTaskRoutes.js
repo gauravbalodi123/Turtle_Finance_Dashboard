@@ -29,17 +29,27 @@ router.get('/rowwisetasks/parent/:parentId', async (req, res) => {
 });
 
 
-
 router.post('/rowwisetasks/addRowWiseTask', async (req, res) => {
     try {
         const rowWiseTaskData = req.body;
-        await RowwiseTask.create(rowWiseTaskData);
-        res.status(200).json({ msg: "rowwisetask has been added sucessfully" });
+
+        // Step 1: Create the task
+        const newTask = await RowwiseTask.create(rowWiseTaskData);
+
+        // Step 2: Populate client and advisor
+        const populatedTask = await RowwiseTask.findById(newTask._id)
+            .populate("client")
+            .populate("advisor");
+
+        // Step 3: Send it back to frontend
+        res.status(200).json(populatedTask);
+    } catch (e) {
+        console.error("Error adding rowwisetask:", e);
+        res.status(400).json({ msg: "Oops, something went wrong while creating a rowwisetask" });
     }
-    catch (e) {
-        res.status(400).json({ msg: "Oops , Something went Wrong while creating a rowwisetask" })
-    }
-})
+});
+
+
 
 router.get('/rowwisetasks/:id/editRowWiseTasks', async (req, res) => {
     try {

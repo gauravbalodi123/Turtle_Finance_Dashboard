@@ -1,6 +1,6 @@
 import React from "react";
 import { HiOutlineUsers } from "react-icons/hi";
-import { FiUsers, FiLogOut } from "react-icons/fi";
+import { FiUsers, FiLogOut,FiBookOpen } from "react-icons/fi";
 import { VscCalendar } from "react-icons/vsc";
 import { FaListOl, FaBars } from "react-icons/fa";
 import brandlogo from "../../assets/images/logo_png.png";
@@ -61,7 +61,15 @@ const Sidebar = ({ sidebarRef, isSidebarOpen, toggleSidebar, backdrop, scroll })
             <span className={`${isSidebarOpen ? "d-inline-block" : "d-none"}`}>Tasks</span>
           </div>
         </Link>
+        {/* <Link to={`${basePath}/admin/bookings`} className={`${styles.navLinks} ${isSidebarOpen ? "d-flex align-items-center w-100 p-2 mb-2" : "d-flex  align-items-center justify-content-center w-100 p-2 mb-2"} ${location.pathname === `${basePath}/admin/bookings` ? styles.active : ""}`}>
+          <div className={styles.navLinksIcons}>
+            <FiBookOpen className={` ${isSidebarOpen ? "me-3" : ""}`} />
+            <span className={`${isSidebarOpen ? "d-inline-block" : "d-none"}`}>Bookings</span>
+          </div>
+        </Link> */}
       </div>
+
+
 
       {/* Footer */}
       {/* <div className={`mt-auto p-2 d-flex align-items-center ${styles.footerContainer}`}>
@@ -75,7 +83,7 @@ const Sidebar = ({ sidebarRef, isSidebarOpen, toggleSidebar, backdrop, scroll })
 
 
 
-    </aside>
+    </aside >
   );
 };
 

@@ -12,6 +12,7 @@ import AllTasks from '../pages/AdminView/Tasks/AllTasks'
 import EditTasks from '../pages/AdminView/Tasks/EditTasks'
 import AddTasks from '../pages/AdminView/Tasks/AddTasks'
 import AddAdvisor from '../pages/AdminView/Advisors/AddAdvisors'
+import AllBookings from '../pages/AdminView/Bookings/AllBookings'
 
 const AdminRoutes = () => {
   // Declare routes here
@@ -29,7 +30,9 @@ const AdminRoutes = () => {
 
     {path:'/admin/rowwisetasks', element:<AllTasks/>},
     { path: '/admin/rowwisetasks/:id/editRowWiseTasks', element: <EditTasks /> },
-    { path: '/admin/rowwisetasks/addTask', element: <AddTasks /> }
+    { path: '/admin/rowwisetasks/addTask', element: <AddTasks /> },
+
+    {path:'/admin/bookings', element:<AllBookings/>},
   ]
 
   // Return all routes using useRoutes

@@ -15,12 +15,14 @@ import { FaRegClock } from "react-icons/fa";
 import { LuNotebook } from "react-icons/lu";
 import DeleteModal from "../../../components/SmallerComponents/DeleteModal";
 import ShowrowwisetaskModal from "../../../components/SmallerComponents/ShowrowwisetaskModal";
-import EditFormModal from "../../../components/SmallerComponents/EditFormModal";
+// import EditFormModal from "../../../components/SmallerComponents/EditFormModal";
+import EditTaskModal from "./EditTaskModal";
+import AddTaskModal from "./AddTaskModal";
 
 
 
 
-const AllMeetings = () => {
+const AllTasks = () => {
     axios.defaults.withCredentials = true
     const url = import.meta.env.VITE_URL;
     const [rowWiseTasks, setRowWiseTasks] = useState([]);
@@ -47,7 +49,7 @@ const AllMeetings = () => {
     const [clients, setClients] = useState([]);
     const [advisors, setAdvisors] = useState([]);
     const [selectedTaskId, setSelectedTaskId] = useState(null);
-    const [refresh, setRefresh] = useState(false);
+
 
     useEffect(() => {
         const fetchDropdownData = async () => {
@@ -64,6 +66,39 @@ const AllMeetings = () => {
     const openEditModal = (taskId) => {
         setSelectedTaskId(taskId);
     };
+
+    const handleTaskUpdate = (updatedTask) => {
+        const fullClient = clients.find(c => c._id === updatedTask.client) || null;
+        const fullAdvisor = advisors.find(a => a._id === updatedTask.advisor) || null;
+
+        const enrichedTask = {
+            ...updatedTask,
+            client: fullClient,
+            advisor: fullAdvisor,
+        };
+
+        setRowWiseTasks(prev =>
+            prev.map(task => task._id === updatedTask._id ? enrichedTask : task)
+        );
+
+        setFilteredRowWiseTasks(prev =>
+            prev.map(task => task._id === updatedTask._id ? enrichedTask : task)
+        );
+    };
+
+
+
+    const handleAddTaskSuccess = (newTask) => {
+        // Update both task states
+        setRowWiseTasks(prev => [newTask, ...prev]);
+        setFilteredRowWiseTasks(prev => [newTask, ...prev]);
+
+        // Optionally, refetch all tasks instead:
+        // fetchTasks();
+    };
+
+
+
 
 
 
@@ -406,8 +441,8 @@ const AllMeetings = () => {
                         type="button"
                         className="btn p-2 btn-outline-turtle-secondary"
                         data-bs-toggle="modal"
-                        data-bs-target="#editFormModal"
-                        onClick={() => openEditModal(row.original._id)} 
+                        data-bs-target="#editTaskModal"
+                        onClick={() => openEditModal(row.original._id)}
                     >
                         <FaRegEdit className="d-block fs-6" />
                     </button>
@@ -441,9 +476,14 @@ const AllMeetings = () => {
 
                 </div>
 
-                <Link to="addTask">
-                    <button className="btn btn-custom-turtle-background">Create New Task</button>
-                </Link>
+                <button
+                    className="btn btn-custom-turtle-background"
+                    data-bs-toggle="modal"
+                    data-bs-target="#addTaskModal"
+                >
+                    Create New Task
+                </button>
+
             </div>
 
             {isLoading ? (
@@ -573,13 +613,23 @@ const AllMeetings = () => {
                                 }}
                             />
 
-                            <EditFormModal
+
+                            <EditTaskModal
                                 id={selectedTaskId}
                                 url={url}
                                 clients={clients}
                                 advisors={advisors}
-                                onSuccess={() => fetchTasks()}
+                                onSuccess={handleTaskUpdate}
                             />
+
+                            <AddTaskModal
+                                clients={clients}
+                                advisors={advisors}
+                                onSuccess={handleAddTaskSuccess}
+                            />
+
+
+
 
                         </div>
                     </div>
@@ -589,4 +639,4 @@ const AllMeetings = () => {
     );
 };
 
-export default AllMeetings;
+export default AllTasks;
