@@ -21,7 +21,8 @@ const dummyClients =[
         "kickOffDate": "2022-08-15",
         "dob": "1977-11-29",
         "companyName": "Turner Solutions",
-        "subscriptionDue": "2023-07-25"
+        "subscriptionDue": "2023-07-25",
+        "caseType":"NRI"
     }
 
 ]  
@@ -29,10 +30,10 @@ const dummyClients =[
 
 
 async function seedClientDB() {
-    const clientSeed = await fetchDatabaseData("95a2d0f29c6844e9bab0b563496e2752");
+    // const clientSeed = await fetchDatabaseData("95a2d0f29c6844e9bab0b563496e2752");
     try {
-        await Client.deleteMany({});
-        await Client.insertMany(clientSeed);
+        
+        await Client.insertMany(dummyClients);
         console.log("✅ Client dummy data seeded successfully!");
     } catch (error) {
         console.error("❌ Error seeding client data:", error);

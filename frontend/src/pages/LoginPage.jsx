@@ -44,17 +44,18 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="d-flex vh-100 align-items-center justify-content-center">
+    <div className={`d-flex vh-100 align-items-center justify-content-center ${styles.bgaquagradient }`}>
       <div className="w-100 h-100 row align-items-center justify-content-center">
-        <div className="col-10 g-0 col-md-8 border border-3 border-turtle-primary rounded-4 bg-light">
+        <div className="col-10  g-0 col-md-7 border border-3 border-turtle-primary rounded-4 bg-info-subtle">
+
           <div className="row g-0">
-            <div className="col-12 col-md-5 d-flex align-items-center p-2 p-md-4 position-relative">
+            <div className="col-12  col-md-5 d-flex align-items-center p-2 p-md-4 position-relative">
               <form className="w-100 h-100 p-3 my-4" onSubmit={handleLogin}>
                 <img className={`${styles.brandlogo}`} src={brandlogo} alt="" />
 
                 <div className="d-flex flex-column gap-3 h-50 my-4">
-                  {message && <div className="alert alert-info">{message}</div>}
-                  {error && <div className="alert alert-danger">{error}</div>}
+                  {message && <div className="alert alert-primary px-1">{message}</div>}
+                  {error && <div className="alert alert-danger px-1">{error}</div>}
 
 
                   <input
@@ -90,7 +91,7 @@ const LoginPage = () => {
               </p>
             </div>
 
-            <div className="col-12 col-md-7 d-none d-md-block">
+            <div className="col-12  col-md-7 d-none d-md-block">
               <img
                 className={`${styles.loginPhoto} h-100 w-100`}
                 src="https://static.wixstatic.com/media/ced0bf_df09d06b093044cc96f22264a45ef92f~mv2.png/v1/fill/w_792,h_596,al_c,q_90,enc_avif,quality_auto/ced0bf_df09d06b093044cc96f22264a45ef92f~mv2.png"

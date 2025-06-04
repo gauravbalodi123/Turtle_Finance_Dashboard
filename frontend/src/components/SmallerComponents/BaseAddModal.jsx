@@ -24,7 +24,7 @@ const BaseAddModal = ({ id, title, children, onSubmit, loading }) => {
                 // data-bs-dismiss="modal"
                 disabled={loading}
               >
-                {loading ? "Adding..." : "Add"}
+                {loading ? "Adding..." : "Send Onboarding Details"}
               </button>
             </div>
 

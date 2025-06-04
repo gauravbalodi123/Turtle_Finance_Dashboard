@@ -6,6 +6,9 @@ require('./middleware/passport'); // Adjusted to require passport config
 const mongoose = require('mongoose');
 require('dotenv').config();
 
+const {seedProspectDB} = require('./prospectseed');
+const {seedClientDB} = require('./clientseed')
+
 const { authRoutes } = require('./routes/authRoutes');
 const { adminClientRoutes } = require('./routes/adminRoutes/adminClientRoutes');
 const { advisorRoutes } = require('./routes/advisorRoutes');
@@ -13,6 +16,10 @@ const { meetingAndTasksRoutes } = require('./routes/meetingAndTaskRoutes');
 const { firefliesRouter } = require('./fireFlies/fetchFromFireflies');
 const { rowWiseTaskRoutes } = require('./routes/rowWiseTaskRoutes');
 const {calendlyRoutes} = require('./routes/adminRoutes/calendlyRoutes')
+const{calendlyRes} = require('./Calendly/calendlyGetRes')
+const {bookingRoutes} = require('./routes/adminRoutes/bookingRoutes')
+const {prospectRoutes} = require('./routes/adminRoutes/prospectRoutes')
+const {adminMemberRoutes} = require('./routes/adminRoutes/memberRoutes')
 const cors = require('cors');
 
 // Initialize constants
@@ -40,7 +47,15 @@ app.use('/admin',advisorRoutes);
 app.use(firefliesRouter);
 app.use('/admin',meetingAndTasksRoutes);
 app.use('/admin',rowWiseTaskRoutes);
+app.use('/admin',bookingRoutes);
+app.use('/admin',adminMemberRoutes)
 app.use('/admin/api/calendly', calendlyRoutes);
+app.use('/admin/api/calendly',calendlyRes);
+app.use('/admin',prospectRoutes)
+
+// seedProspectDB()
+// seedClientDB()
+
 
 // Auth routes (these might not need protection)
 app.use('/auth', authRoutes);

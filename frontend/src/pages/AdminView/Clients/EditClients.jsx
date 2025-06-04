@@ -16,6 +16,7 @@ const EditClients = () => {
     const leadSourceIdRef = useRef();
     const leadSourceRef = useRef();
     const subscriptionStatusRef = useRef();
+    const caseTypeRef = useRef();
     const genderRef = useRef();
     const countryCodeRef = useRef();
     const phoneRef = useRef();
@@ -30,7 +31,7 @@ const EditClients = () => {
     const companyNameRef = useRef();
 
     const fetchClientData = async signal => {
-        
+
         try {
             const response = await axios.get(`${url}/admin/clients/${id}/editClients`, { signal });
             const data = response.data;
@@ -38,7 +39,7 @@ const EditClients = () => {
             const formatDate = (isoDate) => {
                 if (!isoDate) return "";
                 const date = new Date(isoDate);
-                return date.toISOString().split("T")[0]; 
+                return date.toISOString().split("T")[0];
             };
 
             setFormData({
@@ -69,31 +70,11 @@ const EditClients = () => {
         const value = ref.current?.value?.trim();
         return value === "" ? null : value;
     };
-    
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
-
-        // const updatedData = {
-        //     fullName: fullNameRef.current.value,
-        //     salutation: salutationRef.current.value,
-        //     leadSourceId: leadSourceIdRef.current.value,
-        //     leadSource: leadSourceRef.current.value,
-        //     subscriptionStatus: subscriptionStatusRef.current.value || null,
-        //     gender: genderRef.current.value || null,
-        //     countryCode: countryCodeRef.current.value,
-        //     phone: phoneRef.current.value,
-        //     email: emailRef.current.value,
-        //     address: addressRef.current.value,
-        //     subscriptionDate: subscriptionDateRef.current.value || null,
-        //     subscriptionDue: subscriptionDueRef.current.value || null,
-        //     riskProfileDate: riskProfileDateRef.current.value || null,
-        //     kickOffDate: kickOffDateRef.current.value || null,
-        //     onboardingStatus: onboardingStatusRef.current.value || null,
-        //     dob: dobRef.current.value || null,
-        //     companyName: companyNameRef.current.value,
-        // };
 
         const updatedData = {
             fullName: getValueOrNull(fullNameRef),
@@ -101,6 +82,7 @@ const EditClients = () => {
             leadSourceId: getValueOrNull(leadSourceIdRef),
             leadSource: getValueOrNull(leadSourceRef),
             subscriptionStatus: getValueOrNull(subscriptionStatusRef),
+            caseType: getValueOrNull(caseTypeRef),
             gender: getValueOrNull(genderRef),
             countryCode: getValueOrNull(countryCodeRef),
             phone: getValueOrNull(phoneRef),
@@ -114,7 +96,7 @@ const EditClients = () => {
             dob: getValueOrNull(dobRef),
             companyName: getValueOrNull(companyNameRef),
         };
-        
+
 
         try {
             await axios.patch(`${url}/admin/clients/${id}/editClients`, updatedData);
@@ -257,6 +239,16 @@ const EditClients = () => {
                             <div className="col-md-6">
                                 <label className="form-label">Date of Birth</label>
                                 <input type="date" className="form-control" ref={dobRef} defaultValue={formData.dob} />
+                            </div>
+
+                            <div className="col-md-6">
+                                <label className="form-label">Case Type</label>
+                                <select className="form-select" ref={caseTypeRef} defaultValue={formData.caseType}>
+                                    <option value="">Select</option>
+                                    <option value="NRI">NRI</option>
+                                    <option value="Resident Indian">Resident Indian</option>
+
+                                </select>
                             </div>
                         </div>
 

@@ -14,7 +14,6 @@ import DeleteModal from "../../../components/SmallerComponents/DeleteModal";
 
 const AllClients = () => {
     axios.defaults.withCredentials = true
-    // const url = "http://localhost:8000";
     const url = import.meta.env.VITE_URL;
     const [clients, setClients] = useState([]);
     const [filteredClients, setFilteredClients] = useState([]); // ✅ New state for filtered data
@@ -104,6 +103,7 @@ const AllClients = () => {
         { accessorKey: "salutation", header: "Salutation", enableResizing: true, size: 120, minSize: 80 },
         { accessorKey: "leadSourceId", header: "Lead Source ID", enableResizing: true, size: 150, minSize: 120 },
         { accessorKey: "leadSource", header: "Lead Source", enableResizing: true, size: 130, minSize: 140 },
+        { accessorKey: "caseType", header: "Case Type", enableResizing: true, size: 130, minSize: 140 },
         {
             accessorKey: "subscriptionStatus",
             header: "Subscription Status",

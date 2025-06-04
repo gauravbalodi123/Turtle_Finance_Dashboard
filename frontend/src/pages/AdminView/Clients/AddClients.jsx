@@ -19,6 +19,7 @@ const AddClients = () => {
     const leadSourceIdRef = useRef();
     const leadSourceRef = useRef();
     const subscriptionStatusRef = useRef();
+    const caseTypeRef = useRef();
     const genderRef = useRef();
     const countryCodeRef = useRef();
     const phoneRef = useRef();
@@ -41,6 +42,7 @@ const AddClients = () => {
             leadSourceId: getValueOrNull(leadSourceIdRef),
             leadSource: getValueOrNull(leadSourceRef),
             subscriptionStatus: getValueOrNull(subscriptionStatusRef),
+            caseType: getValueOrNull(caseTypeRef),
             gender: getValueOrNull(genderRef),
             countryCode: getValueOrNull(countryCodeRef),
             phone: getValueOrNull(phoneRef),
@@ -169,14 +171,23 @@ const AddClients = () => {
                     </div>
 
                     <div className="row mb-3">
-                        <div className="col-md-6">
+                        <div className="col-12 col-md-4">
                             <label className="form-label">Date of Birth</label>
                             <input type="date" className="form-control" ref={dobRef} />
                         </div>
-                        <div className="col-md-6">
+                        <div className="col-12 col-md-4">
                             <label className="form-label">Company Name</label>
                             <input type="text" className="form-control" ref={companyNameRef} />
                         </div>
+                        <div className="col-12 col-md-4">
+                                <label className="form-label">Case Type</label>
+                                <select className="form-select" ref={caseTypeRef} >
+                                    <option value="">Select</option>
+                                    <option value="NRI">NRI</option>
+                                    <option value="Resident Indian">Resident Indian</option>
+
+                                </select>
+                            </div>
                     </div>
 
                     <div className="d-flex justify-content-end">

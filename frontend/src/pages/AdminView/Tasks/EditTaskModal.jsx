@@ -5,7 +5,6 @@ import BaseEditModal from "../../../components/SmallerComponents/BaseEditModal";
 
 const EditTaskModal = ({ id, url, clients, advisors, onSuccess }) => {
     const [formData, setFormData] = useState(null);
-    const [initialData, setInitialData] = useState(null);
     const [loading, setLoading] = useState(false);
 
     const titleRef = useRef();
@@ -15,40 +14,19 @@ const EditTaskModal = ({ id, url, clients, advisors, onSuccess }) => {
     const statusRef = useRef();
     const dueDateRef = useRef();
 
-    useEffect(() => {
-        if (!initialData) return;
-
-        titleRef.current.value = initialData.title || "";
-        dateRef.current.value = initialData.date || "";
-        actionItemsRef.current.value = initialData.actionItems || "";
-        responsiblePersonRef.current.value = initialData.responsiblePerson || "";
-        statusRef.current.value = initialData.status || "Pending";
-        dueDateRef.current.value = initialData.dueDate || "";
-    }, [initialData]);
-
     const fetchData = async () => {
         try {
-
-            setInitialData(null);
-            setFormData(null);
+            setFormData(null); 
             const res = await axios.get(`${url}/admin/rowwisetasks/${id}/editRowWiseTasks`);
             const task = res.data;
             const formatDate = (isoDate) =>
                 isoDate ? new Date(isoDate).toISOString().split("T")[0] : "";
-
-            setInitialData({
-                ...task,
-                date: formatDate(task.date),
-                dueDate: formatDate(task.dueDate),
-            });
 
             setFormData({
                 ...task,
                 date: formatDate(task.date),
                 dueDate: formatDate(task.dueDate),
             });
-
-
         } catch (error) {
             console.error("Error loading task", error);
         }
@@ -98,6 +76,7 @@ const EditTaskModal = ({ id, url, clients, advisors, onSuccess }) => {
             setLoading(false);
         }
     };
+    
 
     const clientOptions = clients.map(c => ({ value: c._id, label: `${c.fullName} (${c.email})` }));
     const advisorOptions = advisors.map(a => ({ value: a._id, label: `${a.advisorFullName} (${a.email})` }));
@@ -139,33 +118,60 @@ const EditTaskModal = ({ id, url, clients, advisors, onSuccess }) => {
                     <div className="row mb-3">
                         <div className="col-md-6">
                             <label>Title</label>
-                            <input ref={titleRef} className="form-control" />
+                            <input
+                                ref={titleRef}
+                                defaultValue={formData.title || ""}
+                                className="form-control"
+                            />
                         </div>
                         <div className="col-md-6">
                             <label>Date</label>
-                            <input ref={dateRef} type="date" className="form-control" />
+                            <input
+                                ref={dateRef}
+                                type="date"
+                                defaultValue={formData.date || ""}
+                                className="form-control"
+                            />
                         </div>
                     </div>
 
                     <div className="row mb-3">
                         <div className="col-md-6">
                             <label>Responsible Person</label>
-                            <input ref={responsiblePersonRef} className="form-control" />
+                            <input
+                                ref={responsiblePersonRef}
+                                defaultValue={formData.responsiblePerson || ""}
+                                className="form-control"
+                            />
                         </div>
                         <div className="col-md-6">
                             <label>Due Date</label>
-                            <input ref={dueDateRef} type="date" className="form-control" />
+                            <input
+                                ref={dueDateRef}
+                                type="date"
+                                defaultValue={formData.dueDate || ""}
+                                className="form-control"
+                            />
                         </div>
                     </div>
 
                     <div className="mb-3">
                         <label>Action Items</label>
-                        <textarea ref={actionItemsRef} className="form-control" rows="3" />
+                        <textarea
+                            ref={actionItemsRef}
+                            className="form-control"
+                            rows="3"
+                            defaultValue={formData.actionItems || ""}
+                        />
                     </div>
 
                     <div className="mb-3">
                         <label>Status</label>
-                        <select ref={statusRef} className="form-select">
+                        <select
+                            ref={statusRef}
+                            className="form-select"
+                            defaultValue={formData.status || "Pending"}
+                        >
                             <option value="Pending">Pending</option>
                             <option value="Completed">Completed</option>
                             <option value="Overdue">Overdue</option>
@@ -177,9 +183,6 @@ const EditTaskModal = ({ id, url, clients, advisors, onSuccess }) => {
             )}
         </BaseEditModal>
     );
-
 };
 
 export default EditTaskModal;
-
-

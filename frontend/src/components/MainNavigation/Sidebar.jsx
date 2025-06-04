@@ -1,11 +1,13 @@
 import React from "react";
 import { HiOutlineUsers } from "react-icons/hi";
-import { FiUsers, FiLogOut,FiBookOpen } from "react-icons/fi";
+import { FiUsers, FiLogOut, FiBookOpen } from "react-icons/fi";
 import { VscCalendar } from "react-icons/vsc";
 import { FaListOl, FaBars } from "react-icons/fa";
 import brandlogo from "../../assets/images/logo_png.png";
 import { Link, useLocation } from "react-router-dom";
 import styles from "../../styles/Sidebar/Sidebar.module.css";
+import { BsPersonCheckFill } from "react-icons/bs";
+import { LuActivity } from "react-icons/lu";
 
 const Sidebar = ({ sidebarRef, isSidebarOpen, toggleSidebar, backdrop, scroll }) => {
   const location = useLocation();
@@ -49,6 +51,12 @@ const Sidebar = ({ sidebarRef, isSidebarOpen, toggleSidebar, backdrop, scroll })
             <span className={`${isSidebarOpen ? "d-inline-block" : "d-none"}`}>Advisors</span>
           </div>
         </Link>
+        <Link to={`${basePath}/admin/memberActivation`} className={`${styles.navLinks} ${isSidebarOpen ? "d-flex align-items-center w-100 p-2 mb-2" : "d-flex  align-items-center justify-content-center w-100 p-2 mb-2"} ${location.pathname === `${basePath}/admin/memberActivation` ? styles.active : ""}`}>
+          <div className={styles.navLinksIcons}>
+            <LuActivity className={` ${isSidebarOpen ? "me-3" : ""}`} />
+            <span className={`${isSidebarOpen ? "d-inline-block" : "d-none"}`}>Member Activation</span>
+          </div>
+        </Link>
         <Link to={`${basePath}/admin/tasks`} className={`${styles.navLinks} ${isSidebarOpen ? "d-flex align-items-center w-100 p-2 mb-2" : "d-flex  align-items-center justify-content-center w-100 p-2 mb-2"} ${location.pathname === `${basePath}/admin/tasks` ? styles.active : ""}`}>
           <div className={styles.navLinksIcons}>
             <VscCalendar className={` ${isSidebarOpen ? "me-3" : ""}`} />
@@ -61,12 +69,18 @@ const Sidebar = ({ sidebarRef, isSidebarOpen, toggleSidebar, backdrop, scroll })
             <span className={`${isSidebarOpen ? "d-inline-block" : "d-none"}`}>Tasks</span>
           </div>
         </Link>
-        {/* <Link to={`${basePath}/admin/bookings`} className={`${styles.navLinks} ${isSidebarOpen ? "d-flex align-items-center w-100 p-2 mb-2" : "d-flex  align-items-center justify-content-center w-100 p-2 mb-2"} ${location.pathname === `${basePath}/admin/bookings` ? styles.active : ""}`}>
+        <Link to={`${basePath}/admin/bookings`} className={`${styles.navLinks} ${isSidebarOpen ? "d-flex align-items-center w-100 p-2 mb-2" : "d-flex  align-items-center justify-content-center w-100 p-2 mb-2"} ${location.pathname === `${basePath}/admin/bookings` ? styles.active : ""}`}>
           <div className={styles.navLinksIcons}>
             <FiBookOpen className={` ${isSidebarOpen ? "me-3" : ""}`} />
             <span className={`${isSidebarOpen ? "d-inline-block" : "d-none"}`}>Bookings</span>
           </div>
-        </Link> */}
+        </Link>
+        <Link to={`${basePath}/admin/prospects`} className={`${styles.navLinks} ${isSidebarOpen ? "d-flex align-items-center w-100 p-2 mb-2" : "d-flex  align-items-center justify-content-center w-100 p-2 mb-2"} ${location.pathname === `${basePath}/admin/prospects` ? styles.active : ""}`}>
+          <div className={styles.navLinksIcons}>
+            <BsPersonCheckFill className={` ${isSidebarOpen ? "me-3" : ""}`} />
+            <span className={`${isSidebarOpen ? "d-inline-block" : "d-none"}`}>Prospects</span>
+          </div>
+        </Link>
       </div>
 
 

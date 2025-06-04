@@ -18,9 +18,9 @@ const App = () => {
       <Route
         path="/adminautharized/*"
         element={
-          <AdminPrivateRoutes>
+          // <AdminPrivateRoutes>
             <AdminLayout />
-          </AdminPrivateRoutes>
+          // </AdminPrivateRoutes>
         }
       />
     </Routes>

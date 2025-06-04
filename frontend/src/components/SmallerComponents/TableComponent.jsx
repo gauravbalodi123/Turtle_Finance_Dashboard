@@ -1,4 +1,4 @@
-import React, { Fragment,useEffect } from "react";
+import React, { Fragment, useEffect } from "react";
 import {
     useReactTable,
     getCoreRowModel,
@@ -10,17 +10,25 @@ import {
 import { FaSort, FaSortUp, FaSortDown, FaAngleDoubleLeft, FaAngleDoubleRight } from "react-icons/fa";
 import styles from "../../styles/SmallerComponents/TableComponent/TableComponent.module.css";
 
-const TableComponent = ({ data, columns, pageSize, className }) => {
+const TableComponent = ({ data,columns,pageIndex,pageSize,setPageIndex,setPageSize,totalCount,className,}) => {
 
     const table = useReactTable({
         data,
         columns,
-        autoResetPageIndex: false,
+        manualPagination: true,
+        pageCount: Math.ceil(totalCount / pageSize),
+        state: {
+            pagination: { pageIndex, pageSize },
+        },
+        onPaginationChange: (updater) => {
+            const next = typeof updater === 'function' ? updater({ pageIndex, pageSize }) : updater;
+            setPageIndex(next.pageIndex);
+            setPageSize(next.pageSize);
+        },
         getCoreRowModel: getCoreRowModel(),
         getSortedRowModel: getSortedRowModel(),
         getPaginationRowModel: getPaginationRowModel(),
         columnResizeMode: "onChange",
-        initialState: { pagination: { pageSize } },
     });
 
     useEffect(() => {
@@ -118,7 +126,7 @@ const TableComponent = ({ data, columns, pageSize, className }) => {
                             </option>
                         ))}
                     </select>
-                    <span className="ms-2">entries of {data.length} total rows</span>
+                    <span className="ms-2">entries of {totalCount} total rows</span>
                 </div>
 
                 <div>

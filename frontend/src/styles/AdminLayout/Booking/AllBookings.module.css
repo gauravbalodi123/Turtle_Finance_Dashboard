@@ -1,0 +1,47 @@
+h2.taskHeaderItem {
+    margin: 0;
+    font-weight: 500;
+}
+
+p.taskHeaderItem {
+    margin: 0;
+    font-size: 1rem;
+    color: #909cad;
+    font-weight: 500;
+
+}
+
+.bookingsPageTableWrapper .custom-style-table thead th {
+    color: #8d9aaa;
+}
+
+.bookingsPageTableWrapper .custom-style-table tr .pending-status,
+.bookingsPageTableWrapper .pending-status {
+    color: #E09238;
+    font-size: 0.8rem;
+    background-color: #FDF3E1;
+    border-radius: 24px;
+    padding: 2px 10px;
+    font-weight: 500;
+}
+
+.bookingsPageTableWrapper .custom-style-table tr .completed-status,
+.bookingsPageTableWrapper .completed-status {
+    color: #16A45E;
+    font-size: 0.8rem;
+    background-color: #def6e7;
+    border-radius: 24px;
+    padding: 2px 10px;
+    font-weight: 500;
+}
+
+.bookingsPageTableWrapper .custom-style-table tr .overdue-status,
+.bookingsPageTableWrapper .overdue-status {
+    color: #f0716d;
+    font-size: 0.8rem;
+    background-color: #fde3e3;
+    border-radius: 24px;
+    padding: 2px 10px;
+    font-weight: 500;
+}
+

@@ -113,6 +113,8 @@ const EditMeetingModal = ({ meetingId, clients, advisors, onSuccess }) => {
 
             // ✅ FIX: return updated data with _id so AllMeetings can update it
             onSuccess?.({ ...updatedData, _id: meetingId });
+            const modal = bootstrap.Modal.getInstance(document.getElementById('editMeetingModal'));
+            modal.hide();
         } catch (error) {
             console.error("Update failed:", error);
             alert("Failed to update meeting.");

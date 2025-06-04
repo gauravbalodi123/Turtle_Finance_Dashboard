@@ -30,6 +30,11 @@ const ClientSchema = new mongoose.Schema(
             enum: ["Active", "Expired", "Up for Renewal"],
             default: null,
         },
+        caseType: {
+            type: String,
+            enum: ["NRI", "Resident Indian"],
+            default: null,
+        },
         gender: {
             type: String,
             enum: ["Male", "Female", "Other", "Null"],
