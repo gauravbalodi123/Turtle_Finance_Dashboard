@@ -1,7 +1,7 @@
 const axios = require("axios");
 require("dotenv").config();
 
-const notionApiKey = "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";
+const notionApiKey = "gg";
 // const databaseId = "951f266835164926bc2d2b5d133cdc57";
 
 async function fetchDatabaseDataAdvisors(databaseId) {

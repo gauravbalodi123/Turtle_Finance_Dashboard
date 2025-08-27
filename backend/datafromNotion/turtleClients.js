@@ -12,7 +12,7 @@ async function fetchAllSubscribers(databaseId) {
             const requestBody = nextCursor ? { start_cursor: nextCursor } : {};
             const response = await axios.post(notionAPI, requestBody, {
                 headers: {
-                    "Authorization": `Bearer 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`, // You can hardcode if needed
+                    "Authorization": `hh`, 
                     "Notion-Version": "2022-06-28",
                     "Content-Type": "application/json",
                 },
