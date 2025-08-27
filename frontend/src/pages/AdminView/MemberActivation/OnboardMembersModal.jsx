@@ -11,7 +11,7 @@ const OnboardMembersModal = ({ bookingClients, onSuccess, loading }) => {
     const nameRef = useRef(null);
     const emailRef = useRef(null);
     const phoneRef = useRef(null);
-    const caseTypeRef = useRef(null);
+    const clientTypeRef = useRef(null);
     const passwordRef = useRef(null);
 
     const clientOptions = bookingClients.map(b => {
@@ -60,7 +60,7 @@ const OnboardMembersModal = ({ bookingClients, onSuccess, loading }) => {
                 name: selectedClient.fullName,
                 email: selectedClient.email,
                 phone: selectedClient.phone,
-                caseType: caseTypeRef.current?.querySelector("input:checked")?.value || "",
+                clientType: clientTypeRef.current?.querySelector("input:checked")?.value || "",
                 password: passwordRef.current?.value || "",
             };
         } else {
@@ -71,7 +71,7 @@ const OnboardMembersModal = ({ bookingClients, onSuccess, loading }) => {
                 name: nameRef.current?.value || "",
                 email: emailRef.current?.value || "",
                 phone: phoneRef.current?.value || "",
-                caseType: caseTypeRef.current?.querySelector("input:checked")?.value || "",
+                clientType: clientTypeRef.current?.querySelector("input:checked")?.value || "",
                 password: passwordRef.current?.value || "",
             };
         }
@@ -120,7 +120,7 @@ const OnboardMembersModal = ({ bookingClients, onSuccess, loading }) => {
                         <Select
                             options={clientOptions}
                             value={selectedClient}
-                            onChange={(opt) => setSelectedClient(opt)} // ✅ store selected
+                            onChange={(opt) => setSelectedClient(opt)} 
                             isClearable
                             placeholder="Search by name or email...."
                             formatOptionLabel={(option) => (
@@ -158,15 +158,15 @@ const OnboardMembersModal = ({ bookingClients, onSuccess, loading }) => {
 
                 <hr />
 
-                <div className="mb-3" ref={caseTypeRef}>
-                    <label className="form-label d-block">Case Type</label>
+                <div className="mb-3" ref={clientTypeRef}>
+                    <label className="form-label d-block">Client Type</label>
                     <div className="form-check form-check-inline">
-                        <input className="form-check-input" type="radio" name="caseType" value="NRI" defaultChecked />
+                        <input className="form-check-input" type="radio" name="clientType" value="NRI" defaultChecked />
                         <label className="form-check-label">NRI</label>
                     </div>
                     <div className="form-check form-check-inline">
-                        <input className="form-check-input" type="radio" name="caseType" value="Resident Indian" />
-                        <label className="form-check-label">Resident Indian</label>
+                        <input className="form-check-input" type="radio" name="clientType" value="Indian" />
+                        <label className="form-check-label">Indian</label>
                     </div>
                 </div>
 

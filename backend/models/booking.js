@@ -34,6 +34,7 @@ const BookingSchema = new mongoose.Schema(
                 updated_at: { type: Date, default: null },
             }
         ],
+        advisors: [{ type: mongoose.Schema.Types.ObjectId, ref: "Advisor" }],
 
 
         event_type: { type: String, required: true },
@@ -61,7 +62,7 @@ const BookingSchema = new mongoose.Schema(
         ],
 
         invitee: {
-            email: { type: String, required: true },
+            email: { type: String},
             fullName: { type: String, required: true },
             firstName: { type: String, default: null },
             lastName: { type: String, default: null },
@@ -70,6 +71,7 @@ const BookingSchema = new mongoose.Schema(
             rescheduleUrl: { type: String, default: null },
 
             questionsAndAnswers: [
+
                 {
                     question: { type: String },
                     answer: { type: String },
@@ -80,6 +82,17 @@ const BookingSchema = new mongoose.Schema(
                     phoneNumber: { type: String, default: null }
                 }
             ]
+        },
+
+        backfillStatus: {
+            type: String,
+            enum: ['success', 'error', null],
+            default: null,
+        },
+
+        errorMessage: {
+            type: String,
+            default: null
         },
 
 

@@ -11,6 +11,13 @@ node_modules
 dist
 dist-ssr
 *.local
+package-lock.json
+frontend/src/styles/custom-bootstrap/main.css
+frontend/src/styles/custom-bootstrap/main.css.map
+tailwind.config.js
+postcss.config.js
+
+
 
 .env
 

@@ -19,7 +19,7 @@ const AddClients = () => {
     const leadSourceIdRef = useRef();
     const leadSourceRef = useRef();
     const subscriptionStatusRef = useRef();
-    const caseTypeRef = useRef();
+    const clientTypeRef = useRef();
     const genderRef = useRef();
     const countryCodeRef = useRef();
     const phoneRef = useRef();
@@ -42,7 +42,7 @@ const AddClients = () => {
             leadSourceId: getValueOrNull(leadSourceIdRef),
             leadSource: getValueOrNull(leadSourceRef),
             subscriptionStatus: getValueOrNull(subscriptionStatusRef),
-            caseType: getValueOrNull(caseTypeRef),
+            clientType: getValueOrNull(clientTypeRef),
             gender: getValueOrNull(genderRef),
             countryCode: getValueOrNull(countryCodeRef),
             phone: getValueOrNull(phoneRef),
@@ -103,6 +103,7 @@ const AddClients = () => {
                                 <option value="Active">Active</option>
                                 <option value="Expired">Expired</option>
                                 <option value="Up for Renewal">Up for Renewal</option>
+                                <option value="Prospect">Prospect</option>
                             </select>
                         </div>
                         <div className="col-md-6">
@@ -181,10 +182,10 @@ const AddClients = () => {
                         </div>
                         <div className="col-12 col-md-4">
                                 <label className="form-label">Case Type</label>
-                                <select className="form-select" ref={caseTypeRef} >
+                                <select className="form-select" ref={clientTypeRef} >
                                     <option value="">Select</option>
                                     <option value="NRI">NRI</option>
-                                    <option value="Resident Indian">Resident Indian</option>
+                                    <option value="Indian">Indian</option>
 
                                 </select>
                             </div>

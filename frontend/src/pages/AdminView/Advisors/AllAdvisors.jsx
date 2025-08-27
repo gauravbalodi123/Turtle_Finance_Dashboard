@@ -9,6 +9,7 @@ import SearchFilter from '@components/SmallerComponents/SearchFilter'
 import { IoFilter } from "react-icons/io5";
 import { FaRegEdit } from "react-icons/fa";
 import { RiDeleteBin6Line } from "react-icons/ri";
+import { BsLinkedin } from "react-icons/bs";
 import DeleteModal from "../../../components/SmallerComponents/DeleteModal";
 
 
@@ -16,35 +17,81 @@ const AllAdvisors = () => {
     axios.defaults.withCredentials = true
     const url = import.meta.env.VITE_URL;
     const [advisors, setAdvisors] = useState([]);
-    const [filteredAdvisors, setFilteredAdvisors] = useState([]);// ✅ New state for filtered data
+    // const [filteredAdvisors, setFilteredAdvisors] = useState([]);// ✅ New state for filtered data
     const [isLoading, setIsLoading] = useState(true);
     const [loadingId, setLoadingId] = useState(null);
     const [targetId, setTargetId] = useState(null);
     const [error, setError] = useState(null);
     const [columnFilter, setColumnFilter] = useState(""); // ✅ Search filter state
 
+    const [summary, setSummary] = useState(null);
+    const [loadingSummary, setLoadingSummary] = useState(true);
+
+    const [sorting, setSorting] = useState([]);
+
+
+
+    const [totalCount, setTotalCount] = useState(0);
+    const [pageSize, setPageSize] = useState(10);
+    const [pageIndex, setPageIndex] = useState(0);
 
 
     useEffect(() => {
-        fetchAdvisors();
-    }, []);
+        fetchAdvisors(pageIndex, pageSize, sorting, columnFilter);
+    }, [pageIndex, pageSize, sorting, columnFilter]);
 
 
-    const fetchAdvisors = async () => {
+    const fetchAdvisors = async (page = 0, size = 10, sorting = [], search = "") => {
+        setIsLoading(true);
         try {
-            // const res = await axios.get("http://localhost:8000/advisors");
-            // const res = await axios.get(`${url}/advisors`);
-            const res = await axios.get(`${url}/admin/advisors`);
-            // console.log(`${url}/advisors`);
-            const reversedData = res.data.reverse();
-            setAdvisors(reversedData);
-            setFilteredAdvisors(res.data);
+            const sortField = sorting[0]?.id;
+            const sortOrder = sorting[0]?.desc !== undefined
+                ? (sorting[0].desc ? "desc" : "asc")
+                : undefined;
+
+            const params = {
+                page: page + 1,
+                limit: size,
+                search
+            };
+
+            // Only include sort params if they're valid
+            if (sorting.length && sortField && sortOrder) {
+                params.sortField = sortField;
+                params.sortOrder = sortOrder;
+            }
+
+
+            const res = await axios.get(`${url}/admin/selectiveAdvisors`, {
+                params
+            });
+
+            setAdvisors(res.data.advisors);
+            setTotalCount(res.data.total);
         } catch (err) {
-            setError("Failed to fetch clients");
+            console.error("Error fetching advisors:", err);
+            setError("Failed to fetch advisors");
         } finally {
             setIsLoading(false);
         }
     };
+
+
+
+    // useEffect(() => {
+    //     const fetchSummary = async () => {
+    //         try {
+    //             const res = await axios.get(`${url}/admin/advisors/stats`);
+    //             setSummary(res.data); // expected: { total, active, inactive }
+    //         } catch (err) {
+    //             console.error("Error fetching advisor summary:", err);
+    //         } finally {
+    //             setLoadingSummary(false);
+    //         }
+    //     };
+
+    //     fetchSummary();
+    // }, []);
 
 
 
@@ -67,24 +114,24 @@ const AllAdvisors = () => {
     };
 
 
-    useEffect(() => {
-        if (!columnFilter) {
-            setFilteredAdvisors(advisors); // Reset when filter is empty
-            return;
-        }
+    // useEffect(() => {
+    //     if (!columnFilter) {
+    //         setFilteredAdvisors(advisors); // Reset when filter is empty
+    //         return;
+    //     }
 
-        const lowerCaseFilter = columnFilter.toLowerCase();
+    //     const lowerCaseFilter = columnFilter.toLowerCase();
 
-        const filteredData = advisors.filter((advisor) =>
-            Object.values(advisor).some(
-                (value) =>
-                    value &&
-                    value.toString().toLowerCase().includes(lowerCaseFilter)
-            )
-        );
+    //     const filteredData = advisors.filter((advisor) =>
+    //         Object.values(advisor).some(
+    //             (value) =>
+    //                 value &&
+    //                 value.toString().toLowerCase().includes(lowerCaseFilter)
+    //         )
+    //     );
 
-        setFilteredAdvisors(filteredData);
-    }, [columnFilter, advisors]);
+    //     setFilteredAdvisors(filteredData);
+    // }, [columnFilter, advisors]);
 
 
     const columns = [
@@ -92,8 +139,9 @@ const AllAdvisors = () => {
             accessorKey: "advisorFullName",
             header: "Advisor Name",
             enableResizing: true,
-            size: 150,
-            minSize: 150,
+            size: 140,
+            minSize: 100,
+            sortDescFirst: true,
         },
         {
             accessorKey: "salutation",
@@ -101,13 +149,31 @@ const AllAdvisors = () => {
             enableResizing: true,
             size: 120,
             minSize: 80,
+            sortDescFirst: true,
         },
         {
             accessorKey: "advisorDomain",
             header: "Domain",
             enableResizing: true,
             size: 120,
-            minSize: 120,
+            minSize: 80,
+            sortDescFirst: true,
+            cell: ({ row }) =>
+                row.original.advisorDomain && row.original.advisorDomain.length
+                    ? row.original.advisorDomain.join(", ")
+                    : "N/A",
+        },
+        {
+            accessorKey: "eventName",
+            header: "Event Name",
+            enableResizing: true,
+            size: 140,
+            minSize: 100,
+            sortDescFirst: true,
+            cell: ({ row }) =>
+                row.original.eventName && row.original.eventName.length
+                    ? row.original.eventName.join(", ")
+                    : "N/A",
         },
         {
             accessorKey: "countryCode",
@@ -115,6 +181,7 @@ const AllAdvisors = () => {
             enableResizing: true,
             size: 140,
             minSize: 80,
+            sortDescFirst: true,
         },
         {
             accessorKey: "phone",
@@ -122,6 +189,7 @@ const AllAdvisors = () => {
             enableResizing: true,
             size: 120,
             minSize: 120,
+            sortDescFirst: true,
         },
         {
             accessorKey: "email",
@@ -129,13 +197,15 @@ const AllAdvisors = () => {
             enableResizing: true,
             size: 180,
             minSize: 150,
+            sortDescFirst: true,
         },
         {
             accessorKey: "address",
             header: "Address",
             enableResizing: true,
-            size: 180,
+            size: 160,
             minSize: 150,
+            sortDescFirst: true,
         },
         {
             accessorKey: "dob",
@@ -143,6 +213,7 @@ const AllAdvisors = () => {
             enableResizing: true,
             size: 140,
             minSize: 120,
+            sortDescFirst: true,
             cell: ({ row }) =>
                 row.original.dob ? new Date(row.original.dob).toLocaleDateString("en-GB") : "N/A",
         },
@@ -150,15 +221,58 @@ const AllAdvisors = () => {
             accessorKey: "gender",
             header: "Gender",
             enableResizing: true,
-            size: 100,
+            size: 90,
             minSize: 80,
+            sortDescFirst: true,
         },
+        {
+            accessorKey: "qualification",
+            header: "Qualification",
+            enableResizing: true,
+            size: 160,
+            minSize: 120,
+            sortDescFirst: true,
+        },
+        {
+            accessorKey: "experience",
+            header: "Experience (yrs)",
+            enableResizing: true,
+            size: 150,
+            minSize: 100,
+            sortDescFirst: true,
+        },
+        // {
+        //     accessorKey: "credentials",
+        //     header: "Credentials",
+        //     enableResizing: true,
+        //     size: 180,
+        //     minSize: 150,
+        //     sortDescFirst: true,
+        // },
+        {
+            accessorKey: "bio",
+            header: "Bio",
+            enableResizing: true,
+            size: 200,
+            minSize: 160,
+            sortDescFirst: true,
+            cell: ({ row }) =>
+                row.original.bio ? (
+                    <span title={row.original.bio}>
+                        {row.original.bio.length > 40
+                            ? row.original.bio.slice(0, 40) + "..."
+                            : row.original.bio}
+                    </span>
+                ) : "N/A",
+        },
+
         {
             accessorKey: "_id",
             header: "Action",
             enableResizing: false,
-            size: 100,
+            size: 140,
             minSize: 80,
+            enableSorting: false,
             cell: ({ row }) => (
                 <div className="d-flex gap-2">
                     <Link
@@ -178,10 +292,21 @@ const AllAdvisors = () => {
                     >
                         {loadingId === row.original._id ? "Deleting..." : <RiDeleteBin6Line className="d-block fs-6" />}
                     </button>
+
+
+                    <a
+                        href={row.original.linkedinProfile}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn p-2 btn-outline-turtle-secondary"
+                        title="View LinkedIn"
+                    >
+                        <BsLinkedin className="d-block fs-6" />
+                    </a>
+
                 </div>
             ),
         }
-
     ];
 
 
@@ -257,11 +382,20 @@ const AllAdvisors = () => {
                                 </div>
                             </div>
 
-                            <TableComponent data={filteredAdvisors}
+                            <TableComponent
+                                data={advisors}
                                 columns={columns}
-                                pageSize={10}
+                                pageSize={pageSize}
+                                pageIndex={pageIndex}
+                                setPageIndex={setPageIndex}
+                                setPageSize={setPageSize}
+                                totalCount={totalCount}
+                                sorting={sorting}
+                                setSorting={setSorting}
                                 className={`${styles["custom-style-table"]}`}
                             />
+
+
 
                             <DeleteModal
                                 modalId="deleteModal"

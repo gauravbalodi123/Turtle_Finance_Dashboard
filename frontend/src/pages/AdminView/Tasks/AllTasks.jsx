@@ -18,6 +18,7 @@ import ShowrowwisetaskModal from "../../../components/SmallerComponents/Showroww
 // import EditFormModal from "../../../components/SmallerComponents/EditFormModal";
 import EditTaskModal from "./EditTaskModal";
 import AddTaskModal from "./AddTaskModal";
+import Select from "react-select";
 
 
 
@@ -32,36 +33,53 @@ const AllTasks = () => {
     const [error, setError] = useState(null);
     const [columnFilter, setColumnFilter] = useState("");
     const [targetId, setTargetId] = useState(null);
-    const [taskStats, setTaskStats] = useState({
-        overdue: 0,
-        pending: 0,
-        completed: 0,
-    });
+    const [taskStats, setTaskStats] = useState();
+
     const [selectedClient, setSelectedClient] = useState('');
     const [selectedAdvisor, setSelectedAdvisor] = useState('');
     const [clientsList, setClientsList] = useState([]);
     const [advisorsList, setAdvisorsList] = useState([]);
     const [currentItem, setCurrentItem] = useState({});
 
-
-
-
     const [clients, setClients] = useState([]);
     const [advisors, setAdvisors] = useState([]);
     const [selectedTaskId, setSelectedTaskId] = useState(null);
 
+    const [totalCount, setTotalCount] = useState(0);
+    const [pageSize, setPageSize] = useState(10);
+    const [pageIndex, setPageIndex] = useState(0);
+
+    const [sorting, setSorting] = useState([]);
+
 
     useEffect(() => {
         const fetchDropdownData = async () => {
-            const [cRes, aRes] = await Promise.all([
-                axios.get(`${url}/admin/clients`),
-                axios.get(`${url}/admin/advisors`)
-            ]);
-            setClients(cRes.data);
-            setAdvisors(aRes.data);
+            try {
+                const res = await axios.get(`${url}/admin/allAdvisorsClientsRowWiseTasks`);
+                const { advisors, clients } = res.data;
+
+                console.log("ADVISORS", advisors); // ✅ add this
+                console.log("CLIENTS", clients);   // ✅ and this
+
+                setAdvisors(advisors);
+                setClients(clients);
+
+                const advisorNames = advisors.map(a => a.advisorFullName).filter(Boolean);
+                const clientNames = clients.map(c => c.fullName).filter(Boolean);
+
+                setAdvisorsList(advisorNames);
+                setClientsList(clientNames);
+
+            } catch (err) {
+                console.error("Failed to fetch dropdown advisor/client lists", err);
+            }
         };
+
         fetchDropdownData();
     }, []);
+
+
+
 
     const openEditModal = (taskId) => {
         setSelectedTaskId(taskId);
@@ -81,9 +99,9 @@ const AllTasks = () => {
             prev.map(task => task._id === updatedTask._id ? enrichedTask : task)
         );
 
-        setFilteredRowWiseTasks(prev =>
-            prev.map(task => task._id === updatedTask._id ? enrichedTask : task)
-        );
+        // setFilteredRowWiseTasks(prev =>
+        //     prev.map(task => task._id === updatedTask._id ? enrichedTask : task)
+        // );
     };
 
 
@@ -91,10 +109,8 @@ const AllTasks = () => {
     const handleAddTaskSuccess = (newTask) => {
         // Update both task states
         setRowWiseTasks(prev => [newTask, ...prev]);
-        setFilteredRowWiseTasks(prev => [newTask, ...prev]);
+        // setFilteredRowWiseTasks(prev => [newTask, ...prev]);
 
-        // Optionally, refetch all tasks instead:
-        // fetchTasks();
     };
 
 
@@ -153,98 +169,94 @@ const AllTasks = () => {
             });
         };
 
-    }, [filteredRowWiseTasks]);
+    }, [rowWiseTasks]);
 
 
 
 
 
     useEffect(() => {
-        fetchTasks();
-    }, []);
+        fetchTasks(pageIndex, pageSize, sorting, columnFilter, selectedAdvisor, selectedClient);
+        fetchTaskStats();
+    }, [pageIndex, pageSize, sorting, columnFilter, selectedAdvisor, selectedClient]);
 
-    const fetchTasks = async () => {
+    const fetchTasks = async (
+        page = 0,
+        size = 10,
+        sorting = [],
+        search = "",
+        advisorFilter = "",
+        clientFilter = ""
+    ) => {
+        setIsLoading(true);
         try {
-            const res = await axios.get(`${url}/admin/rowwisetasks`);
-            const reversedData = res.data.reverse();
+            const sortField = sorting[0]?.id || "";
+            const sortOrder = sorting[0]?.desc ? "desc" : "asc";
 
-            // 🔥 Extract unique clients and advisors immediately from raw data:
-            const uniqueClients = Array.from(new Set(res.data.map(task => task.client?.fullName))).filter(Boolean);
-            setClientsList(uniqueClients);
+            const res = await axios.get(`${url}/admin/selectiveRowwiseTasks`, {
+                params: {
+                    page: page + 1,
+                    limit: size,
+                    sortField,
+                    sortOrder,
+                    search,
+                    advisor: advisorFilter,
+                    client: clientFilter,
+                },
+            });
 
-            const uniqueAdvisors = Array.from(new Set(res.data.map(task => task.advisor?.advisorFullName))).filter(Boolean);
-            setAdvisorsList(uniqueAdvisors);
-
-            const counts = {
-                overdue: 0,
-                pending: 0,
-                completed: 0,
-            };
-
-            const today = new Date();
-            const updatedTasks = await Promise.all(
-                reversedData.map(async (task) => {
-                    const dueDate = task.dueDate ? new Date(task.dueDate) : null;
-                    const status = task.status?.toLowerCase();
-
-                    if (dueDate && dueDate < today && status !== "overdue" && status !== "completed") {
-                        try {
-                            await axios.patch(`${url}/admin/rowwisetasks/${task._id}/editRowWiseTasks`, {
-                                status: "Overdue",
-                            });
-                            task.status = "Overdue";
-                            counts.overdue++;
-                        } catch (err) {
-                            console.error(`Failed to update task ${task._id} to overdue`, err);
-                        }
-                    } else {
-                        if (status === "overdue") counts.overdue++;
-                        else if (status === "pending") counts.pending++;
-                        else if (status === "completed") counts.completed++;
-                    }
-
-                    return task;
-                })
-            );
-
-            setRowWiseTasks(updatedTasks);
-            setFilteredRowWiseTasks(updatedTasks);
-            setTaskStats(counts);
-
+            setRowWiseTasks(res.data.tasks);
+            setTotalCount(res.data.total);
         } catch (err) {
-            setError("Failed to fetch rowwisetasks");
+            console.error("Failed to fetch rowwise tasks", err);
+            setError("Failed to fetch rowwise tasks");
         } finally {
             setIsLoading(false);
         }
     };
 
 
-
+    const fetchTaskStats = async () => {
+        try {
+            const res = await axios.get(`${url}/admin/rowwiseTasks/stats`);
+            setTaskStats(res.data); // expects { completed, pending, overdue }
+        } catch (err) {
+            console.error("Failed to fetch task stats:", err);
+        }
+    };
     useEffect(() => {
-        let filtered = rowWiseTasks;
+        fetchTaskStats();
+    }, []);
 
-        if (selectedClient) {
-            filtered = filtered.filter(task => task.client?.fullName === selectedClient);
-        }
 
-        if (selectedAdvisor) {
-            filtered = filtered.filter(task => task.advisor?.advisorFullName === selectedAdvisor);
-        }
 
-        // Also apply column search if user typed something
-        if (columnFilter) {
-            const lowerCaseFilter = columnFilter.toLowerCase();
-            filtered = filtered.filter((task) =>
-                Object.values(task).some(
-                    (value) =>
-                        value &&
-                        value.toString().toLowerCase().includes(lowerCaseFilter)
-                )
-            );
-        }
 
-        setFilteredRowWiseTasks(filtered);
-    }, [selectedClient, selectedAdvisor, columnFilter, rowWiseTasks]);
+
+    // useEffect(() => {
+    //     let filtered = rowWiseTasks;
+
+    //     if (selectedClient) {
+    //         filtered = filtered.filter(task => task.client?.fullName === selectedClient);
+    //     }
+
+    //     if (selectedAdvisor) {
+    //         filtered = filtered.filter(task => task.advisor?.advisorFullName === selectedAdvisor);
+    //     }
+
+    //     // Also apply column search if user typed something
+    //     if (columnFilter) {
+    //         const lowerCaseFilter = columnFilter.toLowerCase();
+    //         filtered = filtered.filter((task) =>
+    //             Object.values(task).some(
+    //                 (value) =>
+    //                     value &&
+    //                     value.toString().toLowerCase().includes(lowerCaseFilter)
+    //             )
+    //         );
+    //     }
+
+    //     setFilteredRowWiseTasks(filtered);
+    // }, [selectedClient, selectedAdvisor, columnFilter, rowWiseTasks]);
 
 
 
@@ -269,24 +281,24 @@ const AllTasks = () => {
     };
 
 
-    useEffect(() => {
-        if (!columnFilter) {
-            setFilteredRowWiseTasks(rowWiseTasks);
-            return;
-        }
+    // useEffect(() => {
+    //     if (!columnFilter) {
+    //         setFilteredRowWiseTasks(rowWiseTasks);
+    //         return;
+    //     }
 
-        const lowerCaseFilter = columnFilter.toLowerCase();
+    //     const lowerCaseFilter = columnFilter.toLowerCase();
 
-        const filteredData = rowWiseTasks.filter((task) =>
-            Object.values(task).some(
-                (value) =>
-                    value &&
-                    value.toString().toLowerCase().includes(lowerCaseFilter)
-            )
-        );
+    //     const filteredData = rowWiseTasks.filter((task) =>
+    //         Object.values(task).some(
+    //             (value) =>
+    //                 value &&
+    //                 value.toString().toLowerCase().includes(lowerCaseFilter)
+    //         )
+    //     );
 
-        setFilteredRowWiseTasks(filteredData);
-    }, [columnFilter, rowWiseTasks]);
+    //     setFilteredRowWiseTasks(filteredData);
+    // }, [columnFilter, rowWiseTasks]);
 
     const columns = [
         // {
@@ -295,6 +307,7 @@ const AllTasks = () => {
         //     enableResizing: true,
         //     size: 260,
         //     minSize: 200,
+        // sortDescFirst: true,
         //     cell: ({ row }) => row.original.title || "No Title",
         // },
         {
@@ -303,6 +316,7 @@ const AllTasks = () => {
             enableResizing: true,
             size: 200,
             minSize: 150,
+            sortDescFirst: true,
             cell: ({ row }) => (
                 <div
                     className={`${styles.customtruncatetwolines}`}
@@ -317,19 +331,21 @@ const AllTasks = () => {
 
         },
         {
-            accessorKey: "client.fullName",
+            accessorKey: "clientFullName",
             header: "Client Name",
             enableResizing: true,
             size: 130,
             minSize: 100,
+            sortDescFirst: true,
             cell: ({ row }) => row.original.client?.fullName || "N/A",
         },
         {
-            accessorKey: "advisor.advisorFullName",
+            accessorKey: "advisorFullName",
             header: "Advisor Name",
             enableResizing: true,
             size: 150,
             minSize: 150,
+            sortDescFirst: true,
             cell: ({ row }) => row.original.advisor?.advisorFullName || "N/A",
         },
         {
@@ -338,6 +354,7 @@ const AllTasks = () => {
             enableResizing: true,
             size: 140,
             minSize: 120,
+            sortDescFirst: true,
             cell: ({ row }) =>
                 row.original.date ? new Date(row.original.date).toLocaleDateString("en-GB") : "N/A",
         },
@@ -347,6 +364,7 @@ const AllTasks = () => {
             enableResizing: true,
             size: 125,
             minSize: 100,
+            sortDescFirst: true,
             cell: ({ row, getValue }) => {
                 const value = getValue();
                 const id = row.original._id;
@@ -366,11 +384,11 @@ const AllTasks = () => {
                             )
                         );
 
-                        setFilteredRowWiseTasks((prevTasks) =>
-                            prevTasks.map((task) =>
-                                task._id === id ? { ...task, status: newStatus } : task
-                            )
-                        );
+                        // setFilteredRowWiseTasks((prevTasks) =>
+                        //     prevTasks.map((task) =>
+                        //         task._id === id ? { ...task, status: newStatus } : task
+                        //     )
+                        // );
 
                     } catch (error) {
                         console.error("Error updating row-wise task status:", error);
@@ -401,6 +419,7 @@ const AllTasks = () => {
             enableResizing: true,
             size: 170,
             minSize: 150,
+            sortDescFirst: true,
             cell: ({ row }) => row.original.responsiblePerson || "N/A",
         },
         {
@@ -409,6 +428,7 @@ const AllTasks = () => {
             enableResizing: true,
             size: 110,
             minSize: 100,
+            sortDescFirst: true,
             cell: ({ row }) =>
                 row.original.dueDate ? new Date(row.original.dueDate).toLocaleDateString("en-GB") : "N/A",
         },
@@ -418,6 +438,7 @@ const AllTasks = () => {
             enableResizing: false,
             size: 140,
             minSize: 100,
+            enableSorting: false,
             cell: ({ row }) => (
                 <div className="d-flex gap-2">
                     <button
@@ -536,39 +557,33 @@ const AllTasks = () => {
                         <div className="col-12 col-md-6 d-flex align-items-center gap-3 flex-wrap">
                             <div className="d-flex align-items-center gap-2">
                                 <label className="fw-semibold mb-0">Advisor:</label>
-                                <select
-                                    className="form-select form-select-sm rounded-3"
-                                    style={{ width: '150px' }}
-                                    value={selectedAdvisor}
-                                    onChange={(e) => setSelectedAdvisor(e.target.value)}
-                                >
-                                    <option value="">All Advisors</option>
-                                    {advisorsList.map((advisor, index) => (
-                                        <option key={index} value={advisor}>
-                                            {advisor}
-                                        </option>
-                                    ))}
-                                </select>
+                                <Select
+                                    options={[{ label: "All Advisors", value: "" }, ...advisorsList.map(advisor => ({ label: advisor, value: advisor }))]}
+                                    value={{ label: selectedAdvisor || "All Advisors", value: selectedAdvisor }}
+                                    onChange={(selectedOption) => setSelectedAdvisor(selectedOption?.value || "")}
+                                    className="react-select-container border rounded-3"
+                                    classNamePrefix="react-select"
+                                    styles={{ container: base => ({ ...base, width: '180px' }) }}
+                                    isClearable
+                                />
                             </div>
 
                             <div className="d-flex align-items-center gap-2">
                                 <label className="fw-semibold mb-0">Client:</label>
-                                <select
-                                    className="form-select form-select-sm rounded-3"
-                                    style={{ width: '150px' }}
-                                    value={selectedClient}
-                                    onChange={(e) => setSelectedClient(e.target.value)}
-                                >
-                                    <option value="">All Clients</option>
-                                    {clientsList.map((client, index) => (
-                                        <option key={index} value={client}>
-                                            {client}
-                                        </option>
-                                    ))}
-                                </select>
+                                <Select
+                                    options={[{ label: "All Clients", value: "" }, ...clientsList.map(client => ({ label: client, value: client }))]}
+                                    value={{ label: selectedClient || "All Clients", value: selectedClient }}
+                                    onChange={(selectedOption) => setSelectedClient(selectedOption?.value || "")}
+                                    className="react-select-container border rounded-3"
+                                    classNamePrefix="react-select"
+                                    styles={{ container: base => ({ ...base, width: '180px' }) }}
+                                    isClearable
+                                />
                             </div>
                         </div>
                     </div>
+
+
 
 
                     <div className={styles.rowWiseTasksPageTableWrapper}>
@@ -589,11 +604,20 @@ const AllTasks = () => {
                             </div>
 
                             <TableComponent
-                                data={filteredRowWiseTasks}
-                                columns={columns}
-                                pageSize={10}
+                                data={rowWiseTasks}
+                                columns={columns} // make sure `columns` is defined above or imported
+                                pageSize={pageSize}
+                                pageIndex={pageIndex}
+                                setPageIndex={setPageIndex}
+                                setPageSize={setPageSize}
+                                totalCount={totalCount}
+                                sorting={sorting}
+                                setSorting={setSorting}
                                 className={`${styles["custom-style-table"]}`}
+                                isLoading={isLoading}
+                                setColumnFilter={setColumnFilter}
                             />
+
 
                             <DeleteModal
                                 modalId="deleteModal"

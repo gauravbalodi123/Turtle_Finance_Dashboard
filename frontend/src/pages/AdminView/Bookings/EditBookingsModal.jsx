@@ -14,12 +14,19 @@ const EditBookingsModal = ({ id, url, onSuccess }) => {
   const cancelReasonRef = useRef();
   const joinUrlRef = useRef();
   const advisorEmailRef = useRef();
+  const phoneNumberRef = useRef();
+  const countryCodeRef = useRef();
+  const clientQueryRef = useRef();
+
 
   const fetchData = async () => {
     try {
       setFormData(null);
       const res = await axios.get(`${url}/admin/bookings/${id}/editBooking`);
       const booking = res.data;
+      const questions = booking.invitee?.questionsAndAnswers || [];
+      const phoneQA = questions.find(q => q.question === "Phone Number") || {};
+      const queryQA = questions.find(q => q.question?.toLowerCase().includes("queries")) || {};
 
       setFormData({
         ...booking,
@@ -28,7 +35,11 @@ const EditBookingsModal = ({ id, url, onSuccess }) => {
         canceledBy: booking.cancellation?.canceled_by || "",
         cancelReason: booking.cancellation?.reason || "",
         joinUrl: booking.location?.join_url || "",
-        advisorEmail: booking.event_guests?.[0]?.email || ""
+        advisorEmail: booking.event_guests?.[0]?.email || "",
+
+        phoneNumber: phoneQA.phoneNumber || "",
+        countryCode: phoneQA.countryCode || "",
+        clientQuery: queryQA.answer || ""
       });
     } catch (error) {
       console.error("Error loading booking", error);
@@ -56,12 +67,28 @@ const EditBookingsModal = ({ id, url, onSuccess }) => {
     e.preventDefault();
     setLoading(true);
 
+    const phoneNumber = getValueOrNull(phoneNumberRef);
+    const countryCode = getValueOrNull(countryCodeRef);
+    const clientQuery = getValueOrNull(clientQueryRef);
+
     const updatedData = {
       name: getValueOrNull(nameRef),
       status: getValueOrNull(statusRef),
       invitee: {
         fullName: getValueOrNull(clientNameRef),
         email: getValueOrNull(clientEmailRef),
+        questionsAndAnswers: [
+          ...(phoneNumber || countryCode ? [{
+            question: "Phone Number",
+            answer: `${countryCode || ''}${phoneNumber || ''}`,
+            countryCode: countryCode || null,
+            phoneNumber: phoneNumber || null
+          }] : []),
+          ...(clientQuery ? [{
+            question: "Any queries or concerns?",
+            answer: clientQuery
+          }] : [])
+        ]
       },
       cancellation: {
         canceled_by: getValueOrNull(canceledByRef),
@@ -85,6 +112,7 @@ const EditBookingsModal = ({ id, url, onSuccess }) => {
       setLoading(false);
     }
   };
+
 
   return (
     <BaseEditModal
@@ -142,6 +170,41 @@ const EditBookingsModal = ({ id, url, onSuccess }) => {
               <input ref={advisorEmailRef} defaultValue={formData.advisorEmail || ""} className="form-control" />
             </div>
           </div>
+
+          <div className="row mb-3">
+            <div className="col-12 col-md-6">
+              <label>Phone Number</label>
+              <div className="input-group">
+                <span className="input-group-text px-auto" style={{ width: "50px" }}>
+                  <input
+                    ref={countryCodeRef}
+                    defaultValue={formData.countryCode}
+                    className="form-control border-0 p-0"
+                    placeholder="+91"
+                    style={{ width: "50px" }}
+                  />
+                </span>
+                <input
+                  ref={phoneNumberRef}
+                  defaultValue={formData.phoneNumber}
+                  className="form-control"
+                  placeholder="Phone Number"
+                />
+              </div>
+            </div>
+
+            <div className="col-12 col-md-6">
+              <label>Client Query</label>
+              <input
+                ref={clientQueryRef}
+                defaultValue={formData.clientQuery}
+                className="form-control"
+                placeholder="Any client questions"
+              />
+            </div>
+          </div>
+
+
         </>
       ) : (
         <p>Loading...</p>

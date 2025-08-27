@@ -30,6 +30,7 @@ const AllBookings = () => {
   const [pageIndex, setPageIndex] = useState(0);
 
   const [selectedBookingId, setSelectedBookingId] = useState(null);
+  const [sorting, setSorting] = useState([]);
 
   const [bookingStats, setBookingStats] = useState({
     total: 0,
@@ -38,31 +39,54 @@ const AllBookings = () => {
     issues: 0,
   });
 
+
+
+
+
+
   useEffect(() => {
-    fetchBookings(pageIndex, pageSize);
-  }, [pageIndex, pageSize]);
+    fetchBookings(pageIndex, pageSize, sorting, columnFilter);
+  }, [pageIndex, pageSize, sorting, columnFilter]);
 
-
-  const fetchBookings = async (page = 0, size = 10) => {
+  const fetchBookings = async (
+    page = 0,
+    size = 10,
+    sorting = [],
+    search = ""
+  ) => {
     setIsLoading(true);
     try {
-      const res = await axios.get(`${url}/admin/bookings?page=${page + 1}&limit=${size}`);
+      const sortField = sorting[0]?.id || "";
+      const sortOrder = sorting[0]?.desc ? "desc" : "asc";
+
+      const res = await axios.get(`${url}/admin/selectiveBookings`, {
+        params: {
+          page: page + 1,
+          limit: size,
+          sortField,
+          sortOrder,
+          search
+        }
+      });
+
       setBookings(res.data.bookings);
-      // setTotalCount(res.data.total);
+      setFilteredBookings(res.data.bookings);
+      setTotalCount(res.data.total);
     } catch (err) {
-      console.error("Fetch error:", err);
-      setError("Failed to fetch bookings.");
+      console.error("Failed to fetch bookings", err);
+      setError("Failed to fetch bookings");
     } finally {
       setIsLoading(false);
     }
   };
 
 
+
   const fetchStats = async () => {
     try {
       const res = await axios.get(`${url}/admin/bookings/stats`);
       setBookingStats(res.data);
-      setTotalCount(res.data.total);
+      // setTotalCount(res.data.total);
     } catch (err) {
       console.error("Stats error:", err);
     }
@@ -107,60 +131,64 @@ const AllBookings = () => {
     }
   };
 
-  useEffect(() => {
-    if (!columnFilter) {
-      setFilteredBookings(bookings);
-      return;
-    }
+  // useEffect(() => {
+  //   if (!columnFilter) {
+  //     setFilteredBookings(bookings);
+  //     return;
+  //   }
 
-    const lower = columnFilter.toLowerCase();
+  //   const lower = columnFilter.toLowerCase();
 
-    const filtered = bookings.filter((booking) =>
-      Object.values(booking).some(
-        (val) =>
-          val &&
-          val.toString().toLowerCase().includes(lower)
-      )
-    );
+  //   const filtered = bookings.filter((booking) =>
+  //     Object.values(booking).some(
+  //       (val) =>
+  //         val &&
+  //         val.toString().toLowerCase().includes(lower)
+  //     )
+  //   );
 
-    setFilteredBookings(filtered);
-  }, [columnFilter, bookings]);
+  //   setFilteredBookings(filtered);
+  // }, [columnFilter, bookings]);
+
+
+
+
 
   const columns = [
     // { accessorKey: "bookingId", header: "Booking ID", size: 200 },
     // { accessorKey: "event_type", header: "Event Type", size: 150 },
-    // {
-    //   accessorKey: "start_time",
-    //   header: "Start Time",
-    //   size: 180,
-    //   cell: ({ row }) =>
-    //     row.original.start_time
-    //       ? new Date(row.original.start_time).toLocaleString("en-GB", {
-    //         day: "2-digit",
-    //         month: "2-digit",
-    //         year: "numeric",
-    //         hour: "numeric",
-    //         minute: "numeric",
-    //         hour12: true
-    //       })
-    //       : "N/A",
-    // },
-    // {
-    //   accessorKey: "end_time",
-    //   header: "End Time",
-    //   size: 180,
-    //   cell: ({ row }) =>
-    //     row.original.end_time
-    //       ? new Date(row.original.end_time).toLocaleString("en-GB", {
-    //         day: "2-digit",
-    //         month: "2-digit",
-    //         year: "numeric",
-    //         hour: "numeric",
-    //         minute: "numeric",
-    //         hour12: true
-    //       })
-    //       : "N/A",
-    // },
+    {
+      accessorKey: "start_time",
+      header: "Start Time",
+      size: 180,
+      cell: ({ row }) =>
+        row.original.start_time
+          ? new Date(row.original.start_time).toLocaleString("en-GB", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            hour: "numeric",
+            minute: "numeric",
+            hour12: true
+          })
+          : "N/A",
+    },
+    {
+      accessorKey: "end_time",
+      header: "End Time",
+      size: 180,
+      cell: ({ row }) =>
+        row.original.end_time
+          ? new Date(row.original.end_time).toLocaleString("en-GB", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            hour: "numeric",
+            minute: "numeric",
+            hour12: true
+          })
+          : "N/A",
+    },
 
 
 
@@ -183,8 +211,8 @@ const AllBookings = () => {
     // { accessorKey: "location.type", header: "Location Type", size: 160 },
 
     // Timeline
-    // { accessorKey: "created_at_timeline", header: "Created At (Timeline)", size: 180 },
-    // { accessorKey: "updated_at_timeline", header: "Updated At (Timeline)", size: 180 },
+    { accessorKey: "created_at_timeline", header: "Created At (Timeline)", size: 180 },
+    { accessorKey: "updated_at_timeline", header: "Updated At (Timeline)", size: 180 },
 
     // Meeting Notes
     // { accessorKey: "meeting_notes_plain", header: "Meeting Notes", size: 300 },
@@ -210,39 +238,47 @@ const AllBookings = () => {
 
     // Event Guests (just showing first guest for simplicity)
 
-    { accessorKey: "name", header: "Name", size: 150 },
-    { accessorKey: "status", header: "Status", size: 100 },
-    { accessorKey: "invitee.fullName", header: "Client Name", size: 180 },
-    { accessorKey: "invitee.email", header: "Client Email", size: 200 },
+    { accessorKey: "name", header: "Event Name", size: 150 ,sortDescFirst: true,},
+    { accessorKey: "status", header: "Status", size: 100,sortDescFirst: true, },
+    { accessorKey: "inviteeFullName", header: "Client Name", size: 150 ,sortDescFirst: true,},
+    { accessorKey: "inviteeEmail", header: "Client Email", size: 200,sortDescFirst: true, },
     { accessorKey: "cancellation.canceled_by", header: "Canceled By", size: 160 },
     { accessorKey: "cancellation.reason", header: "Cancellation Reason", size: 200 },
-    { accessorKey: "location.join_url", header: "Join URL", size: 250 },
+    // { accessorKey: "location.join_url", header: "Join URL", size: 250 },
 
     {
       accessorKey: "event_guests",
-      header: "Advisor Email",
+      header: "Event Guests",
       enableResizing: true,
-      size: 200,
+      size: 135,
+      sortDescFirst: true,
       // minSize: 180,
       cell: ({ row }) => {
-        const guest = row.original.event_guests?.[0];
-        return guest?.email || "N/A";
+        const guests = row.original.event_guests || [];
+        return guests.length ? guests.map(g => g.email).filter(Boolean).join(", ") : "N/A"
       }
     },
+
     {
-      header: "Phone Number",
-      accessorKey: "invitee.questionsAndAnswers",
-      size: 160,
+      accessorKey: "advisors",
+      header: "Advisor Email(s)",
+      enableResizing: true,
+      size: 180,
+      sortDescFirst: true,
       cell: ({ row }) => {
-        const qa = row.original.invitee?.questionsAndAnswers || [];
-        const phoneQA = qa.find(q => q.question === "Phone Number");
-        return phoneQA?.phoneNumber || "N/A";
+        const advisors = row.original.advisors || [];
+        return advisors.length
+          ? advisors.map(a => a.email).filter(Boolean).join(", ")
+          : "N/A";
       }
     },
+
     {
+      accessorKey: "countryCode",
+      id: "countryCode", // Custom ID for sorting
       header: "Country Code",
-      accessorKey: "invitee.questionsAndAnswers",
-      size: 120,
+      size: 140,
+      sortDescFirst: true,
       cell: ({ row }) => {
         const qa = row.original.invitee?.questionsAndAnswers || [];
         const phoneQA = qa.find(q => q.question === "Phone Number");
@@ -250,21 +286,35 @@ const AllBookings = () => {
       }
     },
     {
-      header: "Client Query",
-      accessorKey: "invitee.questionsAndAnswers",
-      size: 220,
+      accessorKey: "phoneNumber",
+      id: "phoneNumber", // Custom ID for sorting
+      header: "Phone Number",
+      size: 150,
+      sortDescFirst: true,
       cell: ({ row }) => {
         const qa = row.original.invitee?.questionsAndAnswers || [];
-        const queryQA = qa.find(q => q.question.includes("queries"));
-        return queryQA?.answer || "N/A";
+        const phoneQA = qa.find(q => q.question === "Phone Number");
+        return phoneQA?.phoneNumber || "N/A";
       }
     },
+
+    // {
+    //   header: "Client Query",
+    //   accessorKey: "invitee.questionsAndAnswers",
+    //   size: 130,
+    //   cell: ({ row }) => {
+    //     const qa = row.original.invitee?.questionsAndAnswers || [];
+    //     const queryQA = qa.find(q => q.question.includes("queries"));
+    //     return queryQA?.answer || "N/A";
+    //   }
+    // },
     {
       accessorKey: "_id",
       header: "Action",
       enableResizing: false,
       size: 140,
       minSize: 100,
+      enableSorting: false,
       cell: ({ row }) => (
         <div className="d-flex gap-2">
 
@@ -383,7 +433,11 @@ const AllBookings = () => {
                 setPageIndex={setPageIndex}
                 setPageSize={setPageSize}
                 totalCount={totalCount}
+                sorting={sorting}
+                setSorting={setSorting}
                 className={`${styles["custom-style-table"]}`}
+                isLoading={isLoading}
+                setColumnFilter={setColumnFilter}
               />
 
               {/* <EditTaskModal

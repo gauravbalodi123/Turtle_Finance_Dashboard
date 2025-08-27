@@ -15,6 +15,11 @@ import AddAdvisor from '../pages/AdminView/Advisors/AddAdvisors'
 import AllBookings from '../pages/AdminView/Bookings/AllBookings'
 import AllProspects from '../pages/AdminView/Prospects/AllProspects'
 import AllMembers from '../pages/AdminView/MemberActivation/AllMembers'
+import DigioResponseForm from '../pages/AdminView/Clients/DigioResponseForm'
+import KYCAdmin from '../pages/AdminView/Clients/KYCAdmin'
+import ClientRiskProfile from '../pages/AdminView/Clients/ClientRiskProfile'
+import UpdateSubscriptionPrice from '../pages/AdminView/Subscription/UpdateSubscriptionPrice'
+
 
 
 const AdminRoutes = () => {
@@ -31,19 +36,25 @@ const AdminRoutes = () => {
     { path: '/admin/tasks', element: <AllMeetings /> },
     { path: '/admin/tasks/:id/editTasks', element: <EditMeetings /> },
 
-    {path:'/admin/rowwisetasks', element:<AllTasks/>},
+    { path: '/admin/rowwisetasks', element: <AllTasks /> },
     { path: '/admin/rowwisetasks/:id/editRowWiseTasks', element: <EditTasks /> },
     { path: '/admin/rowwisetasks/addTask', element: <AddTasks /> },
 
-    {path:'/admin/bookings', element:<AllBookings/>},
+    { path: '/admin/bookings', element: <AllBookings /> },
 
-    {path:'/admin/prospects', element:<AllProspects/>},
+    { path: '/admin/prospects', element: <AllProspects /> },
 
-    {path:'/admin/memberActivation', element:<AllMembers/>},
+    { path: '/admin/memberActivation', element: <AllMembers /> },
 
-    
 
-    
+    { path: '/admin/clients/:clientId/riskProfile', element: <ClientRiskProfile /> },
+    { path: "/admin/clients/:clientId/digio-response", element: <DigioResponseForm /> },
+    { path: "/admin/clients/:clientId/kycAdmin", element: <KYCAdmin /> },
+    { path: '/admin/updateSubscriptionPrice', element: <UpdateSubscriptionPrice /> },
+
+
+
+
   ]
 
   // Return all routes using useRoutes

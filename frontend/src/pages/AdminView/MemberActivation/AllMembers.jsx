@@ -3,8 +3,9 @@ import axios from "axios";
 import styles from '../../../styles/AdminLayout/MemberActivation/AllMembers.module.css'
 import Lottie from "lottie-react";
 import parrot from '../../../assets/animation/parrot.json'
-import TableComponent from '../../../components/SmallerComponents/TableComponent';
+// import TableComponent from '../../../components/SmallerComponents/TableComponent';
 import OnboardMembersModal from './OnboardMembersModal';
+import ActivateMemberModal from '../../../components/SmallerComponents/ActivateMemberModal ';
 
 const AllMembers = () => {
     axios.defaults.withCredentials = true;
@@ -12,19 +13,138 @@ const AllMembers = () => {
 
     const [error, setError] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
-    const [clients, setClients] = useState([]);
+    // const [clients, setClients] = useState([]);
     const [bookingClients, setBookingClients] = useState([]);
     const [modalLoading, setModalLoading] = useState(false);
+    const [completedPayments, setCompletedPayments] = useState([]);
+
+    const [selectedClient, setSelectedClient] = useState(null);
+    const [startDate, setStartDate] = useState("");
+    const [advisorAssignments, setAdvisorAssignments] = useState({
+        ca: [],
+        financialPlanner: [],
+        insuranceAdvisor: [],
+        estatePlanner: [],
+        creditCardAdvisor: [],
+        bankingCompliance: [],
+    });
+    const [activating, setActivating] = useState(false);
+    const [advisorsList, setAdvisorsList] = useState([]);
+
+
+
+    useEffect(() => {
+        const fetchCompletedPayments = async () => {
+            try {
+                const response = await axios.get(`${url}/client/payments/completed`);
+                setCompletedPayments(response.data);
+            } catch (error) {
+                console.error("Error fetching completed payments:", error);
+            }
+        };
+
+        fetchCompletedPayments();
+    }, [url]);
+
+    const handleAdvisorChange = (roleKey, advisorId) => {
+        setAdvisorAssignments(prev => ({
+            ...prev,
+            [roleKey]: [advisorId], // Only one advisor per role for now
+        }));
+    };
+
+
+    const handleActivate = async () => {
+        try {
+            setActivating(true);
+
+            const assignedAdvisorIds = Object.values(advisorAssignments).flat().filter(Boolean);
+            if (assignedAdvisorIds.length < 3) {
+                alert("Please assign at least 3 advisors.");
+                return;
+            }
+
+            const payload = {
+                advisors: assignedAdvisorIds,
+                subscriptionDate: startDate,
+                subscriptionStatus: "Active"
+            };
+
+            await axios.patch(`${url}/admin/clients/${selectedClient._id}/editClients`, payload);
+
+            alert("Client activated successfully!");
+            window.location.reload(); // Optional: refresh list or re-fetch clients
+        } catch (error) {
+            console.error("Activation failed:", error);
+            alert("Failed to activate client.");
+        } finally {
+            setActivating(false);
+        }
+    };
+
+
+    useEffect(() => {
+        const fetchAdvisors = async () => {
+            try {
+                const response = await axios.get(`${url}/admin/advisors`);
+                setAdvisorsList(response.data);
+            } catch (error) {
+                console.error("Error fetching advisors:", error);
+            }
+        };
+
+        fetchAdvisors();
+    }, [url]);
+
+
+
 
     // Fetch clients for the modal dropdown
     useEffect(() => {
         const fetchBookingClients = async () => {
             setIsLoading(true);
             try {
-                const res = await axios.get(`${url}/admin/allbookings`);
-                setBookingClients(res.data);
+                // Fetch both sets of data
+                const [bookingsRes, clientsRes] = await Promise.all([
+                    axios.get(`${url}/admin/allbookings`),
+                    axios.get(`${url}/admin/clients`)
+                ]);
+
+                const allBookings = bookingsRes.data;
+                const allClients = clientsRes.data;
+
+                // ✅ Step 1: Build a Set of existing client emails
+                const clientEmailsSet = new Set(allClients.map(client => client.email));
+
+                // ✅ Step 2: Filter bookings that are NOT already clients and have a valid email
+                const newBookingClients = allBookings.filter(booking => {
+                    const email = booking?.invitee?.email;
+                    return email && !clientEmailsSet.has(email);
+                });
+
+                // ✅ Step 3: Keep only the latest created booking per email
+                const latestBookingMap = new Map();
+
+                newBookingClients.forEach(booking => {
+                    const email = booking?.invitee?.email;
+                    if (!email) return;
+
+                    const currentBookingCreatedAt = new Date(booking?.createdAt || 0); // ← Use createdAt here
+                    const existingBooking = latestBookingMap.get(email);
+                    const existingCreatedAt = existingBooking ? new Date(existingBooking.createdAt || 0) : null;
+
+                    if (!existingBooking || currentBookingCreatedAt > existingCreatedAt) {
+                        latestBookingMap.set(email, booking);
+                    }
+                });
+
+                // ✅ Step 4: Convert Map to Array
+                const uniqueLatestBookings = Array.from(latestBookingMap.values());
+
+                console.log("✅ Unique booking clients (latest only):", uniqueLatestBookings);
+                setBookingClients(uniqueLatestBookings);
             } catch (err) {
-                console.error("Failed to fetch booking clients:", err);
+                console.error("❌ Failed to fetch booking clients:", err);
                 setError("Failed to load booking clients data");
             } finally {
                 setIsLoading(false);
@@ -34,71 +154,78 @@ const AllMembers = () => {
         fetchBookingClients();
     }, [url]);
 
+
+
+
     const handleOnboardSubmit = async (formData) => {
         setModalLoading(true);
         setError(null);
 
         const {
             fromBooking,
-            bookingId, // ✅ renamed from client
+            bookingId,
             name,
             email,
             phone,
-            caseType,
+            clientType,
             password,
         } = formData;
 
+        let finalName = name;
+        let finalEmail = email;
+        let finalPhone = phone;
+        let finalClientType = clientType;
+        let finalPassword = password;
+
         try {
             if (fromBooking && bookingId) {
-                // CASE: KC Booking
+                // Fetch booking
+                const { data: bookingData } = await axios.get(
+                    `${url}/admin/bookings/${bookingId}/editBooking`
+                );
 
-                // 1. Get the booking data first
-                const { data: bookingData } = await axios.get(`${url}/admin/bookings/${bookingId}/editBooking`);
-
-                // 2. Prepare payload for client creation
-                const newClientData = {
-                    fullName: bookingData.invitee?.fullName || name,
-                    email: bookingData.invitee?.email || email,
-                    phone: (() => {
-                        const q = bookingData.invitee?.questionsAndAnswers?.find(q =>
-                            q.question?.toLowerCase().includes("phone")
-                        );
-                        return q?.phoneNumber || phone;
-                    })(),
-
-                    caseType,
-                    password,
-                };
-
-                // 3. Create the client
-                await axios.post(`${url}/admin/addClient`, newClientData);
-
-                // 4. Delete the booking
-                await axios.delete(`${url}/admin/bookings/${bookingId}`);
-
-                // 5. Placeholder: Send onboarding email (future step)
-
-            } else {
-                // CASE: Manual Entry
-                const newClientData = {
-                    fullName: name,
-                    email,
-                    phone,
-                    caseType,
-                    password,
-                };
-
-                await axios.post(`${url}/admin/addClient`, newClientData);
+                finalName = bookingData.invitee?.fullName || name;
+                finalEmail = bookingData.invitee?.email || email;
+                finalPhone = (() => {
+                    const q = bookingData.invitee?.questionsAndAnswers?.find(q =>
+                        q.question?.toLowerCase().includes("phone")
+                    );
+                    return q?.phoneNumber || phone;
+                })();
             }
 
-            alert("Member onboarded successfully!");
+            // ✅ Single register call for both cases
+            await axios.post(`${url}/auth/register`, {
+                name: finalName,
+                email: finalEmail,
+                phone: finalPhone,
+                clientType: finalClientType,
+                password: finalPassword,
+                role: "client",
+            });
+
+            // Optional: Delete the booking
+            if (fromBooking && bookingId) {
+                await axios.delete(`${url}/admin/bookings/${bookingId}`);
+            }
+
+            // ✅ Send onboarding email
+            await axios.post(`${url}/admin/sendOnboardingEmail`, {
+                fullName: finalName,
+                email: finalEmail,
+                password: finalPassword,
+            });
+
+            alert("Member onboarded and email sent successfully!");
         } catch (err) {
             console.error("Onboarding failed:", err);
-            alert("Failed to onboard member. Please try again.");
+            alert("Failed to onboard member and can't send email. Please try again.");
         } finally {
             setModalLoading(false);
         }
     };
+
+
 
 
 
@@ -142,23 +269,40 @@ const AllMembers = () => {
                             </div>
 
                             {/* Member Cards */}
-                            {[
-                                { name: "Thomas Anderson", company: "Matrix Technologies", email: "thomas.anderson@example.com", phone: "(555) 123-4567", status: "Payment Complete" },
-                                { name: "Rachel Green", company: "Central Perk Inc.", email: "rachel.green@example.com", phone: "(555) 234-5678", status: "Onboarding Ongoing" },
-                                { name: "Walter White", company: "White Enterprises", email: "walter.white@example.com", phone: "(555) 345-6789", status: "Payment Complete" },
-                            ].map((member, idx) => (
-                                <div key={idx} className="border-top py-3 d-flex justify-content-between align-items-start">
-                                    <div>
-                                        <div className="fw-semibold">{member.name}</div>
-                                        <div className="text-muted">{member.company}</div>
-                                        <div className="text-muted small">{member.email} • {member.phone}</div>
+                            {completedPayments.map((payment, idx) => {
+                                const client = payment.clientId;
+
+                                if (!client) return null; // safeguard
+
+                                return (
+                                    <div key={idx} className="border-top py-3 d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <div className="fw-semibold">{client.fullName}</div>
+                                            <div className=" d-flex gap-4 ">
+                                                <strong>{client.clientType || "Turtle Client"}</strong>
+                                                <p>{client.companyName && `${client.companyName}`}</p>
+                                            </div>
+                                            <div className="text-muted small">{client.email} • {client.phone}</div>
+                                        </div>
+
+                                        <div className="text-end">
+                                            <div className="text-muted small mb-2">Payment Complete</div>
+                                            <button
+                                                className="btn btn-sm btn-custom-turtle-background"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#activateMemberModal"
+                                                onClick={() => setSelectedClient(client)}
+                                            >
+                                                Activate
+                                            </button>
+
+                                        </div>
+
+
                                     </div>
-                                    <div className="text-end">
-                                        <div className="text-muted small mb-2">{member.status}</div>
-                                        <button className="btn btn-sm btn-custom-turtle-background">Activate</button>
-                                    </div>
-                                </div>
-                            ))}
+                                );
+                            })}
+
                         </div>
                     </div>
 
@@ -203,6 +347,20 @@ const AllMembers = () => {
                 loading={modalLoading}
                 onSuccess={handleOnboardSubmit}
             />
+
+            <ActivateMemberModal
+                modalId="activateMemberModal"
+                clientName={selectedClient?.fullName}
+                membershipStartDate={startDate}
+                onStartDateChange={setStartDate}
+                advisorAssignments={advisorAssignments}
+                onAdvisorChange={handleAdvisorChange}
+                onActivate={handleActivate}
+                loading={activating}
+                advisorsList={advisorsList}
+            />
+
+
 
         </div>
     )

@@ -9,7 +9,7 @@ const API_KEY = '40fbef4f-c889-4eb2-9e29-8fa464cb255e';
 const API_URL = "https://api.fireflies.ai/graphql";
 
 // MongoDB connect
-mongoose.connect("mongodb+srv://Gaurav:SFZJlOsXIpC6CDYt@cluster0.gt8apq8.mongodb.net/turtle-finance-db?retryWrites=true&w=majority&appName=Cluster0")
+mongoose.connect("mongodb+srv://tech:admin1234@turtle-finance-cluster.ogdd0ca.mongodb.net/turtle-finance-db?retryWrites=true&w=majority&appName=Turtle-Finance-cluster")
   .then(() => {
     console.log('✅ Connected to MongoDB');
     fetchTranscripts(); // Only start fetching after DB connection is ready
@@ -43,8 +43,8 @@ const QUERY = `
 `;
 
 const variables = {
-  participantEmail:'ahujanit@gmail.com', // or use process.env.PARTICIPANT_EMAIL
-  limit: 1,
+  participantEmail:'captvaibhavpandey@gmail.com', // or use process.env.PARTICIPANT_EMAIL
+  limit: 2,
   skip: 0,
 };
 

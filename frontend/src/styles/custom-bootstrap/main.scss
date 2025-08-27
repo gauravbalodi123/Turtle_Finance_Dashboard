@@ -10,7 +10,7 @@ $turtle-primary-light: #c2f8ef;
 $turtle-btn-text: #fff;
 $turtle-offcanvas-bg: #fff;
 $offcanvas-horizontal-width: 280px;
-$turtle-secondary:#adb5bd;
+$turtle-secondary: #adb5bd;
 
 
 
@@ -28,10 +28,10 @@ $pagination-active-color: #fff;
 $pagination-active-bg: #2be3b8;
 $pagination-active-border-color: transparent;
 
-$pagination-focus-color: transparent  ; 
-$pagination-focus-bg:   transparent ;          
-$pagination-focus-box-shadow:   none;   
- 
+$pagination-focus-color: transparent;
+$pagination-focus-bg: transparent;
+$pagination-focus-box-shadow: none;
+
 
 
 $pagination-disabled-color: #a9a7a7;
@@ -48,7 +48,7 @@ $theme-colors: map-merge($theme-colors,
       "turtle-primary":$turtle-primary,
       "turtle-primary-light":$turtle-primary-light,
       "turtle-secondary":$turtle-secondary,
-       ));
+    ));
 
 
 // STEP 4: Import the rest of Bootstrap
@@ -77,6 +77,27 @@ $theme-colors: map-merge($theme-colors,
   --bs-btn-active-bg: #{$turtle-btn-bg};
   --bs-btn-hover-color: #{$turtle-btn-text};
   --bs-btn-active-border-color: #{$turtle-btn-bg};
+}
+
+.btn-turtle-primary2 {
+  --bs-btn-bg: #009485;
+  --bs-btn-active-color: #fff;
+  --bs-btn-color: #{$turtle-btn-text};
+  --bs-btn-border-color: #009485;
+  --bs-btn-hover-bg: #009485;
+  --bs-btn-hover-border-color: #009485;
+  --bs-btn-active-bg: #009485;
+  --bs-btn-hover-color: #{$turtle-btn-text};
+  --bs-btn-active-border-color: #009485;
+
+  &:disabled,
+  &.disabled {
+    background-color: #63c9bf;
+    color: #{$turtle-btn-text};
+    border-color: #63c9bf;
+    opacity: 0.65;
+    pointer-events: none;
+  }
 }
 
 .btn-outline-turtle-primary {
@@ -203,7 +224,7 @@ $theme-colors: map-merge($theme-colors,
 
 .form-control-search {
   @extend .form-control;
-  
+
   background-color: #f8fafc;
   border: 1px solid $turtle-secondary;
   border-left: 0; // removes overlapping border
@@ -242,5 +263,3 @@ $theme-colors: map-merge($theme-colors,
 .pagination .page-item:last-child {
   margin-right: 0; // remove margin from last item
 }
-
-

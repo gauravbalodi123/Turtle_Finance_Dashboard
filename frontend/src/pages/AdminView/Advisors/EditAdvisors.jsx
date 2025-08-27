@@ -1,6 +1,7 @@
 import React, { Fragment, useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+import Select from "react-select";
 
 const EditAdvisors = () => {
     axios.defaults.withCredentials = true
@@ -10,35 +11,105 @@ const EditAdvisors = () => {
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState(null);
 
+    const [selectedDomains, setSelectedDomains] = useState([]);
+    const [selectedEventNames, setSelectedEventNames] = useState([]);
+
     const fullNameRef = useRef();
     const salutationRef = useRef();
-    const advisorDomainRef = useRef();
+    // const advisorDomainRef = useRef();
     const countryCodeRef = useRef();
     const phoneRef = useRef();
     const emailRef = useRef();
     const addressRef = useRef();
     const dobRef = useRef();
     const genderRef = useRef();
+    // const eventNameRef = useRef();
+    const qualificationRef = useRef();
+    const experienceRef = useRef();
+    const credentialsRef = useRef();
+    const bioRef = useRef();
+    const linkedinRef = useRef();
+
+
+    const advisorDomainOptions = [
+        { value: "Financial Planner", label: "Financial Planner" },
+        { value: "Insurance Advisor", label: "Insurance Advisor" },
+        { value: "Tax Advisor", label: "Tax Advisor" },
+        { value: "Legal Advisor", label: "Legal Advisor" },
+        { value: "Banking and Compliance Advisor", label: "Banking and Compliance Advisor" },
+        { value: "Credit Card Advisor", label: "Credit Card Advisor" },
+        { value: "Others", label: "Others" }
+    ];
+
+    const eventNameOptions = [
+        { value: "Karma Conversation", label: "Karma Conversation" },
+        { value: "Kick-off Conversation", label: "Kick-off Conversation" },
+        { value: "Financial Planning Conversation with RIA Krishna Rath", label: "Financial Planning Conversation with RIA Krishna Rath" },
+        { value: "Financial Planning Conversation with RIA Robins Joseph", label: "Financial Planning Conversation with RIA Robins Joseph" },
+        { value: "Financial Planning Conversation with RIA Kashish", label: "Financial Planning Conversation with RIA Kashish" },
+        { value: "Financial Planning Conversation with Anuj Paul", label: "Financial Planning Conversation with Anuj Paul" },
+        { value: "Insurance Advisory Conversation with Anuj Paul", label: "Insurance Advisory Conversation with Anuj Paul" },
+        { value: "Insurance Advisory Conversation with Rishabh", label: "Insurance Advisory Conversation with Rishabh" },
+        { value: "Insurance Advisory Conversation with Shabad", label: "Insurance Advisory Conversation with Shabad" },
+        { value: "Tax Planning Conversation with CA Nikhil", label: "Tax Planning Conversation with CA Nikhil" },
+        { value: "Tax Planning Conversation with CA Rahul Sharma", label: "Tax Planning Conversation with CA Rahul Sharma" },
+        { value: "Tax Planning Conversation with CA Aman", label: "Tax Planning Conversation with CA Aman" },
+        { value: "Tax Planning Conversation with CA Priyal", label: "Tax Planning Conversation with CA Priyal" },
+        { value: "Tax Planning Conversation with CA Ankit", label: "Tax Planning Conversation with CA Ankit" },
+        { value: "Tax Planning Conversation with CA Raunak", label: "Tax Planning Conversation with CA Raunak" },
+        { value: "Tax Planning Conversation with CA Amarnath Ambati", label: "Tax Planning Conversation with CA Amarnath Ambati" },
+        { value: "Tax Planning Conversation with CA Siddhant Agarwal", label: "Tax Planning Conversation with CA Siddhant Agarwal" },
+        { value: "Tax Planning Conversation with CA Sanyam Goel", label: "Tax Planning Conversation with CA Sanyam Goel" },
+        { value: "Will Drafting Conversation with Anunay", label: "Will Drafting Conversation with Anunay" },
+        { value: "Will Drafting Conversation with Arpit", label: "Will Drafting Conversation with Arpit" },
+        { value: "Will Drafting Conversation with Kunal", label: "Will Drafting Conversation with Kunal" },
+        { value: "Preliminary conversation on EPF with Kunal", label: "Preliminary conversation on EPF with Kunal" },
+        { value: "Estate Planning with Adv. Geetanjali", label: "Estate Planning with Adv. Geetanjali" },
+        { value: "Banking & Compliance Conversation with Shruti", label: "Banking & Compliance Conversation with Shruti" },
+        { value: "Financial Planning Conversation with Shruti", label: "Financial Planning Conversation with Shruti" },
+        { value: "Credit Card Advisory Conversation with Nishadh", label: "Credit Card Advisory Conversation with Nishadh" },
+        { value: "Credit Card Advisory Conversation with Rishabh", label: "Credit Card Advisory Conversation with Rishabh" },
+        { value: "Check In with Turtle", label: "Check In with Turtle" },
+        { value: "Bitcoin Discussion with Varun", label: "Bitcoin Discussion with Varun" },
+        { value: "Tax Planning Conversation with CA Ajay Vaswani", label: "Tax Planning Conversation with CA Ajay Vaswani" },
+        { value: "ITR Filing | Kick-off Conversation", label: "ITR Filing | Kick-off Conversation" },
+        { value: "First Conversation with Turtle", label: "First Conversation with Turtle" },
+         { value: "Insurance Advisory Conversation with Rohit", label: "Insurance Advisory Conversation with Rohit" }
+    ];
+
+
 
     const fetchAdvisorData = async (signal) => {
         try {
             const response = await axios.get(`${url}/admin/advisors/${id}/editAdvisors`, { signal });
-            const data = response.data;
+            const advisor = response.data;
 
             const formatDate = (isoDate) => {
-                if (!isoDate) return "";
-                const date = new Date(isoDate);
-                return date.toISOString().split("T")[0];
+                return isoDate ? new Date(isoDate).toISOString().split("T")[0] : "";
             };
 
+            const mapToSelectOptions = (valuesArray, optionsArray) => {
+                if (!Array.isArray(valuesArray)) return [];
+                return valuesArray
+                    .map(val => optionsArray.find(opt => opt.value === val))
+                    .filter(Boolean); // only valid options
+            };
+
+            // ✅ Set selected options for react-select
+            setSelectedDomains(mapToSelectOptions(advisor.advisorDomain, advisorDomainOptions));
+            setSelectedEventNames(mapToSelectOptions(advisor.eventName, eventNameOptions));
+
+            // ✅ Set other fields
             setFormData({
-                ...data,
-                dob: formatDate(data.dob),
+                ...advisor,
+                dob: formatDate(advisor.dob),
             });
+
         } catch (error) {
             console.error("Error fetching advisor data:", error);
         }
     };
+
 
     useEffect(() => {
         const controller = new AbortController();
@@ -51,6 +122,9 @@ const EditAdvisors = () => {
         return value === "" ? null : value;
     };
 
+    const getSelectedDomainValues = () => selectedDomains.map(item => item.value);
+    const getSelectedEventValues = () => selectedEventNames.map(item => item.value);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
@@ -58,13 +132,19 @@ const EditAdvisors = () => {
         const updatedData = {
             advisorFullName: getValueOrNull(fullNameRef),
             salutation: getValueOrNull(salutationRef),
-            advisorDomain: getValueOrNull(advisorDomainRef),
+            advisorDomain: getSelectedDomainValues(),
             countryCode: getValueOrNull(countryCodeRef),
             phone: getValueOrNull(phoneRef),
             email: getValueOrNull(emailRef),
             address: getValueOrNull(addressRef),
             dob: getValueOrNull(dobRef),
             gender: getValueOrNull(genderRef),
+            eventName: getSelectedEventValues(),
+            qualification: getValueOrNull(qualificationRef),
+            experience: getValueOrNull(experienceRef),
+            credentials: getValueOrNull(credentialsRef),
+            bio: getValueOrNull(bioRef),
+            linkedinProfile: getValueOrNull(linkedinRef),
         };
 
         try {
@@ -86,7 +166,7 @@ const EditAdvisors = () => {
             <div className="container my-4">
                 <div className="card  p-4">
                     <h2 className="mb-4">Edit Advisor</h2>
-                    
+
                     <form onSubmit={handleSubmit}>
                         <div className="row mb-3">
                             <div className="col-md-6">
@@ -101,9 +181,17 @@ const EditAdvisors = () => {
 
                         <div className="row mb-3">
                             <div className="col-md-6">
-                                <label className="form-label">Domain</label>
-                                <input type="text" className="form-control" ref={advisorDomainRef} defaultValue={formData.advisorDomain} />
+                                <label className="form-label">Domain(s)</label>
+                                <Select
+                                    isMulti
+                                    options={advisorDomainOptions}
+                                    value={selectedDomains}
+                                    onChange={setSelectedDomains}
+                                    placeholder="Select domain(s)..."
+                                    classNamePrefix="form-select"
+                                />
                             </div>
+
                             <div className="col-md-6">
                                 <label className="form-label">Country Code</label>
                                 <input type="text" className="form-control" ref={countryCodeRef} defaultValue={formData.countryCode} />
@@ -142,7 +230,51 @@ const EditAdvisors = () => {
                                     <option value="Other">Other</option>
                                 </select>
                             </div>
+
+                            <div className="col-md-6">
+                                <label className="form-label">LinkedIn Profile</label>
+                                <input type="url" className="form-control" ref={linkedinRef} defaultValue={formData.linkedinProfile} />
+                            </div>
                         </div>
+
+                        <div className="row mb-3">
+                            <div className="col">
+                                <label className="form-label">Event(s)</label>
+                                <Select
+                                    isMulti
+                                    options={eventNameOptions}
+                                    value={selectedEventNames}
+                                    onChange={setSelectedEventNames}
+                                    placeholder="Select event(s)..."
+                                    classNamePrefix="form-select"
+                                />
+                            </div>
+                            <div className="col">
+                                <label className="form-label">Qualification</label>
+                                <input type="text" className="form-control" ref={qualificationRef} defaultValue={formData.qualification} />
+                            </div>
+                            <div className="col">
+                                <label className="form-label">Experience (in years)</label>
+                                <input type="number" className="form-control" ref={experienceRef} defaultValue={formData.experience} />
+                            </div>
+                        </div>
+
+                        {/* <div className="row mb-3">
+                            
+                            <div className="col-md-6">
+                                <label className="form-label">Credentials</label>
+                                <input type="text" className="form-control" ref={credentialsRef} defaultValue={formData.credentials} />
+                            </div>
+                        </div> */}
+
+                        <div className="row mb-3">
+                            <div className="col-12">
+                                <label className="form-label">Bio</label>
+                                <textarea className="form-control" rows={10} ref={bioRef} defaultValue={formData.bio}></textarea>
+                            </div>
+
+                        </div>
+
 
                         <div className="d-flex justify-content-end">
                             <button type="submit" className="btn btn-turtle-primary" disabled={loading}>

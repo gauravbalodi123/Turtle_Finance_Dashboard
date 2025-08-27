@@ -3,6 +3,8 @@ import axios from 'axios';
 import { useNavigate, useLocation } from 'react-router-dom';
 import brandlogo from '../assets/images/logo_png.png';
 import styles from '../styles/login.module.css';
+import { Link } from 'react-router-dom';
+
 
 const LoginPage = () => {
   const url = import.meta.env.VITE_URL;
@@ -36,7 +38,24 @@ const LoginPage = () => {
       );
 
       console.log('Login successful:', res.data);
-      navigate('/adminautharized/admin/clients');
+      const role = res.data.role;
+      const status = res.data.status;
+
+      if (role === "admin") {
+        navigate('/adminautharized/admin/clients');
+      } else if (role === "client") {
+
+        if (status === "Active") {
+          navigate("/clientautharized/clientAdvisorDashboard");
+        } else {
+          navigate("/clientautharized/onboarding");
+        }
+
+        //  navigate('/clientautharized/dashboard');// Update this route to your actual client dashboard route
+      } else {
+        setError("Unknown role. Please contact support.");
+      }
+
     } catch (err) {
       console.error('Login failed:', err.response?.data);
       setError(err.response?.data?.message || 'Login failed');
@@ -44,24 +63,23 @@ const LoginPage = () => {
   };
 
   return (
-    <div className={`d-flex vh-100 align-items-center justify-content-center ${styles.bgaquagradient }`}>
+    <div className="d-flex vh-100 align-items-center justify-content-center">
       <div className="w-100 h-100 row align-items-center justify-content-center">
-        <div className="col-10  g-0 col-md-7 border border-3 border-turtle-primary rounded-4 bg-info-subtle">
-
+        <div className="col-10 g-0 col-md-8 border border-3 border-turtle-primary rounded-4 bg-light">
           <div className="row g-0">
-            <div className="col-12  col-md-5 d-flex align-items-center p-2 p-md-4 position-relative">
+            <div className="col-12 col-md-5 d-flex align-items-center p-2 p-md-4 position-relative">
               <form className="w-100 h-100 p-3 my-4" onSubmit={handleLogin}>
                 <img className={`${styles.brandlogo}`} src={brandlogo} alt="" />
 
                 <div className="d-flex flex-column gap-3 h-50 my-4">
-                  {message && <div className="alert alert-primary px-1">{message}</div>}
-                  {error && <div className="alert alert-danger px-1">{error}</div>}
+                  {message && <div className="alert alert-info">{message}</div>}
+                  {error && <div className="alert alert-danger">{error}</div>}
 
 
                   <input
                     type="email"
                     ref={emailRef}
-                    className="form-control"
+                    className="form-control form-control-lg"
                     id="Email"
                     placeholder="Email"
                     required
@@ -70,17 +88,21 @@ const LoginPage = () => {
                   <input
                     type="password"
                     ref={passwordRef}
-                    className="form-control"
+                    className="form-control form-control-lg"
                     id="password"
                     placeholder="Password"
                     required
                   />
 
-                  <a className="fs-6 text-md-end text-dark link-underline-dark link-offset-2" role="button">
+                  <Link
+                    to="/forgot-password"
+                    className="fs-6 text-md-end text-dark link-underline-dark link-offset-2"
+                    role="button"
+                  >
                     Forgot Password?
-                  </a>
+                  </Link>
 
-                  <button type="submit" className="btn btn-md btn-turtle-primary">
+                  <button type="submit" className="btn btn-lg btn-turtle-primary">
                     Login
                   </button>
                 </div>
@@ -91,7 +113,7 @@ const LoginPage = () => {
               </p>
             </div>
 
-            <div className="col-12  col-md-7 d-none d-md-block">
+            <div className="col-12 col-md-7 d-none d-md-block">
               <img
                 className={`${styles.loginPhoto} h-100 w-100`}
                 src="https://static.wixstatic.com/media/ced0bf_df09d06b093044cc96f22264a45ef92f~mv2.png/v1/fill/w_792,h_596,al_c,q_90,enc_avif,quality_auto/ced0bf_df09d06b093044cc96f22264a45ef92f~mv2.png"

@@ -30,10 +30,9 @@ const dummyClients =[
 
 
 async function seedClientDB() {
-    // const clientSeed = await fetchDatabaseData("95a2d0f29c6844e9bab0b563496e2752");
+    const clientSeed = await fetchDatabaseData("95a2d0f29c6844e9bab0b563496e2752");
     try {
-        
-        await Client.insertMany(dummyClients);
+        await Client.insertMany(clientSeed);
         console.log("✅ Client dummy data seeded successfully!");
     } catch (error) {
         console.error("❌ Error seeding client data:", error);

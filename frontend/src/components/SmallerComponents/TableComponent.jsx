@@ -10,25 +10,27 @@ import {
 import { FaSort, FaSortUp, FaSortDown, FaAngleDoubleLeft, FaAngleDoubleRight } from "react-icons/fa";
 import styles from "../../styles/SmallerComponents/TableComponent/TableComponent.module.css";
 
-const TableComponent = ({ data,columns,pageIndex,pageSize,setPageIndex,setPageSize,totalCount,className,}) => {
+const TableComponent = ({ data, columns, pageIndex, pageSize, setPageIndex, setPageSize, totalCount, className, sorting,setSorting, }) => {
 
     const table = useReactTable({
         data,
         columns,
-        manualPagination: true,
-        pageCount: Math.ceil(totalCount / pageSize),
+        manualPagination: true, 
+        manualSorting: true,   
+        pageCount: Math.ceil(totalCount / pageSize), // ✅ required for server pagination
         state: {
             pagination: { pageIndex, pageSize },
+            sorting: sorting
         },
         onPaginationChange: (updater) => {
             const next = typeof updater === 'function' ? updater({ pageIndex, pageSize }) : updater;
             setPageIndex(next.pageIndex);
             setPageSize(next.pageSize);
         },
-        getCoreRowModel: getCoreRowModel(),
-        getSortedRowModel: getSortedRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
+        onSortingChange: setSorting, // ✅ handle sorting changes
+        getCoreRowModel: getCoreRowModel(), // ✅ always required
         columnResizeMode: "onChange",
+        enableSortingRemoval: true,
     });
 
     useEffect(() => {

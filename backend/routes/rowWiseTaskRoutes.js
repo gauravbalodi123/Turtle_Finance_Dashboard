@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const RowwiseTask = require('../models/rowwisetask.js');
+const Advisor = require('../models/advisor.js');
+const Client = require('../models/client.js');
+
 
 
 
@@ -17,6 +20,143 @@ router.get("/rowwisetasks", async (req, res) => {
         res.status(400).json({ msg: "Oops , Something went Wrong while adding the rowwisetasks" });
     }
 })
+
+
+
+router.get("/selectiveRowwiseTasks", async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+
+        const search = req.query.search || "";
+        const sortField = req.query.sortField;
+        const sortOrder = req.query.sortOrder === "asc" ? 1 : -1;
+
+        const selectedAdvisor = req.query.advisor || "";
+        const selectedClient = req.query.client || "";
+
+        const sortBy = {};
+        if (sortField) {
+            sortBy[sortField] = sortOrder;
+        } else {
+            sortBy["createdAt"] = -1; // default sort
+        }
+
+        const matchStage = {};
+
+        if (search) {
+            matchStage.$or = [
+                { "client.fullName": { $regex: search, $options: "i" } },
+                { "client.email": { $regex: search, $options: "i" } },
+                { "advisor.advisorFullName": { $regex: search, $options: "i" } },
+                { "advisor.email": { $regex: search, $options: "i" } },
+                { title: { $regex: search, $options: "i" } },
+                { actionItems: { $regex: search, $options: "i" } },
+                { responsiblePerson: { $regex: search, $options: "i" } },
+                { participants: { $regex: search, $options: "i" } },
+            ];
+        }
+
+        if (selectedClient) {
+            matchStage["client.fullName"] = selectedClient;
+        }
+
+        if (selectedAdvisor) {
+            matchStage["advisor.advisorFullName"] = selectedAdvisor;
+        }
+
+        const result = await RowwiseTask.aggregate([
+            {
+                $lookup: {
+                    from: "clients",
+                    localField: "client",
+                    foreignField: "_id",
+                    as: "client",
+                },
+            },
+            {
+                $unwind: {
+                    path: "$client",
+                    preserveNullAndEmptyArrays: true,
+                },
+            },
+            {
+                $lookup: {
+                    from: "advisors",
+                    localField: "advisor",
+                    foreignField: "_id",
+                    as: "advisor",
+                },
+            },
+            {
+                $unwind: {
+                    path: "$advisor",
+                    preserveNullAndEmptyArrays: true,
+                },
+            },
+            {
+                $addFields: {
+                    clientFullName: "$client.fullName",
+                    clientEmail: "$client.email",
+                    advisorFullName: "$advisor.advisorFullName",
+                    advisorEmail: "$advisor.email",
+                },
+            },
+            {
+                $match: matchStage,
+            },
+            {
+                $sort: sortBy,
+            },
+            {
+                $facet: {
+                    tasks: [{ $skip: skip }, { $limit: limit }],
+                    totalCount: [{ $count: "count" }],
+                },
+            },
+        ]);
+
+        const tasks = result[0].tasks;
+        const total = result[0].totalCount[0]?.count || 0;
+
+        res.status(200).json({ tasks, total });
+    } catch (e) {
+        console.error("Error fetching rowwise tasks:", e);
+        res.status(400).json({ msg: "Oops, something went wrong while fetching tasks" });
+    }
+});
+
+
+
+router.get('/allAdvisorsClientsRowWiseTasks', async (req, res) => {
+    try {
+        const advisors = await Advisor.find({}, 'advisorFullName email');
+        const clients = await Client.find({}, 'fullName email');
+        res.json({ advisors, clients });
+    } catch (err) {
+        res.status(500).json({ message: 'Error fetching advisors/clients' });
+    }
+});
+
+
+
+
+router.get("/rowwiseTasks/stats", async (req, res) => {
+    try {
+        const [completed, pending, overdue] = await Promise.all([
+            RowwiseTask.countDocuments({ status: "Completed" }),
+            RowwiseTask.countDocuments({ status: "Pending" }),
+            RowwiseTask.countDocuments({ status: "Overdue" }),
+        ]);
+
+        res.status(200).json({ completed, pending, overdue });
+    } catch (e) {
+        console.error("Error fetching rowwise task stats:", e);
+        res.status(500).json({ msg: "Failed to fetch task stats." });
+    }
+});
+
 
 router.get('/rowwisetasks/parent/:parentId', async (req, res) => {
     const { parentId } = req.params;

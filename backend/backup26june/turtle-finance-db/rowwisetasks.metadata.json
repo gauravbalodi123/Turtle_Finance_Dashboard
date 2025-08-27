@@ -1,0 +1,1 @@
+{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"},{"v":{"$numberInt":"2"},"key":{"rowWiseTaskId":{"$numberInt":"1"}},"name":"rowWiseTaskId_1","background":true,"unique":true}],"uuid":"0728f28cc7734239be392218f970c941","collectionName":"rowwisetasks","type":"collection"}

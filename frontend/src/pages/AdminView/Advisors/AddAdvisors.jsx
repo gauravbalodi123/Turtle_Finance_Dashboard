@@ -23,6 +23,13 @@ const AddAdvisors = () => {
     const addressRef = useRef();
     const dobRef = useRef();
     const genderRef = useRef();
+    const linkedinProfileRef = useRef();
+    const eventNameRef = useRef();
+    const qualificationRef = useRef();
+    const experienceRef = useRef();
+    const credentialsRef = useRef();
+    const bioRef = useRef();
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -38,6 +45,12 @@ const AddAdvisors = () => {
             address: getValueOrNull(addressRef),
             dob: getValueOrNull(dobRef),
             gender: getValueOrNull(genderRef),
+            linkedinProfile: getValueOrNull(linkedinProfileRef),
+            eventName: getValueOrNull(eventNameRef),
+            qualification: getValueOrNull(qualificationRef),
+            experience: Number(getValueOrNull(experienceRef)) || null,
+            // credentials: getValueOrNull(credentialsRef),
+            bio: getValueOrNull(bioRef)
         };
 
         try {
@@ -101,15 +114,50 @@ const AddAdvisors = () => {
                         </div>
                     </div>
 
-                    <div className="mb-3">
-                        <label className="form-label">Gender</label>
-                        <select ref={genderRef} className="form-select">
-                            <option value="">Select</option>
-                            <option value="Male">Male</option>
-                            <option value="Female">Female</option>
-                            <option value="Other">Other</option>
-                        </select>
+
+
+                    <div className="row mb-3">
+                        <div className="col">
+                            <label className="form-label">Gender</label>
+                            <select ref={genderRef} className="form-select">
+                                <option value="">Select</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div className="col">
+                            <label className="form-label">LinkedIn Profile</label>
+                            <input type="url" ref={linkedinProfileRef} className="form-control" placeholder="https://linkedin.com/in/..." />
+                        </div>
+
                     </div>
+
+                    <div className="row mb-3">
+                        <div className="col">
+                            <label className="form-label">Event Name</label>
+                            <input type="text" ref={eventNameRef} className="form-control" />
+                        </div>
+                        <div className="col">
+                            <label className="form-label">Qualification</label>
+                            <input type="text" ref={qualificationRef} className="form-control" />
+                        </div>
+                        <div className="col">
+                            <label className="form-label">Experience (years)</label>
+                            <input type="number" ref={experienceRef} className="form-control" />
+                        </div>
+                    </div>
+
+                    {/* <div className="mb-3">
+                        <label className="form-label">Credentials</label>
+                        <input type="text" ref={credentialsRef} className="form-control" />
+                    </div> */}
+
+                    <div className="mb-3">
+                        <label className="form-label">Bio</label>
+                        <textarea ref={bioRef} className="form-control" rows={3}></textarea>
+                    </div>
+
 
                     <div className="d-flex justify-content-end">
                         <button type="submit" className="btn btn-turtle-primary" disabled={loading}>

@@ -8,6 +8,7 @@ import { Link, useLocation } from "react-router-dom";
 import styles from "../../styles/Sidebar/Sidebar.module.css";
 import { BsPersonCheckFill } from "react-icons/bs";
 import { LuActivity } from "react-icons/lu";
+import { FaDollarSign } from 'react-icons/fa';
 
 const Sidebar = ({ sidebarRef, isSidebarOpen, toggleSidebar, backdrop, scroll }) => {
   const location = useLocation();
@@ -81,6 +82,23 @@ const Sidebar = ({ sidebarRef, isSidebarOpen, toggleSidebar, backdrop, scroll })
             <span className={`${isSidebarOpen ? "d-inline-block" : "d-none"}`}>Prospects</span>
           </div>
         </Link>
+        <Link
+        to={`${basePath}/admin/updateSubscriptionPrice`}
+        className={`${styles.navLinks} ${isSidebarOpen
+            ? "d-flex align-items-center w-100 p-2 mb-2"
+            : "d-flex align-items-center justify-content-center w-100 p-2 mb-2"
+          } ${location.pathname === `${basePath}/admin/updateSubscriptionPrice`
+            ? styles.active
+            : ""
+          }`}
+      >
+        <div className={styles.navLinksIcons}>
+          <FaDollarSign className={`${isSidebarOpen ? "me-3" : ""}`} />
+          <span className={`${isSidebarOpen ? "d-inline-block" : "d-none"}`}>
+            Update Subscription Price
+          </span>
+        </div>
+      </Link>
       </div>
 
 

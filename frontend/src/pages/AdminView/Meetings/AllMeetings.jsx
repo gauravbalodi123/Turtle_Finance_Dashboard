@@ -19,13 +19,14 @@ import DeleteModal from "../../../components/SmallerComponents/DeleteModal";
 import ActionItemsModal from "../../../components/SmallerComponents/ActionItemsModal";
 import EditModal from "../../../components/SmallerComponents/EditModal";
 import EditMeetingModal from "./EditMeetingsModal";
+import Select from "react-select";
 
 
 const AllMeetings = () => {
     axios.defaults.withCredentials = true
     const url = import.meta.env.VITE_URL;
     const [tasks, setTasks] = useState([]);
-    const [filteredTasks, setFilteredTasks] = useState([]); // ✅ New state for filtered data
+    // const [filteredTasks, setFilteredTasks] = useState([]); 
     const [isLoading, setIsLoading] = useState(true);
     const [loadingId, setLoadingId] = useState(null);
     const [error, setError] = useState(null);
@@ -33,16 +34,17 @@ const AllMeetings = () => {
     // const [showModal, setShowModal] = useState(false);
     const [modalTitle, setModalTitle] = useState("");
     const [modalContent, setModalContent] = useState("");
-    const [meetingStats, setMeetingStats] = useState({
-        overdue: 0,
-        pending: 0,
-        inProgress: 0,
-    });
+    // const [meetingStats, setMeetingStats] = useState({
+    //     overdue: 0,
+    //     pending: 0,
+    //     inProgress: 0,
+    // });
     const [targetId, setTargetId] = useState(null);
     const [deleteType, setDeleteType] = useState(""); // "meeting" or "actionItem"
     const [currentActionItems, setCurrentActionItems] = useState([]);
     const [currentTaskId, setCurrentTaskId] = useState(null); // in case you need it
     const [selectedActionItem, setSelectedActionItem] = useState(null);
+
     const [selectedClient, setSelectedClient] = useState('');
     const [selectedAdvisor, setSelectedAdvisor] = useState('');
     const [clientsList, setClientsList] = useState([]);
@@ -52,6 +54,13 @@ const AllMeetings = () => {
     const [clients, setClients] = useState([]);
     const [advisors, setAdvisors] = useState([]);
     const [selectedMeetingId, setSelectedMeetingId] = useState(null);
+
+    const [totalCount, setTotalCount] = useState(0);
+    const [pageSize, setPageSize] = useState(10);
+    const [pageIndex, setPageIndex] = useState(0);
+
+    const [sorting, setSorting] = useState([]);
+
 
 
     // edit for the meetings modal itself
@@ -96,9 +105,7 @@ const AllMeetings = () => {
             prev.map(m => m._id === updatedMeeting._id ? enrichedMeeting : m)
         );
 
-        setFilteredTasks(prev =>
-            prev.map(m => m._id === updatedMeeting._id ? enrichedMeeting : m)
-        );
+       
     };
 
 
@@ -158,89 +165,94 @@ const AllMeetings = () => {
 
 
 
+
+
+
+    // to fetch all the clisnt and advisors for the filter dropdown 
     useEffect(() => {
-        fetchTasks();
+        const fetchDropdownData = async () => {
+            try {
+                const res = await axios.get(`${url}/admin/allAdvisorsClients`);
+                const { advisors, clients } = res.data;
+
+                const advisorNames = advisors.map(a => a.advisorFullName).filter(Boolean);
+                const clientNames = clients.map(c => c.fullName).filter(Boolean);
+
+                setAdvisorsList(advisorNames);
+                setClientsList(clientNames);
+            } catch (err) {
+                console.error("Failed to fetch dropdown advisor/client lists", err);
+            }
+        };
+
+        fetchDropdownData();
     }, []);
 
-    const fetchTasks = async () => {
+
+
+    useEffect(() => {
+        fetchTasks(pageIndex, pageSize, sorting, columnFilter, selectedAdvisor, selectedClient);
+    }, [pageIndex, pageSize, sorting, columnFilter, selectedAdvisor, selectedClient]);
+
+    const fetchTasks = async (
+        page = 0,
+        size = 10,
+        sorting = [],
+        search = "",
+        advisorFilter = "",
+        clientFilter = ""
+    ) => {
+        setIsLoading(true);
         try {
-            const res = await axios.get(`${url}/admin/tasks`);
-            const reversedData = res.data.reverse();
+            const sortField = sorting[0]?.id || "";
+            const sortOrder = sorting[0]?.desc ? "desc" : "asc";
 
-            // 🔥 Extract unique clients and advisors from this API's data:
-            const uniqueClients = Array.from(new Set(res.data.map(task => task.client?.fullName))).filter(Boolean);
-            setClientsList(uniqueClients);
+            const res = await axios.get(`${url}/admin/selectiveTasks`, {
+                params: {
+                    page: page + 1,
+                    limit: size,
+                    sortField,
+                    sortOrder,
+                    search,
+                    advisor: advisorFilter,
+                    client: clientFilter,
+                },
+            });
 
-            const uniqueAdvisors = Array.from(new Set(res.data.map(task => task.advisor?.advisorFullName))).filter(Boolean);
-            setAdvisorsList(uniqueAdvisors);
-
-            const counts = {
-                overdue: 0,
-                pending: 0,
-                inProgress: 0,
-            };
-
-            const today = new Date();
-            const updatedTasks = await Promise.all(
-                reversedData.map(async (task) => {
-                    const dueDate = task.dueDate ? new Date(task.dueDate) : null;
-                    const status = task.status?.toLowerCase();
-
-                    if (dueDate && dueDate < today && status !== "overdue") {
-                        try {
-                            await axios.patch(`${url}/admin/tasks/${task._id}/editTasks`, {
-                                status: "Overdue",
-                            });
-                            task.status = "Overdue";
-                            counts.overdue++;
-                        } catch (err) {
-                            console.error(`Failed to mark task ${task._id} as overdue`, err);
-                        }
-                    } else {
-                        if (status === "overdue") counts.overdue++;
-                        else if (status === "pending") counts.pending++;
-                        else if (status === "in progress" || status === "inprogress") counts.inProgress++;
-                    }
-
-                    return task;
-                })
-            );
-
-            setTasks(updatedTasks);
-            setFilteredTasks(updatedTasks);
-            setMeetingStats(counts);
-
+            setTasks(res.data.tasks);
+            setTotalCount(res.data.total);
         } catch (err) {
+            console.error(err);
             setError("Failed to fetch tasks");
         } finally {
             setIsLoading(false);
         }
     };
 
-    useEffect(() => {
-        let filtered = tasks;
+    // useEffect(() => {
+    //     let filtered = tasks;
 
-        if (selectedClient) {
-            filtered = filtered.filter(task => task.client?.fullName === selectedClient);
-        }
+    //     if (selectedClient) {
+    //         filtered = filtered.filter(task => task.client?.fullName === selectedClient);
+    //     }
 
-        if (selectedAdvisor) {
-            filtered = filtered.filter(task => task.advisor?.advisorFullName === selectedAdvisor);
-        }
+    //     if (selectedAdvisor) {
+    //         filtered = filtered.filter(task => task.advisor?.advisorFullName === selectedAdvisor);
+    //     }
 
-        if (columnFilter) {
-            const lowerCaseFilter = columnFilter.toLowerCase();
-            filtered = filtered.filter((task) =>
-                Object.values(task).some(
-                    (value) =>
-                        value &&
-                        value.toString().toLowerCase().includes(lowerCaseFilter)
-                )
-            );
-        }
+    //     if (columnFilter) {
+    //         const lowerCaseFilter = columnFilter.toLowerCase();
+    //         filtered = filtered.filter((task) =>
+    //             Object.values(task).some(
+    //                 (value) =>
+    //                     value &&
+    //                     value.toString().toLowerCase().includes(lowerCaseFilter)
+    //             )
+    //         );
+    //     }
 
-        setFilteredTasks(filtered);
-    }, [selectedClient, selectedAdvisor, columnFilter, tasks]);
+    //     setTasks(filtered);
+    // }, [selectedClient, selectedAdvisor, columnFilter, tasks]);
 
 
 
@@ -269,26 +281,6 @@ const AllMeetings = () => {
 
 
 
-
-    useEffect(() => {
-        if (!columnFilter) {
-            setFilteredTasks(tasks); // Reset when filter is empty
-            return;
-        }
-
-        const lowerCaseFilter = columnFilter.toLowerCase();
-
-        const filteredData = tasks.filter((task) =>
-            Object.values(task).some(
-                (value) =>
-                    value &&
-                    value.toString().toLowerCase().includes(lowerCaseFilter)
-            )
-        );
-
-        setFilteredTasks(filteredData);
-    }, [columnFilter, tasks]);
-
     const columns = [
         {
             accessorKey: "title",
@@ -296,21 +288,24 @@ const AllMeetings = () => {
             enableResizing: true,
             size: 200,
             minSize: 200,
+            sortDescFirst: true,
         },
         {
-            accessorKey: "client.fullName",
+            accessorKey: "clientFullName",
             header: "Client Name",
             enableResizing: true,
             size: 140,
             minSize: 100,
+            sortDescFirst: true,
             cell: ({ row }) => row.original.client?.fullName || "N/A",
         },
         {
-            accessorKey: "advisor.advisorFullName",
+            accessorKey: "advisorFullName",
             header: "Advisor Name",
             enableResizing: true,
             size: 140,
             minSize: 100,
+            sortDescFirst: true,
             cell: ({ row }) => row.original.advisor?.advisorFullName || "N/A",
         },
         {
@@ -319,6 +314,7 @@ const AllMeetings = () => {
             enableResizing: true,
             size: 140,
             minSize: 120,
+            sortDescFirst: true,
             cell: ({ row }) =>
                 row.original.date ? new Date(row.original.date).toLocaleDateString("en-GB") : "N/A",
         },
@@ -335,6 +331,8 @@ const AllMeetings = () => {
             enableResizing: true,
             size: 130,
             minSize: 100,
+            enableSorting: false,
+            sortDescFirst: true,
             cell: ({ row }) => (
                 <a
                     className="text-turtle-primary text-decoration-none d-flex align-items-center gap-2 fs-6 cursor-pointer"
@@ -354,6 +352,8 @@ const AllMeetings = () => {
             enableResizing: true,
             size: 140,
             minSize: 100,
+            enableSorting: false,
+            sortDescFirst: true,
             cell: ({ row }) => (
                 <a
                     className="text-turtle-primary text-decoration-none d-flex align-items-center gap-2 fs-6 cursor-pointer"
@@ -443,6 +443,7 @@ const AllMeetings = () => {
             enableResizing: false,
             size: 200,
             minSize: 200,
+            enableSorting: false,
             cell: ({ row }) => (
                 <div className="d-flex  gap-2">
                     <div className="d-flex gap-2">
@@ -530,71 +531,36 @@ const AllMeetings = () => {
             ) : (
                 <Fragment>
 
-
-                    {/* <div className='mb-4 align-items-center row gx-3 gy-3 gy-lg-0 '>
-
-                        <div className="col-12 col-lg-4 text-center text-md-start">
-                            <div className={`card p-3 ${styles}`}>
-                                <h4>In Progress</h4>
-                                <p>Tasks past due date</p>
-                                <h2 className='m-0'>{meetingStats.inProgress}</h2>
-                            </div>
-                        </div>
-
-                        <div className="col-12 col-lg-4 text-center text-md-start">
-                            <div className={`card  p-3 ${styles}`}>
-                                <h4>Pending</h4>
-                                <p>Tasks past due date</p>
-                                <h2 className='m-0'>{meetingStats.pending}</h2>
-                            </div>
-                        </div>
-
-                        <div className="col-12  col-lg-4 text-center text-md-start ">
-                            <div className={` card p-3 ${styles}`}>
-                                <h4>Overdue</h4>
-                                <p>Tasks past due date</p>
-                                <h2 className='m-0'>{meetingStats.overdue}</h2>
-                            </div>
-                        </div>
-                    </div> */}
-
                     <div className="row my-4">
                         <div className="col-12 col-md-6 d-flex align-items-center gap-3 flex-wrap">
                             <div className="d-flex align-items-center gap-2">
                                 <label className="fw-semibold mb-0">Advisor:</label>
-                                <select
-                                    className="form-select form-select-sm rounded-3"
-                                    style={{ width: '150px' }}
-                                    value={selectedAdvisor}
-                                    onChange={(e) => setSelectedAdvisor(e.target.value)}
-                                >
-                                    <option value="">All Advisors</option>
-                                    {advisorsList.map((advisor, index) => (
-                                        <option key={index} value={advisor}>
-                                            {advisor}
-                                        </option>
-                                    ))}
-                                </select>
+                                <Select
+                                    options={[{ label: "All Advisors", value: "" }, ...advisorsList.map(advisor => ({ label: advisor, value: advisor }))]}
+                                    value={{ label: selectedAdvisor || "All Advisors", value: selectedAdvisor }}
+                                    onChange={(selectedOption) => setSelectedAdvisor(selectedOption?.value || "")}
+                                    className="react-select-container border rounded-3"
+                                    classNamePrefix="react-select"
+                                    styles={{ container: base => ({ ...base, width: '180px' }) }}
+                                    isClearable
+                                />
                             </div>
 
                             <div className="d-flex align-items-center gap-2">
                                 <label className="fw-semibold mb-0">Client:</label>
-                                <select
-                                    className="form-select form-select-sm rounded-3"
-                                    style={{ width: '150px' }}
-                                    value={selectedClient}
-                                    onChange={(e) => setSelectedClient(e.target.value)}
-                                >
-                                    <option value="">All Clients</option>
-                                    {clientsList.map((client, index) => (
-                                        <option key={index} value={client}>
-                                            {client}
-                                        </option>
-                                    ))}
-                                </select>
+                                <Select
+                                    options={[{ label: "All Clients", value: "" }, ...clientsList.map(client => ({ label: client, value: client }))]}
+                                    value={{ label: selectedClient || "All Clients", value: selectedClient }}
+                                    onChange={(selectedOption) => setSelectedClient(selectedOption?.value || "")}
+                                    className="react-select-container border rounded-3"
+                                    classNamePrefix="react-select"
+                                    styles={{ container: base => ({ ...base, width: '180px' }) }}
+                                    isClearable
+                                />
                             </div>
                         </div>
                     </div>
+
 
 
 
@@ -615,11 +581,22 @@ const AllMeetings = () => {
                                 </div>
                             </div>
 
-                            <TableComponent data={filteredTasks}
+                            <TableComponent
+                                data={tasks}
                                 columns={columns}
-                                pageSize={10}
+                                pageSize={pageSize}
+                                pageIndex={pageIndex}
+                                setPageIndex={setPageIndex}
+                                setPageSize={setPageSize}
+                                totalCount={totalCount}
+                                sorting={sorting}
+                                setSorting={setSorting}
                                 className={`${styles["custom-style-table"]}`}
                             />
+
+
+
+
                         </div>
 
                         <TaskModal

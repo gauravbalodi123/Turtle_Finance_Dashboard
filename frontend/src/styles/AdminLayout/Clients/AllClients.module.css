@@ -33,6 +33,14 @@ p.taskHeaderItem{
     padding: 2px 10px;
 }
 
+.clientsPageTableWrapper .custom-style-table tr .Prospect {
+    color: #1620df;
+    font-size: 0.8rem;
+    background-color: #def6e7;
+    border-radius: 24px;
+    padding: 2px 10px;
+}
+
 .clientsPageTableWrapper .custom-style-table tr .expired-status {
     color: #ef4444 ;
     font-size: 0.8rem;

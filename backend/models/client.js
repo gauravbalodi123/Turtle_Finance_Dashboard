@@ -9,6 +9,12 @@ const ClientSchema = new mongoose.Schema(
             unique: true,
             required: true,
         },
+        userId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User", // assuming there's a User model
+            //required: true,
+            unique: true,
+        },
         fullName: {
             type: String,
             required: true,
@@ -27,13 +33,18 @@ const ClientSchema = new mongoose.Schema(
         },
         subscriptionStatus: {
             type: String,
-            enum: ["Active", "Expired", "Up for Renewal"],
-            default: null,
+            enum: ["Active", "Expired","Prospect", "Up for Renewal"],
+            default:"Prospect",
         },
-        caseType: {
+        // caseType: {
+        //     type: String,
+        //     enum: ["NRI", "Resident Indian"],
+        //     default: null,
+        // },
+        clientType: {
             type: String,
-            enum: ["NRI", "Resident Indian"],
-            default: null,
+            enum: ["Indian", "NRI"],
+            //default: null,
         },
         gender: {
             type: String,
@@ -126,6 +137,12 @@ const ClientSchema = new mongoose.Schema(
             ref: "CreditCardData",
             default: null,
         },
+        advisors: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Advisor",
+            },
+        ],
     },
     { timestamps: true }
 );
