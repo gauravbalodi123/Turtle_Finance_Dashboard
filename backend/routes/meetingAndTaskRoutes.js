@@ -247,6 +247,40 @@ router.patch('/tasks/:id/editTasks', async (req, res) => {
 });
 
 
+
+
+// below route will be used in client detailedmodalpopup to fetch meeting for a specific client only
+// ✅ Get tasks for a specific client with pagination
+router.get("/clients/:clientId/tasks", async (req, res) => {
+    try {
+        const { clientId } = req.params;
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+
+        const sortField = req.query.sortField || "createdAt";
+        const sortOrder = req.query.sortOrder === "asc" ? 1 : -1;
+
+        // Find only meetings for this client
+        const [tasks, total] = await Promise.all([
+            Task.find({ client: clientId })
+                .populate("client", "fullName email")
+                .populate("advisor", "advisorFullName email")
+                .sort({ [sortField]: sortOrder })
+                .skip(skip)
+                .limit(limit),
+            Task.countDocuments({ client: clientId })
+        ]);
+
+        res.status(200).json({ tasks, total });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ msg: "Failed to fetch tasks for client" });
+    }
+});
+
+
+
 router.delete('/tasks/:id/', async (req, res) => {
 
     const { id } = req.params;

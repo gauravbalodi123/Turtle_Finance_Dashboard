@@ -16,14 +16,7 @@ const QRCodeAndUPI = () => {
         />
       </div>
 
-      {/* Scan Text */}
-      <p className="text-gray-600 text-base">Scan to pay via UPI</p>
-
-      {/* UPI ID */}
-      <div className="space-y-1">
-        <p className="text-sm text-gray-500">Or use UPI ID</p>
-        <p className="text-lg font-semibold text-blue-700">{UPI_ID}</p>
-      </div>
+      
     </div>
   );
 };

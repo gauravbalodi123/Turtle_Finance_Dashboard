@@ -46,13 +46,13 @@ router.get('/user', async (req, res) => {
 //         const organizationUri = userRes.data.resource.current_organization;
 
 //         // Step 2: Set min_start_time to Jan 1, 2025 in ISO format
-       
+
 
 //         // Step 3: Fetch events starting from Jan 1, 2025
 //         const eventsRes = await calendlyApi.get(`/scheduled_events`, {
 //             params: {
 //                 organization: organizationUri,
-               
+
 //             }
 //         });
 
@@ -66,11 +66,14 @@ router.get('/user', async (req, res) => {
 
 router.get('/scheduled_events', async (req, res) => {
     try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+
         // Step 1: Get the user's organization URI
         const userRes = await calendlyApi.get('/users/me');
         const organizationUri = userRes.data.resource.current_organization;
 
-        // Step 2: Set min_start_time to Jan 1, 2025 in ISO format
+        // Step 2: Set min_start_time
         const minStartTime = new Date('2025-01-01T00:00:00Z').toISOString();
 
         // Step 3: Fetch scheduled events
@@ -81,18 +84,26 @@ router.get('/scheduled_events', async (req, res) => {
             }
         });
 
-        const events = eventsRes.data.collection;
+        let events = eventsRes.data.collection;
 
-        // Step 4: For each event, get invitees and extract names/emails
-        const enrichedEvents = await Promise.all(events.map(async (event) => {
+        // ✅ Keep original order (oldest → newest)
+        const totalEvents = events.length;
+        const totalPages = Math.ceil(totalEvents / limit);
+
+        // ✅ If page = "last", calculate last page index
+        const currentPage = page === -1 ? totalPages : page;
+
+        // ✅ Paginate
+        const start = (currentPage - 1) * limit;
+        const paginatedEvents = events.slice(start, start + limit);
+
+        // Step 4: Enrich events with invitee data
+        const enrichedEvents = await Promise.all(paginatedEvents.map(async (event) => {
             try {
                 const inviteesRes = await calendlyApi.get(`${event.uri}/invitees`);
                 const invitees = inviteesRes.data.collection;
-
-                // Assume only one invitee per event (which is typical)
                 const invitee = invitees[0];
 
-                // Split full name
                 let firstName = null, lastName = null;
                 if (invitee?.name) {
                     const nameParts = invitee.name.trim().split(' ');
@@ -110,21 +121,23 @@ router.get('/scheduled_events', async (req, res) => {
                     }
                 };
             } catch (inviteeError) {
-                console.error(`Error fetching invitees for event ${event.uri}:`, inviteeError?.response?.data || inviteeError.message);
-                return {
-                    ...event,
-                    invitee: null
-                };
+                return { ...event, invitee: null };
             }
         }));
 
-        // Step 5: Return enriched events
-        res.json(enrichedEvents);
+        // Step 5: Return data with pagination info
+        res.json({
+            events: enrichedEvents,
+            totalPages,
+            currentPage,
+            totalEvents
+        });
     } catch (error) {
         console.error(error?.response?.data || error.message);
         res.status(500).json({ error: error.message });
     }
 });
+
 
 // router.get('/scheduled_events/:uuid', async (req, res) => {
 //     const { uuid } = req.params;

@@ -1,0 +1,86 @@
+h2.taskHeaderItem {
+    margin: 0;
+    font-weight: 500;
+}
+
+p.taskHeaderItem {
+    margin: 0;
+    font-size: 1rem;
+    color: #909cad;
+    font-weight: 500;
+
+}
+
+.emailTrackerPageTableWrapper .custom-style-table thead th {
+    color: #8d9aaa;
+}
+
+.emailTrackerPageTableWrapper .custom-style-table tr .pending-status,
+.emailTrackerPageTableWrapper .pending-status {
+    color: #E09238;
+    font-size: 0.8rem;
+    background-color: #FDF3E1;
+    border-radius: 24px;
+    padding: 2px 10px;
+    font-weight: 500;
+}
+
+.emailTrackerPageTableWrapper .custom-style-table tr .completed-status,
+.emailTrackerPageTableWrapper .completed-status {
+    color: #16A45E;
+    font-size: 0.8rem;
+    background-color: #def6e7;
+    border-radius: 24px;
+    padding: 2px 10px;
+    font-weight: 500;
+}
+
+.emailTrackerPageTableWrapper .custom-style-table tr .overdue-status,
+.emailTrackerPageTableWrapper .overdue-status {
+    color: #f0716d;
+    font-size: 0.8rem;
+    background-color: #fde3e3;
+    border-radius: 24px;
+    padding: 2px 10px;
+    font-weight: 500;
+}
+
+
+/* ensure the toggle buttons start neutral and don't inherit bootstrap bg/border */
+.btnBase {
+  padding: 8px 18px;
+  border: none;
+  box-shadow: none;
+  background: transparent;         
+  color: inherit;                  
+  width: 56px;                     
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.18s ease;
+  cursor: pointer;
+}
+
+
+.inactiveToggle {
+  background-color: transparent;
+  color: #213547; 
+}
+
+/* active state — make this highly specific to override bootstrap easily */
+.btnBase.activeToggle,
+.activeToggle {
+  background-color: #2be3b8 !important;
+  color: #ffffff !important;            
+  border-radius: 999px;
+  box-shadow: 0 6px 18px rgba(43, 227, 184, 0.22);
+  transform: translateY(-1px);
+}
+
+/* Slight hover for inactive */
+.btnBase.inactiveToggle:hover,
+.inactiveToggle:hover {
+  background-color: rgba(43, 227, 184, 0.06);
+}
+

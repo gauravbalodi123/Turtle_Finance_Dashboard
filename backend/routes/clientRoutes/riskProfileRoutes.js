@@ -23,6 +23,29 @@ const Docxtemplater = require('docxtemplater');
 
 
 
+
+
+// Get all risk profiles (admin access or general)
+router.get("/allRiskData", protect, authorizeRoles('admin'), async (req, res) => {
+    try {
+        // Fetch all risk profiles
+        const allRiskProfiles = await RiskProfile.find().sort({ createdAt: -1 });
+
+        if (!allRiskProfiles || allRiskProfiles.length === 0) {
+            return res.status(404).json({ msg: "No risk profiles found in the database." });
+        }
+
+        res.status(200).json(allRiskProfiles);
+    } catch (e) {
+        console.error("Error fetching all risk profiles:", e.message);
+        res.status(400).json({ msg: "Oops, something went wrong." });
+    }
+});
+
+
+
+
+
 router.get("/riskData", protect, authorizeRoles('client'), async (req, res) => {
     try {
         const userId = req.user._id;
@@ -383,14 +406,13 @@ router.post('/upload-document', protect, authorizeRoles('client'), upload.single
         const subscription = await Subscription.findOne({ planName: clientType })
         let subscriptionPrice = subscription.priceRupees;
         console.log(subscriptionPrice);
-        if (clientData.clientType == "Indian") {
 
+        if (clientData.clientType === "Indian" || clientData.clientType === "Indian Renewal") {
+            pdfTemplatePath = path.join('static', 'Contract.pdf'); // Indian template
+        } else if (clientData.clientType === "NRI" || clientData.clientType === "NRI Renewal") {
+            pdfTemplatePath = path.join('static', 'Contract.pdf'); // NRI template
+        }
 
-            pdfTemplatePath = path.join('static', 'ContractTemplate.pdf'); // Change to PDF template
-        }
-        else if (clientData.clientType == "NRI") {
-            pdfTemplatePath = path.join('static', 'ContractTemplateNRI.pdf'); // Change to PDF template
-        }
 
         // Load the PDF template
         const existingPdfBytes = fs.readFileSync(pdfTemplatePath);
@@ -536,53 +558,56 @@ router.post('/upload-document', protect, authorizeRoles('client'), upload.single
 
         // Add text to the PDF at specific positions
         const { width, height } = firstPage.getSize();
+        const offsetX = 25; // move 10pts to the right
+        const offsetY = 35; // move 15pts up (subtract from y)
+
 
         // Example of adding text - you'll need to adjust coordinates for your template
         firstPage.drawText(Salutation, {
-            x: 254,
-            y: height - 380,
+            x: 254 + offsetX - 50,
+            y: height - 380 + 45,
             size: 18,
             color: rgb(0, 0, 0),
         });
 
         firstPage.drawText(Salutation, {
-            x: 109,
-            y: height - 576,
+            x: 109 + offsetX,
+            y: height - 576 + 35,
             size: 12,
             color: rgb(0, 0, 0),
         });
 
         firstPage.drawText(risk_profile_sheet_row_data[1], {
-            x: 109,
-            y: height - 600,
+            x: 109 + offsetX,
+            y: height - 600 + 30,
             size: 12,
             color: rgb(0, 0, 0),
         });
 
         firstPage.drawText(risk_profile_sheet_row_data[2], {
-            x: 109,
-            y: height - 640,
+            x: 109 + offsetX,
+            y: height - 640 + 40,
             size: 12,
             color: rgb(0, 0, 0),
         });
 
         firstPage.drawText(risk_profile_sheet_row_data[3], {
-            x: 109,
-            y: height - 680,
+            x: 109 + offsetX,
+            y: height - 680 + 30,
             size: 12,
             color: rgb(0, 0, 0),
         });
 
         firstPage.drawText(risk_profile_sheet_row_data[4], {
-            x: 109,
-            y: height - 716,
+            x: 109 + offsetX,
+            y: height - 716 + 30,
             size: 12,
             color: rgb(0, 0, 0),
         });
 
         firstPage.drawText(risk_profile_sheet_row_data[5], {
-            x: 109,
-            y: height - 740,
+            x: 109 + offsetX,
+            y: height - 740 + offsetY,
             size: 12,
             color: rgb(0, 0, 0),
         });
@@ -590,55 +615,55 @@ router.post('/upload-document', protect, authorizeRoles('client'), upload.single
 
         const sixteenthPage = pages[15];
         sixteenthPage.drawText(String(Score1), {
-            x: 551,
-            y: height - 278,
+            x: 551 + offsetX -70,
+            y: height - 278 -10,
             size: 12,
             color: rgb(0, 0, 0),
         });
         sixteenthPage.drawText(String(Score2), {
-            x: 551,
-            y: height - 304,
+            x: 551 + offsetX -70,
+            y: height - 304 -5,
             size: 12,
             color: rgb(0, 0, 0),
         });
         sixteenthPage.drawText(String(Score3), {
-            x: 551,
+            x: 551 + offsetX -70,
             y: height - 354,
             size: 12,
             color: rgb(0, 0, 0),
         });
         sixteenthPage.drawText(String(Score4), {
-            x: 551,
-            y: height - 383,
+            x: 551 + offsetX -70,
+            y: height - 383 +10,
             size: 12,
             color: rgb(0, 0, 0),
         });
         sixteenthPage.drawText(String(Score5), {
-            x: 551,
-            y: height - 417,
+            x: 551 + offsetX -70,
+            y: height - 417 +10,
             size: 12,
             color: rgb(0, 0, 0),
         });
         sixteenthPage.drawText(String(Score6), {
-            x: 551,
-            y: height - 457,
+            x: 551 + offsetX -70,
+            y: height - 457 +10,
             size: 12,
             color: rgb(0, 0, 0),
         });
         sixteenthPage.drawText(String(Score7), {
-            x: 551,
-            y: height - 511,
+            x: 551 + offsetX -70,
+            y: height - 511 +20,
             size: 12,
             color: rgb(0, 0, 0),
         });
         sixteenthPage.drawText(String(Score8), {
-            x: 551,
+            x: 551 + offsetX -70,
             y: height - 534,
             size: 12,
             color: rgb(0, 0, 0),
         });
         sixteenthPage.drawText(String(Total_Score), {
-            x: 541,
+            x: 541 + offsetX -60,
             y: height - 555,
             size: 12,
             color: rgb(0, 0, 0),
@@ -646,16 +671,16 @@ router.post('/upload-document', protect, authorizeRoles('client'), upload.single
 
 
         sixteenthPage.drawText(clientRiskData.investmentHorizon, {
-            x: 314,
-            y: height - 266,
+            x: 314 + offsetX - 25,
+            y: height - 266 - 20,
             size: 9,
             color: rgb(0, 0, 0),
         });
         console.log(Age_Group)
 
         sixteenthPage.drawText(Age_Group, {
-            x: 314,
-            y: height - 301,
+            x: 314 + offsetX - 25,
+            y: height - 301 - 8,
             size: 9,
             color: rgb(0, 0, 0),
         });
@@ -669,8 +694,8 @@ router.post('/upload-document', protect, authorizeRoles('client'), upload.single
 
         lines.forEach((line, i) => {
             sixteenthPage.drawText(line, {
-                x: startX,
-                y: startY - i * 9, // 12 is the line height. Adjust as needed.
+                x: startX + offsetX - 25,
+                y: startY - i * 9 -10, // 12 is the line height. Adjust as needed.
                 size: 9,
                 color: rgb(0, 0, 0),
             });
@@ -684,8 +709,8 @@ router.post('/upload-document', protect, authorizeRoles('client'), upload.single
 
         lines4.forEach((line, i) => {
             sixteenthPage.drawText(line, {
-                x: startX,
-                y: startY - i * 9, // 12 is the line height. Adjust as needed.
+                x: startX + offsetX - 25 ,
+                y: startY - i * 9 +10, // 12 is the line height. Adjust as needed.
                 size: 9,
                 color: rgb(0, 0, 0),
             });
@@ -700,8 +725,8 @@ router.post('/upload-document', protect, authorizeRoles('client'), upload.single
 
         lines5.forEach((line, i) => {
             sixteenthPage.drawText(line, {
-                x: startX,
-                y: startY - i * 9, // 12 is the line height. Adjust as needed.
+                x: startX + offsetX - 25,
+                y: startY - i * 9 +10, // 12 is the line height. Adjust as needed.
                 size: 9,
                 color: rgb(0, 0, 0),
             });
@@ -716,8 +741,8 @@ router.post('/upload-document', protect, authorizeRoles('client'), upload.single
 
         lines6.forEach((line, i) => {
             sixteenthPage.drawText(line, {
-                x: startX,
-                y: startY - i * 9, // 12 is the line height. Adjust as needed.
+                x: startX + offsetX - 25,
+                y: startY - i * 9 , // 12 is the line height. Adjust as needed.
                 size: 9,
                 color: rgb(0, 0, 0),
             });
@@ -734,7 +759,7 @@ router.post('/upload-document', protect, authorizeRoles('client'), upload.single
 
         lines7.forEach((line, i) => {
             sixteenthPage.drawText(line, {
-                x: startX,
+                x: startX + offsetX - 25,
                 y: startY - i * 9, // 12 is the line height. Adjust as needed.
                 size: 9,
                 color: rgb(0, 0, 0),
@@ -750,7 +775,7 @@ router.post('/upload-document', protect, authorizeRoles('client'), upload.single
 
         lines8.forEach((line, i) => {
             sixteenthPage.drawText(line, {
-                x: startX,
+                x: startX + offsetX - 25,
                 y: startY - i * 9, // 12 is the line height. Adjust as needed.
                 size: 9,
                 color: rgb(0, 0, 0),
@@ -758,33 +783,33 @@ router.post('/upload-document', protect, authorizeRoles('client'), upload.single
         });
 
         sixteenthPage.drawText(risk_assessment, {
-            x: 170,
-            y: height - 579,
+            x: 170 + offsetX - 15,
+            y: height - 575,
             size: 9,
             color: rgb(0, 0, 0),
         });
 
         sixteenthPage.drawText(point1, {
-            x: 73,
-            y: height - 625,
+            x: 73 + offsetX - 10,
+            y: height - 625 + 10,
             size: 9,
             color: rgb(0, 0, 0),
         });
         sixteenthPage.drawText(point2, {
-            x: 73,
-            y: height - 639,
+            x: 73 + offsetX - 10,
+            y: height - 639 + 10,
             size: 9,
             color: rgb(0, 0, 0),
         });
         sixteenthPage.drawText(point3, {
-            x: 73,
-            y: height - 653,
+            x: 73 + offsetX - 10,
+            y: height - 653 + 10,
             size: 9,
             color: rgb(0, 0, 0),
         });
         sixteenthPage.drawText(point4, {
-            x: 73,
-            y: height - 667,
+            x: 73 + offsetX - 10,
+            y: height - 667 + 10,
             size: 9,
             color: rgb(0, 0, 0),
         });
@@ -793,44 +818,44 @@ router.post('/upload-document', protect, authorizeRoles('client'), upload.single
 
         const fifteenthPage = pages[14];
         fifteenthPage.drawText(String(Age), {
-            x: 39,
-            y: height - 272,
+            x: 39 + offsetX,
+            y: height - 272 -12,
             size: 9,
             color: rgb(0, 0, 0),
         });
         fifteenthPage.drawText(String(clientRiskData.maritalStatus), {
-            x: 121,
-            y: height - 272,
+            x: 121 + offsetX,
+            y: height - 272 -12,
             size: 9,
             color: rgb(0, 0, 0),
         });
         fifteenthPage.drawText(String(clientRiskData.daughters), {
-            x: 206,
-            y: height - 272,
+            x: 206 + offsetX,
+            y: height - 272 -12,
             size: 9,
             color: rgb(0, 0, 0),
         });
         fifteenthPage.drawText(String(clientRiskData.sons), {
-            x: 274,
-            y: height - 272,
+            x: 274 + offsetX,
+            y: height - 272 -12,
             size: 9,
             color: rgb(0, 0, 0),
         });
         fifteenthPage.drawText(String(clientRiskData.dependentParents), {
-            x: 352,
-            y: height - 272,
+            x: 352 + offsetX,
+            y: height - 272 -12,
             size: 9,
             color: rgb(0, 0, 0),
         });
         fifteenthPage.drawText(String(clientRiskData.dependentParentsInLaw), {
-            x: 442,
-            y: height - 272,
+            x: 442 + offsetX,
+            y: height - 272 -12,
             size: 9,
             color: rgb(0, 0, 0),
         });
         fifteenthPage.drawText(String(clientRiskData.dependentSiblings), {
-            x: 552,
-            y: height - 272,
+            x: 552 + offsetX - 65,
+            y: height - 272 -12,
             size: 9,
             color: rgb(0, 0, 0),
         });
@@ -844,7 +869,7 @@ router.post('/upload-document', protect, authorizeRoles('client'), upload.single
 
         sentences.forEach((line, i) => {
             fifteenthPage.drawText(line, {
-                x: startX,
+                x: startX + offsetX,
                 y: startY - i * 9, // 12 is the line height. Adjust as needed.
                 size: 9,
                 color: rgb(0, 0, 0),
@@ -860,7 +885,7 @@ router.post('/upload-document', protect, authorizeRoles('client'), upload.single
 
         sentences.forEach((line, i) => {
             fifteenthPage.drawText(line, {
-                x: startX,
+                x: startX + offsetX,
                 y: startY - i * 9, // 12 is the line height. Adjust as needed.
                 size: 9,
                 color: rgb(0, 0, 0),
@@ -876,7 +901,7 @@ router.post('/upload-document', protect, authorizeRoles('client'), upload.single
 
         sentences.forEach((line, i) => {
             fifteenthPage.drawText(line, {
-                x: startX,
+                x: startX + offsetX,
                 y: startY - i * 9, // 12 is the line height. Adjust as needed.
                 size: 9,
                 color: rgb(0, 0, 0),
@@ -892,7 +917,7 @@ router.post('/upload-document', protect, authorizeRoles('client'), upload.single
 
         sentences.forEach((line, i) => {
             fifteenthPage.drawText(line, {
-                x: startX,
+                x: startX + offsetX,
                 y: startY - i * 9, // 12 is the line height. Adjust as needed.
                 size: 9,
                 color: rgb(0, 0, 0),
@@ -908,7 +933,7 @@ router.post('/upload-document', protect, authorizeRoles('client'), upload.single
 
         sentences.forEach((line, i) => {
             fifteenthPage.drawText(line, {
-                x: startX,
+                x: startX + offsetX,
                 y: startY - i * 9, // 12 is the line height. Adjust as needed.
                 size: 9,
                 color: rgb(0, 0, 0),
@@ -924,7 +949,7 @@ router.post('/upload-document', protect, authorizeRoles('client'), upload.single
 
         sentences.forEach((line, i) => {
             fifteenthPage.drawText(line, {
-                x: startX,
+                x: startX + offsetX - 30,
                 y: startY - i * 9, // 12 is the line height. Adjust as needed.
                 size: 9,
                 color: rgb(0, 0, 0),
@@ -932,14 +957,14 @@ router.post('/upload-document', protect, authorizeRoles('client'), upload.single
         });
 
         fifteenthPage.drawText(`${LOE_Date.day}-${LOE_Date.month}-${LOE_Date.year}`, {
-            x: 259,
-            y: height - 153,
+            x: 259 + offsetX + 100,
+            y: height - 153 -5 ,
             size: 10,
             color: rgb(0, 0, 0),
         });
 
         /*firstPage.drawText(risk_assessment.toUpperCase(), {
-            x: 100,
+            x: 100 + offsetX,
             y: height - 140,
             size: 12,
             color: rgb(0, 0, 0),
@@ -947,8 +972,8 @@ router.post('/upload-document', protect, authorizeRoles('client'), upload.single
 
         const eleventhPage = pages[10];
         eleventhPage.drawText(Salutation, {
-            x: 37,
-            y: height - 644,
+            x: 37 + offsetX,
+            y: height - 644 -10,
             size: 12,
             color: rgb(0, 0, 0),
         });
@@ -956,32 +981,32 @@ router.post('/upload-document', protect, authorizeRoles('client'), upload.single
 
         const thirdPage = pages[2];
         thirdPage.drawText(`${LOE_Date.day} of ${LOE_Date.month} ${LOE_Date.year}`, {
-            x: 278,
-            y: height - 77,
+            x: 278 + offsetX -18,
+            y: height - 77 - 34,
             size: 10,
             color: rgb(0, 0, 0),
         });
 
 
         thirdPage.drawText(Salutation, {
-            x: 313,
-            y: height - 207,
+            x: 313 + offsetX -40,
+            y: height - 207 -22,
             size: 10,
             color: rgb(0, 0, 0),
         });
 
 
         thirdPage.drawText(Salutation, {
-            x: 87,
-            y: height - 94,
+            x: 87 + offsetX -50,
+            y: height - 94 -33,
             size: 10,
             color: rgb(0, 0, 0),
         });
 
         subscriptionPrice = wrapText(subscriptionPrice, 20);
         thirdPage.drawText(subscriptionPrice, {
-            x: 283,
-            y: height - 728,
+            x: 283 + offsetX -30,
+            y: height - 728 + 35,
             size: 10,
             color: rgb(0, 0, 0),
         });
@@ -989,8 +1014,8 @@ router.post('/upload-document', protect, authorizeRoles('client'), upload.single
         const fourteenPage = pages[13];
 
         fourteenPage.drawText(subscriptionPrice, {
-            x: 428,
-            y: height - 210,
+            x: 428 + offsetX - 40,
+            y: height - 200 - 40,
             size: 10,
             color: rgb(0, 0, 0),
         });
@@ -999,12 +1024,12 @@ router.post('/upload-document', protect, authorizeRoles('client'), upload.single
         // Add more fields as needed...
         let signType;
 
-        if (clientType == "Indian") {
+        if (clientType === "Indian" || clientType === "Indian Renewal") {
             signType = "aadhaar";
-        }
-        else if (clientType == "NRI") {
+        } else if (clientType === "NRI" || clientType === "NRI Renewal") {
             signType = "Electronic";
         }
+
 
         // Save the modified PDF
         const pdfBytes = await pdfDoc.save();

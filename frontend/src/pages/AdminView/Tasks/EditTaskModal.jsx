@@ -3,7 +3,7 @@ import axios from "axios";
 import Select from "react-select";
 import BaseEditModal from "../../../components/SmallerComponents/BaseEditModal";
 
-const EditTaskModal = ({ id, url, clients, advisors, onSuccess }) => {
+const EditTaskModal = ({ id, url, clients, advisors, onSuccess, show, onHide }) => {
     const [formData, setFormData] = useState(null);
     const [loading, setLoading] = useState(false);
 
@@ -14,35 +14,28 @@ const EditTaskModal = ({ id, url, clients, advisors, onSuccess }) => {
     const statusRef = useRef();
     const dueDateRef = useRef();
 
-    const fetchData = async () => {
-        try {
-            setFormData(null); 
-            const res = await axios.get(`${url}/admin/rowwisetasks/${id}/editRowWiseTasks`);
-            const task = res.data;
-            const formatDate = (isoDate) =>
-                isoDate ? new Date(isoDate).toISOString().split("T")[0] : "";
-
-            setFormData({
-                ...task,
-                date: formatDate(task.date),
-                dueDate: formatDate(task.dueDate),
-            });
-        } catch (error) {
-            console.error("Error loading task", error);
-        }
-    };
-
+    // Fetch data when modal opens
     useEffect(() => {
-        const modal = document.getElementById("editTaskModal");
+        if (!show || !id) return;
+        const fetchData = async () => {
+            try {
+                setFormData(null);
+                const res = await axios.get(`${url}/admin/rowwisetasks/${id}/editRowWiseTasks`);
+                const task = res.data;
+                const formatDate = (isoDate) =>
+                    isoDate ? new Date(isoDate).toISOString().split("T")[0] : "";
 
-        const handleModalOpen = () => {
-            if (!id) return;
-            fetchData();
+                setFormData({
+                    ...task,
+                    date: formatDate(task.date),
+                    dueDate: formatDate(task.dueDate),
+                });
+            } catch (error) {
+                console.error("Error loading task", error);
+            }
         };
-
-        modal?.addEventListener("shown.bs.modal", handleModalOpen);
-        return () => modal?.removeEventListener("shown.bs.modal", handleModalOpen);
-    }, [id]);
+        fetchData();
+    }, [show, id, url]);
 
     const getValueOrNull = (ref) => {
         const value = ref.current?.value?.trim();
@@ -67,8 +60,7 @@ const EditTaskModal = ({ id, url, clients, advisors, onSuccess }) => {
         try {
             await axios.patch(`${url}/admin/rowwisetasks/${id}/editRowWiseTasks`, updatedData);
             onSuccess({ ...updatedData, _id: id });
-            const modal = bootstrap.Modal.getInstance(document.getElementById('editTaskModal'));
-            modal.hide();
+           
         } catch (error) {
             console.log("Error updating task:", error);
             alert("Failed to update task");
@@ -76,14 +68,14 @@ const EditTaskModal = ({ id, url, clients, advisors, onSuccess }) => {
             setLoading(false);
         }
     };
-    
 
     const clientOptions = clients.map(c => ({ value: c._id, label: `${c.fullName} (${c.email})` }));
     const advisorOptions = advisors.map(a => ({ value: a._id, label: `${a.advisorFullName} (${a.email})` }));
 
     return (
         <BaseEditModal
-            id="editTaskModal"
+            show={show}
+            onHide={onHide}
             title="Edit Task"
             onSubmit={handleSubmit}
             loading={loading}

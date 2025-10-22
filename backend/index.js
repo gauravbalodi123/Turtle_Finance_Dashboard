@@ -2,26 +2,36 @@ const express = require('express');
 const app = express();
 const passport = require('passport');
 const cookieParser = require('cookie-parser');
+
+
+const cron = require('node-cron');
+const markCompletedMeetings = require('./services/updateMeetingStatusScheduler');
+
 require('./middleware/passport'); // Adjusted to require passport config
 const mongoose = require('mongoose');
 require('dotenv').config();
 const compression = require('compression');
+
+require('./utils/quaterlyEmails/quaterlyEmailCornJob');
+require('./utils/quaterlyEmails/updateSubscriptionStatusJob');
 
 const { seedProspectDB } = require('./prospectseed');
 const { seedClientDB } = require('./clientseed')
 
 const { authRoutes } = require('./routes/authRoutes');
 const { adminClientRoutes } = require('./routes/adminRoutes/adminClientRoutes');
-const { advisorRoutes } = require('./routes/advisorRoutes');
+const { advisorRoutes } = require('./routes/adminAdvisorRoutes');
 const { meetingAndTasksRoutes } = require('./routes/meetingAndTaskRoutes');
 const { firefliesRouter } = require('./fireFlies/fetchFromFireflies');
 const { rowWiseTaskRoutes } = require('./routes/rowWiseTaskRoutes');
 const { calendlyRoutes } = require('./routes/adminRoutes/calendlyRoutes')
 const { calendlyRes } = require('./Calendly/calendlyGetRes')
 const { bookingRoutes } = require('./routes/adminRoutes/bookingRoutes')
+const { processedBookingRoutes } = require('./routes/adminRoutes/processedBookingRoutes')
 const { prospectRoutes } = require('./routes/adminRoutes/prospectRoutes')
 const { adminMemberRoutes } = require('./routes/adminRoutes/memberRoutes')
 const { emailRoutes } = require('./routes/adminRoutes/emailRoutes')
+const { emailTrackerRoutes }= require('./routes/adminRoutes/emailTrackerRoutes')
 
 
 // himanshu's client routes
@@ -30,6 +40,21 @@ const kycRoutes = require("./routes/clientRoutes/kycRoutes");
 const subscriptionPlan = require("./routes/adminRoutes/subscriptionPlan");
 const payment = require("./routes/clientRoutes/paymentRoutes");
 const files = require("./routes/files");
+
+const {clientAdvisorRoutes}  = require("./routes/clientRoutes/clientAdvisorRoutes")
+
+
+
+
+
+
+
+
+// advisors routes
+const {advisorTasksRoutes} = require('./routes/advisorRoutes/advisorMeetingRoutes');
+const {advisorBookingsRoutes} = require('./routes/advisorRoutes/advisorBookingRoutes');
+const {advisorClientRoutes} = require('./routes/advisorRoutes/advisorClientRoutes');
+
 // const  AssignAdvisorToClient  = require('./routes/adminRoutes/assignAdvisorToClient');
 
 
@@ -84,19 +109,29 @@ app.use(firefliesRouter);
 app.use('/admin', meetingAndTasksRoutes);
 app.use('/admin', rowWiseTaskRoutes);
 app.use('/admin', bookingRoutes);
+app.use('/admin', processedBookingRoutes);
 app.use('/admin', adminMemberRoutes)
 app.use('/admin/api/calendly', calendlyRoutes);
 app.use('/admin/api/calendly', calendlyRes);
 app.use('/admin', prospectRoutes);
 app.use('/admin', emailRoutes)
-
-
+app.use('/admin', emailTrackerRoutes);
 app.use('/admin', subscriptionPlan);
 // app.use('/admin', AssignAdvisorToClient)
+
+
+
 app.use('/client', riskProfileRoutes);
 app.use("/client", kycRoutes);
 // app.use("/client", formRoutes);
 app.use("/client", payment);
+app.use("/client", clientAdvisorRoutes);
+
+
+app.use("/advisor", advisorTasksRoutes);
+app.use("/advisor", advisorBookingsRoutes);
+app.use("/advisor", advisorClientRoutes);
+
 
 // seedProspectDB()
 // seedClientDB()
@@ -108,6 +143,13 @@ app.use('/auth', authRoutes);
 
 app.get('/', (req, res) => {
   res.status(200).json({ msg: 'hello from turtle finance server' });
+});
+
+
+// this scheduler will check all the past or historic booking data from canlendly with status upcomming or recheduled and if tier time has pased then it will mark them completed yes
+cron.schedule('0 0 * * *', async () => {
+  console.log('Running nightly completed-meetings job...');
+  await markCompletedMeetings();
 });
 
 

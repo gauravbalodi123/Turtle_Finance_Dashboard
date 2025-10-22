@@ -3,7 +3,7 @@ import axios from "axios";
 import Select from "react-select";
 import BaseEditModal from "../../../components/SmallerComponents/BaseEditModal";
 
-const EditMeetingModal = ({ meetingId, clients, advisors, onSuccess }) => {
+const EditMeetingModal = ({ meetingId, clients, advisors, onSuccess, show, onHide }) => {
     axios.defaults.withCredentials = true;
     const url = import.meta.env.VITE_URL;
 
@@ -13,83 +13,57 @@ const EditMeetingModal = ({ meetingId, clients, advisors, onSuccess }) => {
 
     const titleRef = useRef();
     const transcriptUrlRef = useRef();
-    // const participantsRef = useRef();
     const videoUrlRef = useRef();
     const dateRef = useRef();
     const meetingNumberRef = useRef();
     const actionItemsRef = useRef();
     const detailedNotesRef = useRef();
-    // const summaryRef = useRef();
-    // const responsiblePersonRef = useRef();
-    // const statusRef = useRef();
-    // const dueDateRef = useRef();
 
+    // Fetch meeting data when modal opens
     useEffect(() => {
-        if (!initialData) return;
-
-        titleRef.current.value = initialData.title || "";
-        transcriptUrlRef.current.value = initialData.transcriptUrl || "";
-        // participantsRef.current.value = initialData.participants?.join(", ") || "";
-        videoUrlRef.current.value = initialData.videoUrl || "";
-        dateRef.current.value = initialData.date || "";
-        meetingNumberRef.current.value = initialData.meetingNumber || "";
-        // actionItemsRef.current.value = initialData.actionItems || "";
-        detailedNotesRef.current.value = initialData.detailedNotes || "";
-        // summaryRef.current.value = initialData.summary || "";
-        // responsiblePersonRef.current.value = initialData.responsiblePerson || "";
-        // statusRef.current.value = initialData.status || "Pending";
-        // dueDateRef.current.value = initialData.dueDate || "";
-    }, [initialData]);
-
-    useEffect(() => {
-        const modal = document.getElementById("editMeetingModal");
+        if (!show || !meetingId) return;
 
         const fetchData = async () => {
             try {
-
                 setInitialData(null);
                 setFormData(null);
                 const res = await axios.get(`${url}/admin/tasks/${meetingId}/editTasks`);
                 const data = res.data;
 
-                const formatDate = (d) => d ? new Date(d).toISOString().split("T")[0] : "";
+                const formatDate = (d) => (d ? new Date(d).toISOString().split("T")[0] : "");
 
-
-
-                setInitialData({
+                const formattedData = {
                     ...data,
                     date: formatDate(data.date),
                     dueDate: formatDate(data.dueDate),
-                });
+                };
 
-                setFormData({
-                    ...data,
-                    date: formatDate(data.date),
-                    dueDate: formatDate(data.dueDate),
-                });
-
+                setInitialData(formattedData);
+                setFormData(formattedData);
             } catch (error) {
                 console.error("Error loading meeting data:", error);
             }
         };
 
-        const handleOpen = () => {
-            if (meetingId) fetchData();
-        };
+        fetchData();
+    }, [show, meetingId]);
 
-        modal?.addEventListener("shown.bs.modal", handleOpen);
-        return () => modal?.removeEventListener("shown.bs.modal", handleOpen);
-    }, [meetingId]);
+    // Set form values when data is loaded
+    useEffect(() => {
+        if (!initialData) return;
+
+        titleRef.current.value = initialData.title || "";
+        transcriptUrlRef.current.value = initialData.transcriptUrl || "";
+        videoUrlRef.current.value = initialData.videoUrl || "";
+        dateRef.current.value = initialData.date || "";
+        meetingNumberRef.current.value = initialData.meetingNumber || "";
+        detailedNotesRef.current.value = initialData.detailedNotes || "";
+    }, [initialData]);
 
     const getValueOrNull = (ref) => {
         const value = ref.current?.value?.trim();
         return value === "" ? null : value;
     };
-
-    // const getArrayFromInput = (ref) => {
-    //     const value = ref.current?.value?.trim();
-    //     return value === "" ? [] : value.split(",").map(item => item.trim());
-    // };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -103,18 +77,16 @@ const EditMeetingModal = ({ meetingId, clients, advisors, onSuccess }) => {
             meetingNumber: getValueOrNull(meetingNumberRef),
             actionItems: getValueOrNull(actionItemsRef),
             detailedNotes: getValueOrNull(detailedNotesRef),
-            // summary: getValueOrNull(summaryRef),
-            transcriptUrl: getValueOrNull(transcriptUrlRef), // ✅ add this
+            transcriptUrl: getValueOrNull(transcriptUrlRef),
             videoUrl: getValueOrNull(videoUrlRef),
         };
 
         try {
             await axios.patch(`${url}/admin/tasks/${meetingId}/editTasks`, updatedData);
 
-            // ✅ FIX: return updated data with _id so AllMeetings can update it
+            // Send updated data back to parent
             onSuccess?.({ ...updatedData, _id: meetingId });
-            const modal = bootstrap.Modal.getInstance(document.getElementById('editMeetingModal'));
-            modal.hide();
+
         } catch (error) {
             console.error("Update failed:", error);
             alert("Failed to update meeting.");
@@ -122,7 +94,6 @@ const EditMeetingModal = ({ meetingId, clients, advisors, onSuccess }) => {
             setLoading(false);
         }
     };
-
 
     const clientOptions = clients.map(c => ({
         value: c._id,
@@ -136,7 +107,8 @@ const EditMeetingModal = ({ meetingId, clients, advisors, onSuccess }) => {
 
     return (
         <BaseEditModal
-            id="editMeetingModal"
+            show={show}
+            onHide={onHide}
             title="Edit Meeting"
             onSubmit={handleSubmit}
             loading={loading}
@@ -180,7 +152,6 @@ const EditMeetingModal = ({ meetingId, clients, advisors, onSuccess }) => {
                             <label>Date</label>
                             <input ref={dateRef} type="date" className="form-control" />
                         </div>
-
                     </div>
 
                     <div className="row mb-3">
@@ -194,27 +165,10 @@ const EditMeetingModal = ({ meetingId, clients, advisors, onSuccess }) => {
                         </div>
                     </div>
 
-                    {/* <div className="mb-3">
-                        <label>Participants (comma-separated)</label>
-                        <input ref={participantsRef} className="form-control" />
-                    </div> */}
-
-                    {/* <div className="mb-3">
-                        <label>Action Items</label>
-                        <textarea ref={actionItemsRef} className="form-control" rows="3" />
-                    </div> */}
-
                     <div className="mb-3">
                         <label>Detailed Notes</label>
                         <textarea ref={detailedNotesRef} className="form-control" rows="4" />
                     </div>
-
-                    {/* <div className="mb-3">
-                        <label>Summary</label>
-                        <textarea ref={summaryRef} className="form-control" rows="4" />
-                    </div> */}
-
-
                 </>
             ) : (
                 <p>Loading...</p>

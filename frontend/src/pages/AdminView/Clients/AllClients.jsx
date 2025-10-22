@@ -8,11 +8,11 @@ import TableComponent from "../../../components/SmallerComponents/TableComponent
 import styles from '@styles/AdminLayout/Clients/AllClients.module.css'
 import SearchFilter from "../../../components/SmallerComponents/SearchFilter";
 import { IoFilter } from "react-icons/io5";
-import { FaRegEdit } from "react-icons/fa";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import DeleteModal from "../../../components/SmallerComponents/DeleteModal";
-import ClientDetailedInfoModal from "../../../components/SmallerComponents/ClientDetailedInfoModal";
-import { FaRegEye } from "react-icons/fa";
+import ClientDetailedInfoModal from "../../../components/SmallerComponents/ClientDetailedInfoModal/ClientDetailedInfoModal";
+import { FaRegEye, FaRegEdit } from "react-icons/fa";
+import { BsLinkedin } from "react-icons/bs";
 
 const AllClients = () => {
     axios.defaults.withCredentials = true
@@ -34,6 +34,11 @@ const AllClients = () => {
     const [sorting, setSorting] = useState([]);
 
     const [selectedClientId, setSelectedClientId] = useState(null);
+
+
+
+
+
 
 
 
@@ -86,29 +91,6 @@ const AllClients = () => {
         fetchSummary();
     }, []);
 
-    // useEffect(() => {
-    //     const fetchAllClientEmails = async () => {
-    //         try {
-    //             const res = await axios.get(`${url}/admin/clients`); // this hits the full list endpoint
-    //             const allClients = res.data;
-
-    //             console.log("📧 All Client Emails:");
-    //             allClients.forEach((client, i) => {
-    //                 console.log(`${i + 1}. ${client.email}`);
-    //             });
-
-    //             console.log(`✅ Total: ${allClients.length} clients`);
-    //         } catch (err) {
-    //             console.error("Failed to fetch all client emails", err);
-    //         }
-    //     };
-
-    //     fetchAllClientEmails();
-    // }, []);
-
-
-
-
     const handleDelete = async () => {
         if (!targetId) return;
         setLoadingId(targetId);
@@ -151,6 +133,7 @@ const AllClients = () => {
     // }, [columnFilter, clients]);
 
     const columns = [
+
         {
             accessorKey: "fullName",
             header: "Full Name",
@@ -162,14 +145,11 @@ const AllClients = () => {
                 <Link
                     role="button"
                     className="text-dark p-0 text-decoration-none"
-                    data-bs-toggle="modal"
-                    data-bs-target="#clientDetailModal"
                     onClick={() => setSelectedClientId(row.original._id)} // 👈 Save clicked client's ID
                 >
                     {row.original.fullName}
                 </Link>
             ),
-
         },
         // { accessorKey: "salutation", header: "Salutation", enableResizing: true, size: 120, minSize: 80 },
         // { accessorKey: "leadSourceId", header: "Lead Source ID", enableResizing: true, size: 150, minSize: 120 },
@@ -200,6 +180,7 @@ const AllClients = () => {
         //         );
         //     }
         // },
+
         {
             accessorKey: "subscriptionStatus",
             header: "Subscription Status",
@@ -214,16 +195,61 @@ const AllClients = () => {
                 if (value === "Active") statusClass = styles["active-status"];
                 else if (value === "Expired") statusClass = styles["expired-status"];
                 else if (value === "Up for Renewal") statusClass = styles["renewal-status"];
-                else if (value === "Prospect") statusClass = styles["Prospect"];
+                else if (value === "Prospect") statusClass = styles["prospect-status"];
+                else if (value === "Deadpool") statusClass = styles["deadpool-status"];
 
                 return <span className={statusClass}>{value}</span>;
             }
         },
         // { accessorKey: "gender", header: "Gender", enableResizing: true, size: 100, minSize: 80 },
-        { accessorKey: "countryCode", header: "Country Code", enableResizing: true, size: 125, minSize: 100 },
-        { accessorKey: "phone", header: "Phone", enableResizing: true, size: 110, minSize: 100, sortDescFirst: true, },
-        { accessorKey: "email", header: "Email", enableResizing: true, size: 200, minSize: 200, sortDescFirst: true, },
+        // { accessorKey: "countryCode", header: "Country Code", enableResizing: true, size: 135, minSize: 100 },
+        // { accessorKey: "phone", header: "Phone", enableResizing: true, size: 110, minSize: 100, sortDescFirst: true, },
+
+        // { accessorKey: "countryCode2", header: "Country Code 2", enableResizing: true, size: 145, minSize: 110 },
+        // { accessorKey: "phone2", header: "Phone 2", enableResizing: true, size: 130, minSize: 110 },
+        {
+            accessorKey: "email",
+            header: "Email(s)",
+            enableResizing: true,
+            size: 220,
+            minSize: 180,
+            sortDescFirst: true,
+            cell: ({ row }) =>
+                row.original.email && row.original.email.length
+                    ? row.original.email.join(", ")
+                    : "N/A",
+        },
         // { accessorKey: "address", header: "Address", enableResizing: true, size: 180, minSize: 150 },
+
+        {
+            accessorKey: "phones",
+            header: "Phone Numbers",
+            enableResizing: true,
+            size: 150,
+            minSize: 150,
+            cell: ({ row }) => {
+                const { countryCode, phone, countryCode2, phone2 } = row.original;
+
+                const phoneList = [];
+
+                // First number
+                if (countryCode || phone) {
+                    phoneList.push([countryCode, phone].filter(Boolean).join(" ")); // join only existing parts
+                }
+
+                // Second number
+                if (countryCode2 || phone2) {
+                    phoneList.push([countryCode2, phone2].filter(Boolean).join(" "));
+                }
+
+                // Render each phone in a separate line, or "N/A" if none exist
+                return phoneList.length > 0
+                    ? phoneList.map((p, i) => <div key={i}>{p}</div>)
+                    : "N/A";
+            },
+        },
+
+
         {
             accessorKey: "subscriptionDate",
             header: "Subscription Date",
@@ -298,11 +324,25 @@ const AllClients = () => {
         //     accessorKey: "dob",
         //     header: "Date of Birth",
         //     enableResizing: true,
-        //     size: 140,
-        //     minSize: 140,
+        //     size: 130,
+        //     minSize: 120,
         //     cell: ({ row }) =>
         //         row.original.dob ? new Date(row.original.dob).toLocaleDateString("en-GB") : "N/A",
         // },
+
+
+        // {
+        //     accessorKey: "bio",
+        //     header: "Bio",
+        //     enableResizing: true,
+        //     size: 250,
+        //     minSize: 200,
+        //     cell: ({ row }) => {
+        //         const bio = row.original.bio || "N/A";
+        //         return bio.length > 100 ? bio.substring(0, 100) + "..." : bio;
+        //     }
+        // },
+
 
         // { accessorKey: "companyName", header: "Company Name", enableResizing: true, size: 150, minSize: 150 },
 
@@ -310,40 +350,53 @@ const AllClients = () => {
             accessorKey: "_id",
             header: "Action",
             enableResizing: false,
-            size: 135,
+            size: 180,
             minSize: 130,
             enableSorting: false,
-            cell: ({ row }) => (
-                <div className="d-flex gap-2">
-                    <Link
-                        to={`/adminautharized/admin/clients/${row.original._id}/editClients`}
-                        className="btn p-2 btn-outline-turtle-secondary"
-                    >
-                        <FaRegEdit className="d-block fs-6" />
-                    </Link>
+            cell: ({ row }) => {
+                const linkedinUrl = row.original.linkedinProfile;
+                return (
+                    <div className="d-flex gap-2">
+                        <Link
+                            to={`/adminautharized/admin/clients/${row.original._id}/editClients`}
+                            className="btn p-2 btn-outline-turtle-secondary"
+                        >
+                            <FaRegEdit className="d-block fs-6" />
+                        </Link>
 
-                    <Link
-                        to={`/adminautharized/admin/clients/${row.original._id}/riskProfile`}
-                        className="btn p-2 btn-outline-turtle-secondary"
-                    >
-                        <FaRegEye className="d-block fs-6" title="View Risk Profile" />
-                    </Link>
+                        <Link
+                            to={`/adminautharized/admin/clients/${row.original._id}/riskProfile`}
+                            className="btn p-2 btn-outline-turtle-secondary"
+                        >
+                            <FaRegEye className="d-block fs-6" title="View Risk Profile" />
+                        </Link>
 
+                        <button
+                            type="button"
+                            className="btn p-2 btn-outline-turtle-secondary"
+                            data-bs-toggle="modal"
+                            data-bs-target="#deleteModal"
+                            onClick={() => setTargetId(row.original._id)}
+                            disabled={loadingId === row.original._id}
+                        >
+                            {loadingId === row.original._id ? "Deleting..." : <RiDeleteBin6Line className="d-block fs-6" />}
+                        </button>
 
-                    <button
-                        type="button"
-                        className="btn p-2 btn-outline-turtle-secondary"
-                        data-bs-toggle="modal"
-                        data-bs-target="#deleteModal"
-                        onClick={() => setTargetId(row.original._id)}
-                        disabled={loadingId === row.original._id}
-                    >
-                        {loadingId === row.original._id ? "Deleting..." : <RiDeleteBin6Line className="d-block fs-6" />}
-                    </button>
-                </div>
-            ),
+                        <a
+                            href={linkedinUrl || "#"}
+                            target={linkedinUrl ? "_blank" : undefined}
+                            rel={linkedinUrl ? "noopener noreferrer" : undefined}
+                            className={`btn p-2 btn-outline-turtle-secondary ${!linkedinUrl ? "disabled" : ""}`}
+                            title={linkedinUrl ? "View LinkedIn" : "LinkedIn Not Available"}
+                            onClick={(e) => !linkedinUrl && e.preventDefault()} // prevent click if no URL
+                        >
+                            <BsLinkedin className="d-block fs-6" />
+                        </a>
+                    </div>
+                );
+            }
+        }
 
-        },
     ];
 
 
@@ -369,50 +422,27 @@ const AllClients = () => {
             ) : (
                 <Fragment>
 
-                    <div className='mb-4 align-items-center row gx-3 gy-3 gy-lg-0'>
-
-                        <div className="col-12 col-md-3 text-center text-md-start">
-                            <div className="card p-4">
-                                <h4 className="fs-5 fw-bold">Total Clients</h4>
-                                <p className="fs-6 mb-2 text-secondary">All registered clients</p>
-                                <h2 className='fs-4 m-0 fw-bolder'>
-                                    {loadingSummary ? '...' : summary?.total}
-                                </h2>
+                    <div className='mb-4 row gx-3 gy-3 gy-lg-0'>
+                        {[
+                            { title: "Total Clients", desc: "All registered clients", value: summary?.total },
+                            { title: "Active Membership", desc: "Currently active clients", value: summary?.active },
+                            { title: "Up for Renewal", desc: "Clients nearing renewal", value: summary?.upForRenewal },
+                            { title: "Expired Membership", desc: "Currently expired clients", value: summary?.expired },
+                            { title: "Deadpool", desc: "Clients marked as deadpool", value: summary?.deadpool }
+                        ].map((card, idx) => (
+                            <div key={idx} className="col-12 col-md text-center text-md-start">
+                                <div className={`card p-4 h-100 d-flex flex-column justify-content-between ${styles.cardHover}`} >
+                                    <div>
+                                        <h4 className="fs-5 fw-bold">{card.title}</h4>
+                                        <p className="fs-6 mb-2 text-secondary">{card.desc}</p>
+                                    </div>
+                                    <h2 className='fs-4 m-0 fw-bolder'>{loadingSummary ? '...' : card.value}</h2>
+                                </div>
                             </div>
-                        </div>
-
-                        <div className="col-12 col-md-3 text-center text-md-start">
-                            <div className="card p-4">
-                                <h4 className="fs-5 fw-bold">Active Membership</h4>
-                                <p className="fs-6 mb-2 text-secondary">Currently active clients</p>
-                                <h2 className='fs-4 m-0 fw-bolder'>
-                                    {loadingSummary ? '...' : summary?.active}
-                                </h2>
-                            </div>
-                        </div>
-
-                        <div className="col-12 col-md-3 text-center text-md-start">
-                            <div className="card p-4">
-                                <h4 className="fs-5 fw-bold">Expired Membership</h4>
-                                <p className="fs-6 mb-2 text-secondary">Currently Expired clients</p>
-                                <h2 className='fs-4 m-0 fw-bolder'>
-                                    {loadingSummary ? '...' : summary?.expired}
-                                </h2>
-                            </div>
-                        </div>
-
-                        <div className="col-12 col-md-3 text-center text-md-start">
-                            <div className="card p-4">
-                                <h4 className="fs-5 fw-bold">Total Revenue</h4>
-                                <p className="fs-6 mb-2 text-secondary">From all client contracts</p>
-                                <h2 className='fs-4 m-0 fw-bolder'>
-                                    {/* {loadingSummary ? '...' : `₹${summary?.totalRevenue}`} */}
-                                    4
-                                </h2>
-                            </div>
-                        </div>
-
+                        ))}
                     </div>
+
+
 
 
                     <div className={styles.clientsPageTableWrapper}>
@@ -421,7 +451,7 @@ const AllClients = () => {
 
                             <div className="my-3 bg-light-subtle d-flex justify-content-between " >
                                 <div className="">
-                                    <SearchFilter columnFilter={columnFilter} setColumnFilter={setColumnFilter} />
+                                    <SearchFilter columnFilter={columnFilter} setColumnFilter={setColumnFilter} setSelectedClientId={setSelectedClientId} />
                                 </div>
 
                                 <div>
@@ -456,9 +486,10 @@ const AllClients = () => {
 
 
                             <ClientDetailedInfoModal
-                                modalId="clientDetailModal"
-                                clientId={selectedClientId} // 👈 Pass ID
+                                clientId={selectedClientId}
+                                onClose={() => setSelectedClientId(null)}
                             />
+
 
 
 

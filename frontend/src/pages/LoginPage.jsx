@@ -43,16 +43,19 @@ const LoginPage = () => {
 
       if (role === "admin") {
         navigate('/adminautharized/admin/clients');
-      } else if (role === "client") {
-
+      }
+      else if (role === "client") {
         if (status === "Active") {
-          navigate("/clientautharized/clientAdvisorDashboard");
+          navigate("/clientautharized/client/advisors");
         } else {
           navigate("/clientautharized/onboarding");
         }
-
-        //  navigate('/clientautharized/dashboard');// Update this route to your actual client dashboard route
-      } else {
+      }
+      else if (role === "advisor") {
+        // ✅ Redirect advisors to their authorized tasks dashboard
+        navigate('/advisorautharized/advisor/meetingNotes');
+      }
+      else {
         setError("Unknown role. Please contact support.");
       }
 
@@ -61,6 +64,7 @@ const LoginPage = () => {
       setError(err.response?.data?.message || 'Login failed');
     }
   };
+
 
   return (
     <div className="d-flex vh-100 align-items-center justify-content-center">

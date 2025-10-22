@@ -18,14 +18,26 @@ const EditModal = ({
         }
     }, [actionItemData]);
 
+
+
     const handleSave = () => {
         const updatedData = {
             ...actionItemData,
             actionItems: actionItemsRef.current.value,
             status: statusRef.current.value,
         };
-        onSave(updatedData); 
+
+        onSave(updatedData);
+
+        // Close EditModal
+        const editModal = bootstrap.Modal.getInstance(document.getElementById("editModal"));
+        if (editModal) editModal.hide();
+
+        // Open ActionItemsModal again
+        const actionModal = new bootstrap.Modal(document.getElementById("actionItemsModal"));
+        actionModal.show();
     };
+
 
 
     return (
@@ -90,11 +102,13 @@ const EditModal = ({
                         <div className="modal-footer">
                             <button
                                 type="button"
-                                className="btn btn-secondary"
-                                data-bs-dismiss="modal"
+                                className="btn btn-outline-turtle-secondary"
+                                data-bs-target="#actionItemsModal"
+                                data-bs-toggle="modal"
                             >
-                                Close
+                                Back
                             </button>
+
                             <button
                                 type="button"
                                 className="btn btn-turtle-primary"
@@ -103,6 +117,7 @@ const EditModal = ({
                                 Save Changes
                             </button>
                         </div>
+
                     </div>
                 </div>
             </div>

@@ -1,26 +1,20 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
-// import RiskProfileForm from "@pages/ClientView/riskProfileForm";
-// import AgreementSigning from "@pages/ClientView/AgreementSigning";
-// import KYCUpload from "@pages/ClientView/KYCUpload";
-import OnboardingFlow from "../pages/ClientView/Onboarding/OnboardingFlow";
-import CalendlyBooking from "../components/SmallerComponents/CalendlyBooking";
-// import PaymentPage from "@pages/ClientView/Payment/PaymentPage";
-// import ClientAdvisorDashboard from "@pages/ClientView/clientAdvisorDashboard";
+import AllAdvisors from "../pages/ClientView/Advisors/AllAdvisors";
+
 
 const ClientRoutes = () => {
   return (
     <Routes>
-      {/* Direct Routes (if accessed individually) */}
-      {/* <Route path="dashboard" element={<RiskProfileForm />} /> */}
-      {/* <Route path="agreement" element={<AgreementSigning />} /> */}
-      {/* <Route path="kyc" element={<KYCUpload />} /> */}
-      {/* <Route path="payment" element={<PaymentPage />} /> */}
-      {/* <Route path="clientAdvisorDashboard" element={<ClientAdvisorDashboard />} /> */}
+
+      <Route path="/client/advisors" element={<AllAdvisors />} />
 
 
-      <Route path="/onboarding" element={<OnboardingFlow />} />
-      <Route path="/book-call" element={<CalendlyBooking />} />
+
+      {/* to be called inside app.jsx direcly bcs they dont need client layouts sidebar and navbar */}
+      {/* <Route path="/onboarding" element={<OnboardingFlow />} />
+      <Route path="/book-call" element={<CalendlyBooking />} /> */}
+      
     </Routes>
   );
 };

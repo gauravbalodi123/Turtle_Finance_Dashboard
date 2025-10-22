@@ -1,210 +1,333 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import BaseEditModal from "../../../components/SmallerComponents/BaseEditModal";
+import Select from "react-select";
 
-const EditBookingsModal = ({ id, url, onSuccess }) => {
+const EditBookingsModal = ({ show, onHide, id, url, onSuccess }) => {
+  axios.defaults.withCredentials = true;
+
   const [formData, setFormData] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [advisorOptions, setAdvisorOptions] = useState([]);
+  const [selectedAdvisors, setSelectedAdvisors] = useState([]);
 
-  const nameRef = useRef();
-  const statusRef = useRef();
-  const clientNameRef = useRef();
-  const clientEmailRef = useRef();
-  const canceledByRef = useRef();
-  const cancelReasonRef = useRef();
-  const joinUrlRef = useRef();
-  const advisorEmailRef = useRef();
-  const phoneNumberRef = useRef();
-  const countryCodeRef = useRef();
-  const clientQueryRef = useRef();
-
-
-  const fetchData = async () => {
-    try {
-      setFormData(null);
-      const res = await axios.get(`${url}/admin/bookings/${id}/editBooking`);
-      const booking = res.data;
-      const questions = booking.invitee?.questionsAndAnswers || [];
-      const phoneQA = questions.find(q => q.question === "Phone Number") || {};
-      const queryQA = questions.find(q => q.question?.toLowerCase().includes("queries")) || {};
-
-      setFormData({
-        ...booking,
-        clientName: booking.invitee?.fullName || "",
-        clientEmail: booking.invitee?.email || "",
-        canceledBy: booking.cancellation?.canceled_by || "",
-        cancelReason: booking.cancellation?.reason || "",
-        joinUrl: booking.location?.join_url || "",
-        advisorEmail: booking.event_guests?.[0]?.email || "",
-
-        phoneNumber: phoneQA.phoneNumber || "",
-        countryCode: phoneQA.countryCode || "",
-        clientQuery: queryQA.answer || ""
-      });
-    } catch (error) {
-      console.error("Error loading booking", error);
-    }
-  };
-
+  // Fetch booking data when modal opens
   useEffect(() => {
-    const modal = document.getElementById("editBookingsModal");
+    if (!show || !id) return;
 
-    const handleModalOpen = () => {
-      if (!id) return;
-      fetchData();
+    const fetchBooking = async () => {
+      try {
+        setFormData(null);
+        const res = await axios.get(`${url}/admin/bookings/${id}/editBooking`);
+        const booking = res.data;
+
+        // Map advisors to react-select format
+
+        const selected = booking.advisors.map(a => ({
+          value: a._id,
+          label: `${a.advisorFullName} (${a.email})`
+        }));
+        setSelectedAdvisors(selected);
+
+
+        // Parse questions
+        const questions = booking.invitee?.questionsAndAnswers || [];
+        const phoneQA = questions.find(q => q.question === "Phone Number") || {};
+        const queryQA = questions.find(q => q.question?.toLowerCase().includes("queries")) || {};
+
+        setFormData({
+          name: booking.name || "",
+          status: booking.status || "",
+          simplifiedStatus: booking.simplifiedStatus || "",
+          event_type: booking.event_type || "",
+          is_completed: booking.is_completed || "",
+          start_time: booking.start_time || "",
+          end_time: booking.end_time || "",
+          clientName: booking.invitee?.fullName || "",
+          clientEmail: booking.invitee?.email || "",
+          phoneNumber: phoneQA.phoneNumber || "",
+          countryCode: phoneQA.countryCode || "",
+          clientQuery: queryQA.answer || "",
+          canceledBy: booking.cancellation?.canceled_by || "",
+          cancelReason: booking.cancellation?.reason || "",
+          joinUrl: booking.location?.join_url || "",
+          locationStatus: booking.location?.status || "",
+          locationType: booking.location?.type || "",
+          eventGuests: booking.event_guests || [],
+          calendarExternalId: booking.calendar_event?.external_id || "",
+          calendarKind: booking.calendar_event?.kind || "",
+          inviteesActive: booking.invitees_counter?.active || 0,
+          inviteesLimit: booking.invitees_counter?.limit || 1,
+          inviteesTotal: booking.invitees_counter?.total || 1,
+          backfillStatus: booking.backfillStatus || "",
+          errorMessage: booking.errorMessage || "",
+          meetingNotesPlain: booking.meeting_notes_plain || "",
+          meetingNotesHtml: booking.meeting_notes_html || "",
+        });
+      } catch (err) {
+        console.error("Error loading booking", err);
+      }
     };
 
-    modal?.addEventListener("shown.bs.modal", handleModalOpen);
-    return () => modal?.removeEventListener("shown.bs.modal", handleModalOpen);
-  }, [id]);
+    fetchBooking();
+  }, [show, id, url]);
 
-  const getValueOrNull = (ref) => {
-    const value = ref.current?.value?.trim();
-    return value === "" ? null : value;
+  // Fetch all advisors for select dropdown
+  useEffect(() => {
+    const fetchAdvisors = async () => {
+      try {
+        const res = await axios.get(`${url}/admin/advisors`);
+        const options = res.data.map(a => ({ value: a._id, label: a.name }));
+        setAdvisorOptions(options);
+      } catch (err) {
+        console.error("Failed to load advisors", err);
+      }
+    };
+    if (show) fetchAdvisors();
+  }, [show, url]);
+
+  const handleChange = (key, value) => {
+    setFormData(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleGuestChange = (idx, value) => {
+    const newGuests = [...formData.eventGuests];
+    newGuests[idx].email = value;
+    setFormData(prev => ({ ...prev, eventGuests: newGuests }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
-    const phoneNumber = getValueOrNull(phoneNumberRef);
-    const countryCode = getValueOrNull(countryCodeRef);
-    const clientQuery = getValueOrNull(clientQueryRef);
-
-    const updatedData = {
-      name: getValueOrNull(nameRef),
-      status: getValueOrNull(statusRef),
-      invitee: {
-        fullName: getValueOrNull(clientNameRef),
-        email: getValueOrNull(clientEmailRef),
-        questionsAndAnswers: [
-          ...(phoneNumber || countryCode ? [{
-            question: "Phone Number",
-            answer: `${countryCode || ''}${phoneNumber || ''}`,
-            countryCode: countryCode || null,
-            phoneNumber: phoneNumber || null
-          }] : []),
-          ...(clientQuery ? [{
-            question: "Any queries or concerns?",
-            answer: clientQuery
-          }] : [])
-        ]
-      },
-      cancellation: {
-        canceled_by: getValueOrNull(canceledByRef),
-        reason: getValueOrNull(cancelReasonRef),
-      },
-      location: {
-        join_url: getValueOrNull(joinUrlRef),
-      },
-      event_guests: [{ email: getValueOrNull(advisorEmailRef) }],
-    };
-
     try {
-      await axios.patch(`${url}/admin/bookings/${id}/editBooking`, updatedData);
-      onSuccess({ ...updatedData, _id: id });
-      const modal = bootstrap.Modal.getInstance(document.getElementById('editBookingsModal'));
-      modal.hide();
-    } catch (error) {
-      console.error("Error updating booking:", error);
+      const updatedData = {
+        ...formData,
+        advisors: selectedAdvisors.map(a => a.value),
+        event_guests: formData.eventGuests.map(g => ({ email: g.email })),
+        invitee: {
+          fullName: formData.clientName || null,
+          email: formData.clientEmail || null,
+          questionsAndAnswers: [
+            ...(formData.phoneNumber || formData.countryCode
+              ? [{
+                question: "Phone Number",
+                answer: `${formData.countryCode || ""}${formData.phoneNumber || ""}`,
+                phoneNumber: formData.phoneNumber || null,
+                countryCode: formData.countryCode || null
+              }]
+              : []),
+            ...(formData.clientQuery ? [{
+              question: "Any queries or concerns?",
+              answer: formData.clientQuery
+            }] : [])
+          ]
+        },
+        cancellation: {
+          canceled_by: formData.canceledBy || null,
+          reason: formData.cancelReason || null
+        },
+        location: {
+          join_url: formData.joinUrl || null,
+          status: formData.locationStatus || null,
+          type: formData.locationType || null
+        },
+        calendar_event: {
+          external_id: formData.calendarExternalId || null,
+          kind: formData.calendarKind || null
+        },
+        invitees_counter: {
+          active: Number(formData.inviteesActive) || 0,
+          limit: Number(formData.inviteesLimit) || 1,
+          total: Number(formData.inviteesTotal) || 1
+        },
+        backfillStatus: formData.backfillStatus || null,
+        errorMessage: formData.errorMessage || null,
+        meeting_notes_plain: formData.meetingNotesPlain || null,
+        meeting_notes_html: formData.meetingNotesHtml || null
+      };
+
+      const res = await axios.patch(`${url}/admin/bookings/${id}/editBooking`, updatedData);
+      const updatedBooking = res.data;
+
+      // Keep modal fields intact and update advisors
+      const advisors = updatedBooking.advisors || [];
+      setSelectedAdvisors(advisors.map(a => ({ value: a._id, label: a.name })));
+
+      const questions = updatedBooking.invitee?.questionsAndAnswers || [];
+      const phoneQA = questions.find(q => q.question === "Phone Number") || {};
+      const queryQA = questions.find(q => q.question?.toLowerCase().includes("queries")) || {};
+
+      setFormData({
+        ...updatedBooking,
+        clientName: updatedBooking.invitee?.fullName || "",
+        clientEmail: updatedBooking.invitee?.email || "",
+        phoneNumber: phoneQA.phoneNumber || "",
+        countryCode: phoneQA.countryCode || "",
+        clientQuery: queryQA.answer || "",
+        eventGuests: updatedBooking.event_guests || []
+      });
+
+      onSuccess(updatedBooking);
+    } catch (err) {
+      console.error("Error updating booking:", err);
       alert("Failed to update booking");
     } finally {
       setLoading(false);
     }
   };
 
-
   return (
-    <BaseEditModal
-      id="editBookingsModal"
-      title="Edit Booking"
-      onSubmit={handleSubmit}
-      loading={loading}
-    >
+    <BaseEditModal show={show} onHide={onHide} title="Edit Booking" onSubmit={handleSubmit} loading={loading}>
       {formData ? (
         <>
+          {/* Basic Info */}
           <div className="row mb-3">
-            <div className="col-12 col-md-6">
-              <label>Name</label>
-              <input ref={nameRef} defaultValue={formData.name || ""} className="form-control" />
-            </div>
-            <div className="col-12 col-md-6">
-              <label>Status</label>
-              <input ref={statusRef} defaultValue={formData.status || ""} className="form-control" />
-            </div>
-          </div>
-
-          <div className="row mb-3">
-            <div className="col-12 col-md-6">
-              <label>Client Name</label>
-              <input ref={clientNameRef} defaultValue={formData.clientName || ""} className="form-control" />
-            </div>
-            <div className="col-12 col-md-6">
-              <label>Client Email</label>
-              <input ref={clientEmailRef} defaultValue={formData.clientEmail || ""} className="form-control" />
-            </div>
-          </div>
-
-          <div className="row mb-3">
-            <div className="col-12">
-              <label>Canceled By</label>
-              <input ref={canceledByRef} defaultValue={formData.canceledBy || ""} className="form-control" />
-            </div>
-
-          </div>
-
-          <div>
-            <div className="col-12 mb-3">
-              <label>Cancellation Reason</label>
-              <textarea ref={cancelReasonRef} defaultValue={formData.cancelReason || ""} className="form-control" rows="3" />
-            </div>
-          </div>
-
-          <div className="row mb-3">
-            <div className="col-12 col-md-6">
-              <label>Join URL</label>
-              <input ref={joinUrlRef} defaultValue={formData.joinUrl || ""} className="form-control" />
-            </div>
-            <div className="col-12 col-md-6">
-              <label>Advisor Email</label>
-              <input ref={advisorEmailRef} defaultValue={formData.advisorEmail || ""} className="form-control" />
-            </div>
-          </div>
-
-          <div className="row mb-3">
-            <div className="col-12 col-md-6">
-              <label>Phone Number</label>
-              <div className="input-group">
-                <span className="input-group-text px-auto" style={{ width: "50px" }}>
-                  <input
-                    ref={countryCodeRef}
-                    defaultValue={formData.countryCode}
-                    className="form-control border-0 p-0"
-                    placeholder="+91"
-                    style={{ width: "50px" }}
-                  />
-                </span>
-                <input
-                  ref={phoneNumberRef}
-                  defaultValue={formData.phoneNumber}
-                  className="form-control"
-                  placeholder="Phone Number"
-                />
-              </div>
-            </div>
-
-            <div className="col-12 col-md-6">
-              <label>Client Query</label>
+            <div className="col">
+              <label>Event Name</label>
               <input
-                ref={clientQueryRef}
-                defaultValue={formData.clientQuery}
                 className="form-control"
-                placeholder="Any client questions"
+                value={formData.name}
+                onChange={e => handleChange("name", e.target.value)}
+              />
+            </div>
+            <div className="col">
+              <label>Status</label>
+              <input
+                className="form-control"
+                value={formData.status}
+                onChange={e => handleChange("status", e.target.value)}
               />
             </div>
           </div>
 
+          {/* Event & Timeline */}
+          <div className="row mb-3">
+            <div className="col-md-6">
+              <label>Start Time</label>
+              <input
+                type="datetime-local"
+                className="form-control"
+                value={formData.start_time?.slice(0, 16) || ""}
+                onChange={e => handleChange("start_time", e.target.value)}
+              />
+            </div>
+            <div className="col-md-6">
+              <label>End Time</label>
+              <input
+                type="datetime-local"
+                className="form-control"
+                value={formData.end_time?.slice(0, 16) || ""}
+                onChange={e => handleChange("end_time", e.target.value)}
+              />
+            </div>
+          </div>
 
+          {/* Invitee */}
+          <div className="row mb-3">
+            <div className="col">
+              <label>Client Name</label>
+              <input
+                className="form-control"
+                value={formData.clientName}
+                onChange={e => handleChange("clientName", e.target.value)}
+              />
+            </div>
+            <div className="col">
+              <label>Client Email</label>
+              <input
+                className="form-control"
+                value={formData.clientEmail}
+                onChange={e => handleChange("clientEmail", e.target.value)}
+              />
+            </div>
+          </div>
+
+          {/* Advisors */}
+          <div className="mb-3">
+            <label>Advisors</label>
+            <Select
+              options={advisorOptions}
+              value={selectedAdvisors}
+              onChange={setSelectedAdvisors}
+              isMulti
+            />
+          </div>
+
+          {/* Event Guests */}
+          <div className="mb-3">
+            <label>Event Guests</label>
+            {formData.eventGuests.map((guest, idx) => (
+              <input
+                key={idx}
+                className="form-control mb-1"
+                value={guest.email || ""}
+                onChange={e => handleGuestChange(idx, e.target.value)}
+              />
+            ))}
+          </div>
+
+          {/* Phone */}
+          <div className="row mb-3">
+            <div className="col-md-6">
+              <label>Phone Number</label>
+              <div className="input-group">
+                <span className="input-group-text" style={{ width: "60px" }}>
+                  <input
+                    className="form-control border-0 p-0"
+                    placeholder="+91"
+                    value={formData.countryCode || ""}
+                    onChange={e => handleChange("countryCode", e.target.value)}
+                  />
+                </span>
+                <input
+                  className="form-control"
+                  placeholder="Phone Number"
+                  value={formData.phoneNumber || ""}
+                  onChange={e => handleChange("phoneNumber", e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="col-md-6">
+              <label>Client Query</label>
+              <input
+                className="form-control"
+                value={formData.clientQuery || ""}
+                onChange={e => handleChange("clientQuery", e.target.value)}
+              />
+            </div>
+          </div>
+
+          {/* Cancellation */}
+          <div className="row mb-3">
+            <div className="col">
+              <label>Canceled By</label>
+              <input
+                className="form-control"
+                value={formData.canceledBy}
+                onChange={e => handleChange("canceledBy", e.target.value)}
+              />
+            </div>
+            <div className="col">
+              <label>Simplified Status</label>
+              <input
+                className="form-control"
+                value={formData.simplifiedStatus}
+                onChange={e => handleChange("simplifiedStatus", e.target.value)}
+              />
+            </div>
+          </div>
+
+          {/* Cancellation Reason */}
+          <div className="mb-3">
+            <label>Cancellation Reason</label>
+            <textarea
+              className="form-control"
+              rows="3"
+              value={formData.cancelReason || ""}
+              onChange={e => handleChange("cancelReason", e.target.value)}
+            />
+          </div>
         </>
       ) : (
         <p>Loading...</p>

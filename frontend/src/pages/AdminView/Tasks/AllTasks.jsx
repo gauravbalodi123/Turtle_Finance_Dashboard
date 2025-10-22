@@ -51,6 +51,20 @@ const AllTasks = () => {
 
     const [sorting, setSorting] = useState([]);
 
+    const [showEditTaskModal, setShowEditTaskModal] = useState(false);
+
+
+    // Open modal
+    const openEditModal = (taskId) => {
+        setSelectedTaskId(taskId);
+        setShowEditTaskModal(true); // Show modal when edit button is clicked
+    };
+
+    // Close modal
+    const closeEditModal = () => {
+        setShowEditTaskModal(false);
+    };
+
 
     useEffect(() => {
         const fetchDropdownData = async () => {
@@ -81,9 +95,7 @@ const AllTasks = () => {
 
 
 
-    const openEditModal = (taskId) => {
-        setSelectedTaskId(taskId);
-    };
+
 
     const handleTaskUpdate = (updatedTask) => {
         const fullClient = clients.find(c => c._id === updatedTask.client) || null;
@@ -461,8 +473,6 @@ const AllTasks = () => {
                     <button
                         type="button"
                         className="btn p-2 btn-outline-turtle-secondary"
-                        data-bs-toggle="modal"
-                        data-bs-target="#editTaskModal"
                         onClick={() => openEditModal(row.original._id)}
                     >
                         <FaRegEdit className="d-block fs-6" />
@@ -638,13 +648,21 @@ const AllTasks = () => {
                             />
 
 
+
                             <EditTaskModal
+                                show={showEditTaskModal}
+                                onHide={closeEditModal}
                                 id={selectedTaskId}
                                 url={url}
                                 clients={clients}
                                 advisors={advisors}
-                                onSuccess={handleTaskUpdate}
+                                onSuccess={(updated) => {
+                                    handleTaskUpdate(updated);
+                                    closeEditModal(); 
+                                }}
                             />
+
+
 
                             <AddTaskModal
                                 clients={clients}

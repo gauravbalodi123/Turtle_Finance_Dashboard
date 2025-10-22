@@ -1,7 +1,7 @@
 // src/pages/ClientView/Payment/InternationalPayment.jsx
 import React from "react";
 
-const RAZORPAY_URL = "https://pages.razorpay.com/pl_QVqdshsEY7fnwy/view";
+const RAZORPAY_URL = "https://rzp.io/rzp/IabMyt3";
 
 const InternationalPayment = () => {
   const openRazorpay = () => {

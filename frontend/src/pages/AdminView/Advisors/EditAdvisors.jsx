@@ -2,6 +2,7 @@ import React, { Fragment, useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import Select from "react-select";
+import CreatableSelect from "react-select/creatable";
 
 const EditAdvisors = () => {
     axios.defaults.withCredentials = true
@@ -13,12 +14,15 @@ const EditAdvisors = () => {
 
     const [selectedDomains, setSelectedDomains] = useState([]);
     const [selectedEventNames, setSelectedEventNames] = useState([]);
+    const [selectedEmails, setSelectedEmails] = useState([]);
 
     const fullNameRef = useRef();
     const salutationRef = useRef();
     // const advisorDomainRef = useRef();
     const countryCodeRef = useRef();
+    const countryCode2Ref = useRef();
     const phoneRef = useRef();
+    const phone2Ref = useRef();
     const emailRef = useRef();
     const addressRef = useRef();
     const dobRef = useRef();
@@ -29,6 +33,8 @@ const EditAdvisors = () => {
     const credentialsRef = useRef();
     const bioRef = useRef();
     const linkedinRef = useRef();
+    const statusRef = useRef();
+
 
 
     const advisorDomainOptions = [
@@ -74,7 +80,8 @@ const EditAdvisors = () => {
         { value: "Tax Planning Conversation with CA Ajay Vaswani", label: "Tax Planning Conversation with CA Ajay Vaswani" },
         { value: "ITR Filing | Kick-off Conversation", label: "ITR Filing | Kick-off Conversation" },
         { value: "First Conversation with Turtle", label: "First Conversation with Turtle" },
-         { value: "Insurance Advisory Conversation with Rohit", label: "Insurance Advisory Conversation with Rohit" }
+        { value: "Insurance Advisory Conversation with Rohit", label: "Insurance Advisory Conversation with Rohit" },
+        { value: "Credit Card Advisory Conversation with Prashant", label: "Credit Card Advisory Conversation with Prashant" },
     ];
 
 
@@ -98,6 +105,14 @@ const EditAdvisors = () => {
             // ✅ Set selected options for react-select
             setSelectedDomains(mapToSelectOptions(advisor.advisorDomain, advisorDomainOptions));
             setSelectedEventNames(mapToSelectOptions(advisor.eventName, eventNameOptions));
+            setSelectedEmails(
+                Array.isArray(advisor.email)
+                    ? advisor.email.map(e => ({ value: e, label: e }))
+                    : advisor.email
+                        ? [{ value: advisor.email, label: advisor.email }]
+                        : []
+            );
+
 
             // ✅ Set other fields
             setFormData({
@@ -134,8 +149,10 @@ const EditAdvisors = () => {
             salutation: getValueOrNull(salutationRef),
             advisorDomain: getSelectedDomainValues(),
             countryCode: getValueOrNull(countryCodeRef),
+            countryCode2: getValueOrNull(countryCode2Ref),
             phone: getValueOrNull(phoneRef),
-            email: getValueOrNull(emailRef),
+            phone2: getValueOrNull(phone2Ref),
+            email: selectedEmails.map(item => item.value),
             address: getValueOrNull(addressRef),
             dob: getValueOrNull(dobRef),
             gender: getValueOrNull(genderRef),
@@ -145,6 +162,7 @@ const EditAdvisors = () => {
             credentials: getValueOrNull(credentialsRef),
             bio: getValueOrNull(bioRef),
             linkedinProfile: getValueOrNull(linkedinRef),
+            status: getValueOrNull(statusRef),
         };
 
         try {
@@ -180,6 +198,34 @@ const EditAdvisors = () => {
                         </div>
 
                         <div className="row mb-3">
+
+                            <div className="col-md-6">
+                                <label className="form-label">Country Code</label>
+                                <input type="text" className="form-control" ref={countryCodeRef} defaultValue={formData.countryCode} />
+                            </div>
+
+                            <div className="col-md-6">
+                                <label className="form-label">Phone</label>
+                                <input type="text" className="form-control" ref={phoneRef} defaultValue={formData.phone} required />
+                            </div>
+
+                        </div>
+
+                        <div className="row mb-3">
+                            <div className="col-md-6">
+                                <label className="form-label">Country Code 2</label>
+                                <input type="text" className="form-control" ref={countryCode2Ref} defaultValue={formData.countryCode2} />
+                            </div>
+
+                            <div className="col-md-6">
+                                <label className="form-label">Phone2</label>
+                                <input type="text" className="form-control" ref={phone2Ref} defaultValue={formData.phone2} />
+                            </div>
+
+                        </div>
+
+                        <div className="row mb-3">
+
                             <div className="col-md-6">
                                 <label className="form-label">Domain(s)</label>
                                 <Select
@@ -191,21 +237,19 @@ const EditAdvisors = () => {
                                     classNamePrefix="form-select"
                                 />
                             </div>
-
                             <div className="col-md-6">
-                                <label className="form-label">Country Code</label>
-                                <input type="text" className="form-control" ref={countryCodeRef} defaultValue={formData.countryCode} />
-                            </div>
-                        </div>
-
-                        <div className="row mb-3">
-                            <div className="col-md-6">
-                                <label className="form-label">Phone</label>
-                                <input type="text" className="form-control" ref={phoneRef} defaultValue={formData.phone} required />
-                            </div>
-                            <div className="col-md-6">
-                                <label className="form-label">Email</label>
-                                <input type="email" className="form-control" ref={emailRef} defaultValue={formData.email} required />
+                                <label className="form-label">Email(s)</label>
+                                <CreatableSelect
+                                    isMulti
+                                    isClearable
+                                    placeholder="Add email(s)..."
+                                    value={selectedEmails}
+                                    onChange={setSelectedEmails}
+                                    options={[]} // no options, just free text
+                                    classNamePrefix="form-select"
+                                    formatCreateLabel={(inputValue) => inputValue} // shows typed text as-is
+                                    noOptionsMessage={() => null} // hide "no options" message
+                                />
                             </div>
                         </div>
 
@@ -221,7 +265,7 @@ const EditAdvisors = () => {
                         </div>
 
                         <div className="row mb-4">
-                            <div className="col-md-6">
+                            <div className="col">
                                 <label className="form-label">Gender</label>
                                 <select className="form-select" ref={genderRef} defaultValue={formData.gender || ""}>
                                     <option value="">Select</option>
@@ -231,9 +275,17 @@ const EditAdvisors = () => {
                                 </select>
                             </div>
 
-                            <div className="col-md-6">
+                            <div className="col">
                                 <label className="form-label">LinkedIn Profile</label>
                                 <input type="url" className="form-control" ref={linkedinRef} defaultValue={formData.linkedinProfile} />
+                            </div>
+
+                            <div className="col">
+                                <label className="form-label">Status</label>
+                                <select className="form-select" ref={statusRef} defaultValue={formData.status || "Active"}>
+                                    <option value="Active">Active</option>
+                                    <option value="Inactive">Inactive</option>
+                                </select>
                             </div>
                         </div>
 

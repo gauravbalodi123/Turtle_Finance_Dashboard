@@ -19,7 +19,8 @@ import DigioResponseForm from '../pages/AdminView/Clients/DigioResponseForm'
 import KYCAdmin from '../pages/AdminView/Clients/KYCAdmin'
 import ClientRiskProfile from '../pages/AdminView/Clients/ClientRiskProfile'
 import UpdateSubscriptionPrice from '../pages/AdminView/Subscription/UpdateSubscriptionPrice'
-
+import AllProcessedBookings from '../pages/AdminView/ProcessedBookings/AllProcessedBookings'
+import AllEmailTracker from '../pages/AdminView/EmailTracker/AllEmailTracker'
 
 
 const AdminRoutes = () => {
@@ -28,6 +29,7 @@ const AdminRoutes = () => {
     { path: '/admin/clients', element: <AllClients /> },
     { path: '/admin/clients/:id/editClients', element: <EditClients /> },
     { path: '/admin/clients/addClients', element: <AddClients /> },
+    { path: '/admin/prospects/addProspects', element: <AddClients /> },
 
     { path: '/admin/advisors', element: <AllAdvisors /> },
     { path: '/admin/advisors/:id/editAdvisors', element: <EditAdvisors /> },
@@ -42,9 +44,13 @@ const AdminRoutes = () => {
 
     { path: '/admin/bookings', element: <AllBookings /> },
 
+    { path: '/admin/processedbookings', element: <AllProcessedBookings /> },
+
     { path: '/admin/prospects', element: <AllProspects /> },
 
     { path: '/admin/memberActivation', element: <AllMembers /> },
+
+     { path: '/admin/emailTracker', element: <AllEmailTracker /> },
 
 
     { path: '/admin/clients/:clientId/riskProfile', element: <ClientRiskProfile /> },

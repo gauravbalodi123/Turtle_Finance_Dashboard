@@ -31,7 +31,7 @@ const fields = [
         placeholder: "ABCDE1234F",
         required: true,
         validation: {
-            pattern: /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/,
+            pattern: /^[A-Za-z]{5}[0-9]{4}[A-Za-z]{1}$/,
             errorMessage: "Enter a valid PAN number (e.g., ABCDE1234F)"
         }
     },
@@ -55,9 +55,8 @@ const fields = [
         note: "",
         placeholder: "081234 56789",
         required: true,
-        prefilled: true,
         validation: {
-            pattern: /^\+\d{10,15}$/,
+            pattern: /^\+[1-9]\d{1,3}\d{7,12}$/,
             errorMessage: "Enter a valid international phone number (e.g. +919876543210)."
         }
 
@@ -68,7 +67,7 @@ const fields = [
         note: "",
         placeholder: "name@example.com",
         required: true,
-        prefilled: true,
+
         validation: {
             pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
             errorMessage: "Enter a valid email address."
@@ -337,7 +336,7 @@ const RiskProfileForm = ({ onNext, onPrev, updateData, data }) => {
             // Transform the data to match the required format
             const payload = {
                 fullName: formData.fullName || '',
-                panNumber: formData.panNumber || '',
+                panNumber: formData.panNumber ? formData.panNumber.toUpperCase() : '',
                 addressLine1: formData.address1 || '',
                 addressLine2: formData.address2 || '',
                 phoneNumber: formData.phone || '',
@@ -403,8 +402,9 @@ const RiskProfileForm = ({ onNext, onPrev, updateData, data }) => {
 
 
     const handleChange = (e) => {
-        const { value } = e.target;
+        let { value } = e.target;
         const currentField = fields[step];
+
         const error = validateField(currentField, value);
 
         setFieldError(error || "");
@@ -460,8 +460,15 @@ const RiskProfileForm = ({ onNext, onPrev, updateData, data }) => {
             ...prev,
             [fieldName]: value
         }));
+
+        // ✅ run validation here too
+        const field = fields.find(f => f.name === fieldName);
+        const error = validateField(field, value);
+        setFieldError(error || "");
+
         setter(value);
     };
+
 
     const handleKeyDown = (e, fieldName, value, setter) => {
         if (e.key === "Enter") {
@@ -473,7 +480,7 @@ const RiskProfileForm = ({ onNext, onPrev, updateData, data }) => {
 
     const validateField = (field, value) => {
 
-        if (field.prefilled) return null;
+
         // ✅ Special case: Dependents (check if all rows have a value)
         if (field.name === "dependents") {
             const allAnswered = dependentsRows.every(row => dependentsData[row]);
@@ -509,42 +516,6 @@ const RiskProfileForm = ({ onNext, onPrev, updateData, data }) => {
 
 
 
-
-
-
-    // const addCustomChoice = (type) => {
-    //     if (type === "gender") setCustomGenderChoices([...customGenderChoices, ""]);
-    //     else if (type === "marital") setCustomMaritalChoices([...customMaritalChoices, ""]);
-    //     else if (type === "income") setIncomeChoices([...incomeChoices, { isCustom: true, value: "" }]);
-    //     else if (type === "parentIncome") {
-    //         setParentIncomeChoices([...parentIncomeChoices, { value: "", isCustom: true }]);
-    //     }
-    //     else if (type === "currency") {
-    //         setCurrencyChoices([...currencyChoices, { isCustom: true, value: "" }]);
-    //     }
-
-
-    // };
-
-    // const updateCustomChoice = (type, index, value) => {
-    //     const updated =
-    //         type === "gender" ? [...customGenderChoices] :
-    //             type === "marital" ? [...customMaritalChoices] :
-    //                 [...incomeChoices];
-    //     updated[index] = value;
-    //     if (type === "gender") setCustomGenderChoices(updated);
-    //     else if (type === "marital") setCustomMaritalChoices(updated);
-    //     else if (type === "income") {
-    //         const updatedCustom = [...customIncomeChoices];
-    //         updatedCustom[index] = value;
-    //         setCustomIncomeChoices(updatedCustom);
-
-    //         const updatedIncome = [...incomeChoices];
-    //         updatedIncome[index] = value;
-    //         setIncomeChoices(updatedIncome);
-    //     }
-    // };
-
     const addDependentRow = () => setDependentsRows([...dependentsRows, ""]);
     const addDependentColumn = () => setDependentsCols([...dependentsCols, String(dependentsCols.length)]);
     const handleDependentRadio = (row, col) => setDependentsData({ ...dependentsData, [row]: col });
@@ -556,7 +527,7 @@ const RiskProfileForm = ({ onNext, onPrev, updateData, data }) => {
                 // Prefill formData with API values
                 setFormData((prev) => ({
                     ...prev,
-                    
+                    fullName: res.data.name || "",
                     phone: res.data.phone || "",
                     email: res.data.email || ""
                 }));
@@ -569,6 +540,31 @@ const RiskProfileForm = ({ onNext, onPrev, updateData, data }) => {
 
         fetchUserData();
     }, []);
+
+
+
+    useEffect(() => {
+        const currentField = fields[step];
+        const value = formData[currentField.name];
+
+        // Re-run validation for the current step on step change
+        const error = validateField(currentField, value);
+        setFieldError(error || "");
+    }, [step, fields, formData]);
+
+    // clear any stale error when changing steps
+    useEffect(() => {
+        setFieldError("");
+    }, [step]);
+
+
+    useEffect(() => {
+        if (formData.dobDay && formData.dobMonth && formData.dobYear) {
+            setFieldError(null); // or however you clear errors
+        }
+    }, [formData.dobDay, formData.dobMonth, formData.dobYear]);
+
+
 
 
 
@@ -592,15 +588,24 @@ const RiskProfileForm = ({ onNext, onPrev, updateData, data }) => {
                             <p className="mb-2 text-muted ">{fields[step].note}</p>
 
                             {fields[step].name === "phone" ? (
-                                <PhoneInput
-                                    country={"in"}
-                                    value={formData.phone || ""}
-                                    onChange={(phone) => setFormData({ ...formData, phone })}
-                                    inputClass="form-control form-control-lg fs-5 ps-5 w-100 py-2 border-bottom border-secondary"
-                                    buttonClass="border-bottom border-secondary"
-                                    containerClass="mb-4"
-                                    disabled // ✅ phone disabled
-                                />
+                                <div>
+                                    <PhoneInput
+                                        country={"in"}
+                                        value={formData.phone || ""}
+                                        onChange={(phone) => {
+                                            setFormData({ ...formData, phone });
+                                            const error = validateField(fields[step], phone);
+                                            setFieldError(error || "");
+                                        }}
+                                        inputClass="form-control form-control-lg fs-5 ps-5 w-100 py-2 border-bottom border-secondary"
+                                        buttonClass="border-bottom border-secondary"
+                                        containerClass="mb-4"
+                                    />
+                                    {fieldError && (
+                                        <div className="text-danger">{fieldError}</div>
+                                    )}
+
+                                </div>
                             ) : fields[step].name === "gender" ? (
                                 <div className="mb-3">
                                     <div className="d-flex flex-column gap-2">
@@ -649,7 +654,12 @@ const RiskProfileForm = ({ onNext, onPrev, updateData, data }) => {
                                             <select
                                                 className="form-select fs-5 py-2"
                                                 value={formData.dobDay || ""}
-                                                onChange={(e) => setFormData({ ...formData, dobDay: e.target.value })}
+                                                onChange={(e) =>
+                                                    setFormData((prev) => ({
+                                                        ...prev,
+                                                        dobDay: e.target.value,
+                                                    }))
+                                                }
                                             >
                                                 <option value="">DD</option>
                                                 {[...Array(31)].map((_, i) => (
@@ -662,7 +672,12 @@ const RiskProfileForm = ({ onNext, onPrev, updateData, data }) => {
                                             <select
                                                 className="form-select fs-5 py-2"
                                                 value={formData.dobMonth || ""}
-                                                onChange={(e) => setFormData({ ...formData, dobMonth: e.target.value })}
+                                                onChange={(e) =>
+                                                    setFormData((prev) => ({
+                                                        ...prev,
+                                                        dobMonth: e.target.value,
+                                                    }))
+                                                }
                                             >
                                                 <option value="">MM</option>
                                                 {[...Array(12)].map((_, i) => (
@@ -675,7 +690,12 @@ const RiskProfileForm = ({ onNext, onPrev, updateData, data }) => {
                                             <select
                                                 className="form-select fs-5 py-2"
                                                 value={formData.dobYear || ""}
-                                                onChange={(e) => setFormData({ ...formData, dobYear: e.target.value })}
+                                                onChange={(e) =>
+                                                    setFormData((prev) => ({
+                                                        ...prev,
+                                                        dobYear: e.target.value,
+                                                    }))
+                                                }
                                             >
                                                 <option value="">YYYY</option>
                                                 {[...Array(100)].map((_, i) => {
@@ -943,12 +963,11 @@ const RiskProfileForm = ({ onNext, onPrev, updateData, data }) => {
                                         placeholder={fields[step].placeholder}
                                         value={formData[fields[step].name] || ""}
                                         onChange={handleChange}
-                                        disabled={
 
-                                            fields[step].name === "email" ||
-                                            fields[step].name === "phone"
-                                        }
                                     />
+                                    {fieldError && (
+                                        <div className="text-danger ">{fieldError}</div>
+                                    )}
                                 </div>
                             )}
 
@@ -970,7 +989,7 @@ const RiskProfileForm = ({ onNext, onPrev, updateData, data }) => {
                                         fields[step].required && (
                                             (
                                                 fields[step].name === "dob"
-                                                    ? !(formData.dobDay && formData.dobMonth && formData.dobYear)
+                                                    ? (!formData.dobDay || !formData.dobMonth || !formData.dobYear) // ✅ custom DOB check
                                                     : fields[step].name === "dependents"
                                                         ? dependentsRows.some(row => !dependentsData[row])
                                                         : (
@@ -978,7 +997,7 @@ const RiskProfileForm = ({ onNext, onPrev, updateData, data }) => {
                                                             formData[fields[step].name].toString().trim() === "" ||
                                                             (
                                                                 ["currentMonthlyIncome", "currentMonthlyExpenses", "overallInvestment", "monthlyEMIs"].includes(fields[step].name) &&
-                                                                (isNaN(Number(formData[fields[step].name])) || Number(formData[fields[step].name]) < 1)
+                                                                isNaN(Number(formData[fields[step].name]))
                                                             )
                                                         )
                                             ) || !!fieldError
@@ -988,6 +1007,7 @@ const RiskProfileForm = ({ onNext, onPrev, updateData, data }) => {
                                 >
                                     {step === fields.length - 1 ? "Submit" : "Next"}
                                 </button>
+
 
 
                             </div>

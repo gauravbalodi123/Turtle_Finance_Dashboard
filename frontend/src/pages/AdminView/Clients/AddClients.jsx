@@ -1,6 +1,7 @@
 import React, { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import CreatableSelect from "react-select/creatable";
 
 const AddClients = () => {
     axios.defaults.withCredentials = true;
@@ -23,7 +24,8 @@ const AddClients = () => {
     const genderRef = useRef();
     const countryCodeRef = useRef();
     const phoneRef = useRef();
-    const emailRef = useRef();
+    const countryCode2Ref = useRef();
+    const phone2Ref = useRef();
     const addressRef = useRef();
     const subscriptionDateRef = useRef();
     const onboardingStatusRef = useRef();
@@ -31,6 +33,11 @@ const AddClients = () => {
     const kickOffDateRef = useRef();
     const dobRef = useRef();
     const companyNameRef = useRef();
+    const dueDateRef = useRef();
+    const bioRef = useRef();
+    const linkedinProfileRef = useRef();
+
+    const [emails, setEmails] = useState([]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -46,7 +53,9 @@ const AddClients = () => {
             gender: getValueOrNull(genderRef),
             countryCode: getValueOrNull(countryCodeRef),
             phone: getValueOrNull(phoneRef),
-            email: getValueOrNull(emailRef),
+            countryCode2: getValueOrNull(countryCode2Ref),
+            phone2: getValueOrNull(phone2Ref),
+            email: emails.map(e => e.value),
             address: getValueOrNull(addressRef),
             subscriptionDate: getValueOrNull(subscriptionDateRef),
             onboardingStatus: getValueOrNull(onboardingStatusRef),
@@ -54,6 +63,9 @@ const AddClients = () => {
             kickOffDate: getValueOrNull(kickOffDateRef),
             dob: getValueOrNull(dobRef),
             companyName: getValueOrNull(companyNameRef),
+            dueDate: getValueOrNull(dueDateRef),
+            bio: getValueOrNull(bioRef),
+            linkedinProfile: getValueOrNull(linkedinProfileRef),
         };
 
         try {
@@ -70,9 +82,10 @@ const AddClients = () => {
 
     return (
         <div className="container my-4">
-            <div className="card  p-4">
+            <div className="card p-4">
                 <h2 className="mb-4">Add Client</h2>
                 <form onSubmit={handleSubmit}>
+                    {/* Full Name & Salutation */}
                     <div className="row mb-3">
                         <div className="col-md-6">
                             <label className="form-label">Full Name *</label>
@@ -84,6 +97,7 @@ const AddClients = () => {
                         </div>
                     </div>
 
+                    {/* Lead Source ID & Lead Source */}
                     <div className="row mb-3">
                         <div className="col-md-6">
                             <label className="form-label">Lead Source ID</label>
@@ -95,6 +109,7 @@ const AddClients = () => {
                         </div>
                     </div>
 
+                    {/* Subscription Status & Gender */}
                     <div className="row mb-3">
                         <div className="col-md-6">
                             <label className="form-label">Subscription Status</label>
@@ -104,6 +119,7 @@ const AddClients = () => {
                                 <option value="Expired">Expired</option>
                                 <option value="Up for Renewal">Up for Renewal</option>
                                 <option value="Prospect">Prospect</option>
+                                <option value="Deadpool">Deadpool</option>
                             </select>
                         </div>
                         <div className="col-md-6">
@@ -118,6 +134,7 @@ const AddClients = () => {
                         </div>
                     </div>
 
+                    {/* Phone Numbers */}
                     <div className="row mb-3">
                         <div className="col-md-6">
                             <label className="form-label">Country Code</label>
@@ -130,9 +147,26 @@ const AddClients = () => {
                     </div>
 
                     <div className="row mb-3">
+                        <div className="col">
+                            <label className="form-label">Country Code 2</label>
+                            <input type="text" className="form-control" ref={countryCode2Ref} maxLength="4" />
+                        </div>
+                        <div className="col">
+                            <label className="form-label">Phone 2</label>
+                            <input type="text" className="form-control" ref={phone2Ref} />
+                        </div>
+                    </div>
+
+                    {/* Email & Address */}
+                    <div className="row mb-3">
                         <div className="col-md-6">
-                            <label className="form-label">Email *</label>
-                            <input type="email" className="form-control" ref={emailRef} required />
+                            <label className="form-label">Emails *</label>
+                            <CreatableSelect
+                                isMulti
+                                placeholder="Type and press enter..."
+                                onChange={(val) => setEmails(val)}
+                                value={emails}
+                            />
                         </div>
                         <div className="col-md-6">
                             <label className="form-label">Address</label>
@@ -140,12 +174,39 @@ const AddClients = () => {
                         </div>
                     </div>
 
+                    {/* Subscription Date, Onboarding Status */}
                     <div className="row mb-3">
                         <div className="col-md-6">
                             <label className="form-label">Subscription Date</label>
                             <input type="date" className="form-control" ref={subscriptionDateRef} />
                         </div>
+
                         <div className="col-md-6">
+                            <label className="form-label">Subscription Due</label>
+                            <input type="date" className="form-control" ref={dueDateRef} disabled/>
+                        </div>
+                    </div>
+
+                    {/* Risk Profile Date & Kick Off Date */}
+                    <div className="row mb-3">
+                        <div className="col-md-6">
+                            <label className="form-label">Risk Profile Date</label>
+                            <input type="date" className="form-control" ref={riskProfileDateRef} />
+                        </div>
+                        <div className="col-md-6">
+                            <label className="form-label">Kick Off Date</label>
+                            <input type="date" className="form-control" ref={kickOffDateRef} />
+                        </div>
+                    </div>
+
+                    {/* DOB, Company, Case Type */}
+                    <div className="row mb-3">
+
+                        <div className="col">
+                            <label className="form-label">Company Name</label>
+                            <input type="text" className="form-control" ref={companyNameRef} />
+                        </div>
+                        <div className="col">
                             <label className="form-label">Onboarding Status</label>
                             <select className="form-select" ref={onboardingStatusRef}>
                                 <option value="">Select status</option>
@@ -158,39 +219,40 @@ const AddClients = () => {
                                 <option value="null">null</option>
                             </select>
                         </div>
+
                     </div>
 
+                    {/* Due Date */}
                     <div className="row mb-3">
-                        <div className="col-md-6">
-                            <label className="form-label">Risk Profile Date</label>
-                            <input type="date" className="form-control" ref={riskProfileDateRef} />
-                        </div>
-                        <div className="col-md-6">
-                            <label className="form-label">Kick Off Date</label>
-                            <input type="date" className="form-control" ref={kickOffDateRef} />
-                        </div>
-                    </div>
-
-                    <div className="row mb-3">
-                        <div className="col-12 col-md-4">
+                        <div className="col">
                             <label className="form-label">Date of Birth</label>
                             <input type="date" className="form-control" ref={dobRef} />
                         </div>
-                        <div className="col-12 col-md-4">
-                            <label className="form-label">Company Name</label>
-                            <input type="text" className="form-control" ref={companyNameRef} />
+                        <div className="col">
+                            <label className="form-label">LinkedIn Profile</label>
+                            <input type="url" className="form-control" ref={linkedinProfileRef} placeholder="https://linkedin.com/in/username" />
                         </div>
-                        <div className="col-12 col-md-4">
-                                <label className="form-label">Case Type</label>
-                                <select className="form-select" ref={clientTypeRef} >
-                                    <option value="">Select</option>
-                                    <option value="NRI">NRI</option>
-                                    <option value="Indian">Indian</option>
-
-                                </select>
-                            </div>
+                        <div className="col">
+                            <label className="form-label">Client Type</label>
+                            <select className="form-select" ref={clientTypeRef}>
+                                <option value="">Select</option>
+                                <option value="NRI">NRI</option>
+                                <option value="Indian">Indian</option>
+                                <option value="Indian Renewal">Indian Renewal</option>
+                                <option value="NRI Renewal">NRI Renewal</option>
+                            </select>
+                        </div>
                     </div>
 
+                    {/* Bio */}
+                    <div className="row mb-3">
+                        <div className="col-12">
+                            <label className="form-label">Bio</label>
+                            <textarea className="form-control" ref={bioRef} rows="6" placeholder="Enter bio details here..." />
+                        </div>
+                    </div>
+
+                    {/* Submit Button */}
                     <div className="d-flex justify-content-end">
                         <button type="submit" className="btn btn-turtle-primary" disabled={loading}>
                             {loading ? "Saving..." : "Add Client"}

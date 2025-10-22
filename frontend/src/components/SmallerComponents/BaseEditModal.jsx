@@ -1,37 +1,55 @@
 // components/BaseEditModal.jsx
 import React from "react";
+import { Modal, Button, Spinner } from "react-bootstrap";
 
-const BaseEditModal = ({ id, title, children, onSubmit, loading }) => {
+const BaseEditModal = ({ show, onHide, title, children, onSubmit, loading }) => {
     return (
-        <div className="modal fade" id={id} data-bs-backdrop="static" tabIndex="-1" aria-hidden="true">
-            <div className="modal-dialog modal-dialog-scrollable modal-md modal-dialog-centered">
-                <div className="modal-content">
-
-                    <form onSubmit={onSubmit}>
-
-                        <div className="modal-header">
-                            <h5 className="modal-title">{title}</h5>
-                            <button type="button" className="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-
-                        <div className="modal-body" style={{ maxHeight: "70vh"}}>
-                            {children}
-                        </div>
-
-                        <div className="modal-footer">
-                            <button
-                                type="submit"
-                                className="btn btn-turtle-primary"
-                                // data-bs-dismiss="modal"
-                                disabled={loading}
-                            >
-                                {loading ? "Saving..." : "Save Changes"}
-                            </button>
-                        </div>
-                    </form>
+        <Modal
+            show={show}
+            onHide={onHide}
+            backdrop="static" // static backdrop
+            centered
+            size="md"
+            scrollable
+            dialogClassName="" // keep custom classes for styling
+            contentClassName=""
+        >
+            <form onSubmit={onSubmit}>
+                <div className="modal-header">
+                    <h5 className="modal-title">{title}</h5>
+                    <button
+                        type="button"
+                        className="btn-close"
+                        onClick={onHide}
+                    ></button>
                 </div>
-            </div>
-        </div>
+
+                <div className="modal-body" style={{ maxHeight: "70vh" }}>
+                    {children}
+                </div>
+
+                <div className="modal-footer">
+                    <Button
+                        type="submit"
+                        className="btn btn-turtle-primary"
+                        disabled={loading}
+                    >
+                        {loading ? (
+                            <>
+                                <Spinner
+                                    animation="border"
+                                    size="sm"
+                                    className="me-2"
+                                />
+                                Saving...
+                            </>
+                        ) : (
+                            "Save Changes"
+                        )}
+                    </Button>
+                </div>
+            </form>
+        </Modal>
     );
 };
 

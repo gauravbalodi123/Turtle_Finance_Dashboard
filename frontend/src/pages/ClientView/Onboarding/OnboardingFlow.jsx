@@ -19,7 +19,7 @@ const progressSteps = [
   { id: "kyc", title: "KYC Upload" },
   { id: "agreement", title: "Agreement Signing" },
   { id: "payment", title: "Payment" },
-  { id: "bookCall", title: "Book a Call" },
+  { id: "bookCall", title: "Book Kick-off Call" },
 ];
 
 // ✅ All onboarding steps including intro and risk-complete

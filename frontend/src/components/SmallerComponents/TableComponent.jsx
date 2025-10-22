@@ -55,7 +55,7 @@ const TableComponent = ({ data, columns, pageIndex, pageSize, setPageIndex, setP
     return (
         <Fragment>
             <div className={` table-responsive ${className || ""}`}>
-                <table className="table-custom table-borderless table-hover">
+                <table className="table-custom table-borderless ">
                     <thead className="border-top w-100">
                         {table.getHeaderGroups().map((headerGroup) => (
                             <tr key={headerGroup.id}>

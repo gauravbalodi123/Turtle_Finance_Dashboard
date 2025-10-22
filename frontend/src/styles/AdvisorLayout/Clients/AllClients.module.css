@@ -1,0 +1,141 @@
+body {
+    margin: 0;
+    padding: 0;
+}
+
+h2.taskHeaderItem {
+    margin: 0;
+    font-weight: 500;
+}
+
+p.taskHeaderItem {
+    margin: 0;
+    font-size: 1rem;
+    color: #909cad;
+    font-weight: 500;
+
+}
+
+/* AllClients.module.css */
+
+/* Only affects tables inside the Clients page */
+.clientsPageTableWrapper .custom-style-table thead th {
+    color: #8d9aaa;
+}
+
+/* Subscription sattus */
+
+.clientsPageTableWrapper .custom-style-table tr .active-status {
+    color: #21a752;
+    font-size: 0.8rem;
+    background-color: #def6e7;
+    border-radius: 24px;
+    padding: 2px 10px;
+}
+
+.clientsPageTableWrapper .custom-style-table tr .prospect-status {
+    color: #1620df;
+    font-size: 0.8rem;
+    background-color: #def6e7;
+    border-radius: 24px;
+    padding: 2px 10px;
+}
+
+.clientsPageTableWrapper .custom-style-table tr .deadpool-status {
+    color: #5f370e;
+    font-size: 0.8rem;
+    background-color: #fde9d2;
+    border-radius: 24px;
+    padding: 2px 10px;
+}
+
+
+
+.clientsPageTableWrapper .custom-style-table tr .expired-status {
+    color: #ef4444;
+    font-size: 0.8rem;
+    background-color: #fde3e3;
+    border-radius: 24px;
+    padding: 2px 10px;
+}
+
+.clientsPageTableWrapper .custom-style-table tr .renewal-status {
+    color: #d97808;
+    font-size: 0.8rem;
+    background-color: #fef1db;
+    border-radius: 24px;
+    padding: 2px 10px;
+}
+
+
+/* Onboarding status */
+
+.clientsPageTableWrapper .custom-style-table tr .not-started {
+    color: red;
+    font-size: 0.8rem;
+    background-color: lightcoral;
+    border-radius: 24px;
+    padding: 2px 10px;
+}
+
+.clientsPageTableWrapper .custom-style-table tr .ria-allocated {
+    color: yellow;
+    font-size: 0.8rem;
+    background-color: rgb(186, 186, 59);
+    border-radius: 24px;
+    padding: 2px 10px;
+}
+
+.clientsPageTableWrapper .custom-style-table tr .payment-received {
+    color: green;
+    font-size: 0.8rem;
+    background-color: lawngreen;
+    border-radius: 24px;
+    padding: 2px 10px;
+}
+
+.clientsPageTableWrapper .custom-style-table tr .risk-profile {
+    color: rgb(20, 238, 20);
+    font-size: 0.8rem;
+    background-color: lightgreen;
+    border-radius: 24px;
+    padding: 2px 10px;
+}
+
+.clientsPageTableWrapper .custom-style-table tr .kick-off {
+    color: blue;
+    font-size: 0.8rem;
+    background-color: lightblue;
+    border-radius: 24px;
+    padding: 2px 10px;
+}
+
+.clientsPageTableWrapper .custom-style-table tr .contract-signed {
+    color: rgb(96, 228, 246);
+    font-size: 0.8rem;
+    background-color: darkolivegreen;
+    border-radius: 24px;
+    padding: 2px 10px;
+}
+
+
+.cardHover {
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.cardHover:hover {
+  transform: translateY(-7px) ;
+  /* box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15); */
+  outline: 3px solid #2be3b8; 
+  
+}
+
+
+
+
+
+
+
+
+

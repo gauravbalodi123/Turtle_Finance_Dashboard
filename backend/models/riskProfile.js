@@ -12,13 +12,12 @@ const RiskProfileSchema = new mongoose.Schema(
         clientId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Client", // assuming there's a Client model
-            //required: true,
+
         },
         userId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User", // assuming there's a User model
-            //required: true,
-            // unique: true,
+
         },
 
         fullName: {

@@ -71,11 +71,17 @@ const AdvisorSchema = new mongoose.Schema(
                 "Tax Planning Conversation with CA Ajay Vaswani",
                 "ITR Filing | Kick-off Conversation",
                 "First Conversation with Turtle",
-                "Insurance Advisory Conversation with Rohit"
+                "Insurance Advisory Conversation with Rohit",
+                "Credit Card Advisory Conversation with Prashant"
             ],
             default: []
         },
         countryCode: {
+            type: String,
+            maxLength: 4,
+            default: null,
+        },
+        countryCode2: {
             type: String,
             maxLength: 4,
             default: null,
@@ -85,11 +91,23 @@ const AdvisorSchema = new mongoose.Schema(
             required: true,
             unique: true,
         },
-        email: {
+        phone2: {
             type: String,
             unique: true,
-            required: true,
         },
+        email: {
+            type: [String],
+            required: true,
+            validate: {
+                validator: function (emails) {
+                    return emails.every(email =>
+                        /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)   // Validate each email
+                    );
+                },
+                message: props => `${props.value} contains an invalid email!`
+            }
+        },
+
         address: {
             type: String,
             default: null,
@@ -109,6 +127,11 @@ const AdvisorSchema = new mongoose.Schema(
         },
         experience: {
             type: Number,
+        },
+        status: {
+            type: String,
+            enum: ["Active", "Inactive"],
+            default: "Active"
         },
         credentials: {
             type: String
@@ -132,6 +155,7 @@ const AdvisorSchema = new mongoose.Schema(
             //     message: props => `${props.value} is not a valid LinkedIn URL!`
             // }
         },
+
     },
     { timestamps: true }
 );

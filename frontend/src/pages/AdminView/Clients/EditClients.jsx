@@ -1,6 +1,7 @@
 import React, { Fragment, useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+import CreatableSelect from "react-select/creatable"
 
 const EditClients = () => {
     axios.defaults.withCredentials = true;
@@ -20,7 +21,11 @@ const EditClients = () => {
     const genderRef = useRef();
     const countryCodeRef = useRef();
     const phoneRef = useRef();
+    const countryCode2Ref = useRef();
+    const phone2Ref = useRef();
     const emailRef = useRef();
+    const bioRef = useRef();
+    const linkedinRef = useRef();
     const addressRef = useRef();
     const subscriptionDateRef = useRef();
     const subscriptionDueRef = useRef();
@@ -29,6 +34,8 @@ const EditClients = () => {
     const onboardingStatusRef = useRef();
     const dobRef = useRef();
     const companyNameRef = useRef();
+
+    const [emails, setEmails] = useState([]);
 
     const fetchClientData = async signal => {
 
@@ -44,13 +51,22 @@ const EditClients = () => {
 
             setFormData({
                 ...data,
+                bio: data.bio || "",
+                linkedinProfile: data.linkedinProfile || "",
                 subscriptionDate: formatDate(data.subscriptionDate),
                 subscriptionDue: formatDate(data.subscriptionDue),
                 riskProfileDate: formatDate(data.riskProfileDate),
                 kickOffDate: formatDate(data.kickOffDate),
                 dob: formatDate(data.dob),
             });
-            // alert('DATA fETCHED')
+
+            setEmails(
+                Array.isArray(data.email)
+                    ? data.email.map(e => ({ value: e, label: e }))
+                    : data.email
+                        ? [{ value: data.email, label: data.email }]
+                        : []
+            );
         } catch (error) {
             console.error("Error fetching client data:", error);
         }
@@ -86,7 +102,9 @@ const EditClients = () => {
             gender: getValueOrNull(genderRef),
             countryCode: getValueOrNull(countryCodeRef),
             phone: getValueOrNull(phoneRef),
-            email: getValueOrNull(emailRef),
+            countryCode2: getValueOrNull(countryCode2Ref),
+            phone2: getValueOrNull(phone2Ref),
+            email: emails.length ? emails.map(e => e.value) : null,
             address: getValueOrNull(addressRef),
             subscriptionDate: getValueOrNull(subscriptionDateRef),
             subscriptionDue: getValueOrNull(subscriptionDueRef),
@@ -95,6 +113,8 @@ const EditClients = () => {
             onboardingStatus: getValueOrNull(onboardingStatusRef),
             dob: getValueOrNull(dobRef),
             companyName: getValueOrNull(companyNameRef),
+            bio: getValueOrNull(bioRef),                 // ✅ Added
+            linkedinProfile: getValueOrNull(linkedinRef)
         };
 
 
@@ -153,6 +173,7 @@ const EditClients = () => {
                                     <option value="Expired">Expired</option>
                                     <option value="Up for Renewal">Up for Renewal</option>
                                     <option value="Prospect">Prospect</option>
+                                    <option value="Deadpool">Deadpool</option>
                                 </select>
                             </div>
 
@@ -182,8 +203,24 @@ const EditClients = () => {
 
                         <div className="row mb-3">
                             <div className="col-md-6">
-                                <label className="form-label">Email</label>
-                                <input type="email" className="form-control" ref={emailRef} defaultValue={formData.email} required />
+                                <label className="form-label">Country Code 2</label>
+                                <input type="text" className="form-control" ref={countryCode2Ref} defaultValue={formData.countryCode2} />
+                            </div>
+                            <div className="col-md-6">
+                                <label className="form-label">Phone 2</label>
+                                <input type="text" className="form-control" ref={phone2Ref} defaultValue={formData.phone2} />
+                            </div>
+                        </div>
+
+                        <div className="row mb-3">
+                            <div className="col-md-6">
+                                <label className="form-label">Emails</label>
+                                <CreatableSelect
+                                    isMulti
+                                    value={emails}
+                                    onChange={setEmails}
+                                    placeholder="Enter email(s)"
+                                />
                             </div>
 
                             <div className="col-md-6">
@@ -200,7 +237,7 @@ const EditClients = () => {
 
                             <div className="col-md-6">
                                 <label className="form-label">Subscription Due</label>
-                                <input type="date" className="form-control" ref={subscriptionDueRef} defaultValue={formData.subscriptionDue} />
+                                <input type="date" className="form-control" ref={subscriptionDueRef} defaultValue={formData.subscriptionDue} disabled />
                             </div>
                         </div>
 
@@ -236,22 +273,59 @@ const EditClients = () => {
                             </div>
                         </div>
 
+
+
                         <div className="row mb-3">
-                            <div className="col-md-6">
+                            <div className="col">
                                 <label className="form-label">Date of Birth</label>
                                 <input type="date" className="form-control" ref={dobRef} defaultValue={formData.dob} />
                             </div>
 
-                            <div className="col-md-6">
-                                <label className="form-label">Case Type</label>
+                            <div className="col">
+                                <label className="form-label">Client Type</label>
                                 <select className="form-select" ref={clientTypeRef} defaultValue={formData.clientType}>
                                     <option value="">Select</option>
                                     <option value="NRI">NRI</option>
                                     <option value="Indian">Indian</option>
-
+                                    <option value="Indian Renewal">Indian Renewal</option>
+                                    <option value="NRI Renewal">NRI Renewal</option>
                                 </select>
                             </div>
+
+                            <div className="col">
+                                <label className="form-label">LinkedIn Profile</label>
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    ref={linkedinRef}
+                                    defaultValue={formData.linkedinProfile}
+                                    placeholder="Enter LinkedIn URL"
+                                />
+                            </div>
+
                         </div>
+
+
+
+
+                        <div className="row mb-3">
+                            <div className="col">
+                                <label className="form-label">Bio</label>
+                                <textarea
+                                    className="form-control"
+                                    ref={bioRef}
+                                    defaultValue={formData.bio}
+                                    rows={6}
+                                    placeholder="Enter bio"
+                                />
+                            </div>
+
+
+                        </div>
+
+
+
+
 
                         <div className="d-flex justify-content-end">
                             <button type="submit" className="btn btn-turtle-primary" disabled={loading}>

@@ -150,46 +150,35 @@ $theme-colors: map-merge($theme-colors,
   z-index: 1030;
 }
 
+
+
+
+
+
+
 /* Sidebar default styles */
-.offcanvas {
-  overflow-x: hidden;
-
-  &.offcanvas-start {
-    top: 0;
-    left: 0;
-    height: 100vh;
-    border-right: none;
-    background-color: $turtle-offcanvas-bg !important;
-  }
-}
-
-/* On medium and up, manually control width instead of translateX */
-@media (min-width: 767.98px) {
-  .offcanvas-md {
-    transform: none !important; // prevent offcanvas default behavior
-    visibility: visible;
+/* make sure md rules have priority and smooth transition */
+@media (min-width: 768px) {
+  .offcanvas.offcanvas-md {
+    transform: none !important;
+    visibility: visible !important;
     position: fixed;
     z-index: 1040;
+    transition: width .18s ease;
   }
 
-  .offcanvas-md:not(.show) {
-    width: 100px;
+  .offcanvas.offcanvas-md:not(.show) {
+    width: 100px !important;
   }
 
-  .offcanvas-md.show {
-    width: 280px;
-  }
-
-  body {
-    overflow: auto; // prevent scroll lock
+  .offcanvas.offcanvas-md.show {
+    width: 280px !important;
   }
 }
 
-/* On small screens, restore Bootstrap behavior */
+/* small-screen slide behavior (keep your previous) */
 @media (max-width: 767.98px) {
   .offcanvas-sm {
-
-
     &.show {
       transform: translateX(0);
       visibility: visible;
@@ -201,6 +190,15 @@ $theme-colors: map-merge($theme-colors,
     }
   }
 }
+
+
+
+
+
+
+
+
+
 
 
 .dropdown-menu {
@@ -246,15 +244,14 @@ $theme-colors: map-merge($theme-colors,
 
 .table-custom {
   @extend .table;
-  @extend .table-hover;
 
-  --bs-table-hover-bg: #e2f7f3;
-
-  .table-hover {
-    border-radius: 50px;
+  tbody tr:hover {
+    outline: 3px solid #2be3b8;
+    outline-offset: -3px; // optional: keeps outline inside row
+    border-radius: 20px;
   }
-
 }
+
 
 .pagination .page-item {
   margin-right: 0.3rem; // or use gap-like spacing

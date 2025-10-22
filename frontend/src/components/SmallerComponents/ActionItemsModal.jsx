@@ -8,6 +8,7 @@ const ActionItemsModal = ({
     actionItems = [],
     onEdit = () => { },
     onDelete = () => { },
+    onStatusChange = () => { },
     statusClasses = {}
 }) => {
     return (
@@ -43,22 +44,29 @@ const ActionItemsModal = ({
                                             className="list-group-item border border-0 d-flex justify-content-between align-items-center"
                                         >
                                             <div className="row align-items-center w-100">
-                                                <div className="col-7">
+                                                <div className="col-6">
                                                     {item.actionItems}
                                                 </div>
-                                                <div className="col-3">
-                                                    <span
-                                                        className={`${item.status === "Completed"
-                                                                ? statusClasses.completed
-                                                                : item.status === "Pending"
-                                                                    ? statusClasses.pending
-                                                                    : item.status === "Overdue"
-                                                                        ? statusClasses.overdue
-                                                                        : ""
+                                                <div className="col-4">
+                                                    <select
+                                                        className={`form-select form-select-sm ${item.status === "Completed"
+                                                            ? statusClasses.completed
+                                                            : item.status === "Pending"
+                                                                ? statusClasses.pending
+                                                                : item.status === "Overdue"
+                                                                    ? statusClasses.overdue
+                                                                    : ""
                                                             }`}
+                                                        value={item.status || ""}
+                                                        onChange={(e) =>
+                                                            onStatusChange(item._id, e.target.value)
+                                                        }
                                                     >
-                                                        {item.status || "No Status"}
-                                                    </span>
+
+                                                        <option value="Completed">Completed</option>
+                                                        <option value="Pending">Pending</option>
+                                                        <option value="Overdue">Overdue</option>
+                                                    </select>
                                                 </div>
 
                                                 <div className="col-2">
@@ -72,6 +80,7 @@ const ActionItemsModal = ({
                                                         >
                                                             <FaRegEdit className="d-block fs-6" />
                                                         </button>
+
 
                                                         <button
                                                             type="button"

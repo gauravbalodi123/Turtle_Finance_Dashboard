@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Booking = require('../../models/booking');
 require('dotenv').config();
+const { sendClientUpsert, sendClientDelete } = require('../../webhooks/webhookClientSync');
 
 // ✅ Get all bookings
 router.get("/allbookings", async (req, res) => {
@@ -30,7 +31,7 @@ router.get('/selectiveBookings', async (req, res) => {
 
         if (search) {
             matchStage.$or = [
-               
+
                 { advisorEmails: { $regex: search, $options: "i" } },
                 { status: { $regex: search, $options: "i" } },
                 { type: { $regex: search, $options: "i" } },
@@ -274,12 +275,18 @@ router.get("/bookings/stats", async (req, res) => {
 router.post('/addBooking', async (req, res) => {
     try {
         const bookingData = req.body;
-        await Booking.create(bookingData);
+        const newBooking = await Booking.create(bookingData);
+
+
+        sendClientUpsert(newBooking, 'created', 'Bookings')
+            .catch(err => console.error('[webhook] booking.created failed:', err?.message));
+
         res.status(200).json({ msg: "Booking has been added successfully" });
     } catch (e) {
         res.status(400).json({ msg: "Oops, something went wrong while creating the booking" });
     }
 });
+
 
 // ✅ Get a booking by ID (for editing/viewing)
 router.get('/bookings/:id/editBooking', async (req, res) => {
@@ -292,26 +299,174 @@ router.get('/bookings/:id/editBooking', async (req, res) => {
     }
 });
 
-// ✅ Update a booking by ID
+// // ✅ Update a booking by ID
+// router.patch('/bookings/:id/editBooking', async (req, res) => {
+//     try {
+//         const { id } = req.params;
+//         const bookingData = req.body;
+//         const updatedBooking = await Booking.findByIdAndUpdate(id, bookingData, {
+//             new: true,
+//             runValidators: true,
+//         });
+
+
+//         sendClientUpsert(updatedBooking, 'updated', 'Bookings')
+//             .catch(err => console.error('[webhook] booking.updated failed:', err?.message));
+
+//         res.status(200).json(updatedBooking);
+//     } catch (e) {
+//         let response = {
+//             msg: "Oops, something went wrong while updating the booking"
+//         };
+
+//         if (e.name === "ValidationError") {
+//             response.details = {};
+//             for (let field in e.errors) {
+//                 response.details[field] = e.errors[field].message;
+//             }
+//         }
+
+//         if (e.code === 11000) {
+//             response.msg = "Duplicate field error";
+//             response.field = Object.keys(e.keyValue);
+//             response.value = Object.values(e.keyValue);
+//         }
+
+//         console.error("Edit Booking Error:", e);
+//         res.status(400).json(response);
+//     }
+// });
+
+
+
+// PATCH /bookings/:id/editBooking
+// router.patch('/bookings/:id/editBooking', async (req, res) => {
+//     try {
+//         const { id } = req.params;
+//         const updates = req.body;
+
+//         // Fetch booking with advisors populated
+//         const booking = await Booking.findById(id).populate('advisors', 'name email');
+
+
+//         // --- DEBUG: print current advisors before update ---
+//         console.log('Before update, advisors:', booking.advisors);
+
+//         // --- Update nested invitee safely ---
+//         if (updates.invitee) {
+//             booking.invitee = {
+//                 ...booking.invitee?.toObject(),
+//                 ...Object.fromEntries(
+//                     Object.entries(updates.invitee).map(([k, v]) => [k, v === "" ? null : v])
+//                 ),
+//             };
+//         }
+
+//         // --- Update event_guests safely ---
+//         if (Array.isArray(updates.event_guests)) {
+//             booking.event_guests = updates.event_guests.map(g => ({
+//                 ...g,
+//                 email: g.email === "" ? null : g.email,
+//                 created_at: g.created_at || null,
+//                 updated_at: g.updated_at || new Date(),
+//             }));
+//         }
+
+//         // --- Update advisors if provided ---
+//         if (Array.isArray(updates.advisors)) {
+//             booking.advisors = updates.advisors; // array of ObjectId
+//         }
+
+//         // --- Update top-level fields ---
+//         const topFields = Object.keys(updates).filter(
+//             k => !['invitee', 'event_guests', 'advisors'].includes(k)
+//         );
+//         topFields.forEach(key => {
+//             booking[key] = updates[key] === "" ? null : updates[key];
+//         });
+
+//         // Save booking
+//         const updatedBooking = await booking.save();
+
+//         // Re-populate advisors after save to send full objects to frontend
+//         await updatedBooking.populate('advisors', 'name email');
+
+//         // --- DEBUG: print advisors after update ---
+//         console.log('After update, advisors:', updatedBooking.advisors);
+
+//         // Call webhook if needed
+//         sendClientUpsert(updatedBooking, 'updated', 'Bookings')
+//             .catch(err => console.error('[webhook] booking.updated failed:', err?.message));
+
+//         res.status(200).json(updatedBooking);
+
+//     } catch (e) {
+//         console.error("Edit Booking Error:", e);
+
+//         let response = { msg: "Oops, something went wrong while updating the booking" };
+
+//         if (e.name === "ValidationError") {
+//             response.details = {};
+//             for (let field in e.errors) response.details[field] = e.errors[field].message;
+//         }
+
+//         if (e.code === 11000) {
+//             response.msg = "Duplicate field error";
+//             response.field = Object.keys(e.keyValue);
+//             response.value = Object.values(e.keyValue);
+//         }
+
+//         res.status(400).json(response);
+//     }
+// });
+
+
+
+
+
 router.patch('/bookings/:id/editBooking', async (req, res) => {
     try {
         const { id } = req.params;
         const bookingData = req.body;
-        const updatedBooking = await Booking.findByIdAndUpdate(id, bookingData, {
-            new: true,
-            runValidators: true,
-        });
+
+        const booking = await Booking.findById(id);
+        if (!booking) return res.status(404).json({ msg: "Booking not found" });
+
+        // Merge nested invitee
+        if (bookingData.invitee) {
+            booking.invitee = {
+                ...booking.invitee.toObject(),
+                ...bookingData.invitee,
+            };
+        }
+
+        // Merge nested event_guests if sent
+        if (bookingData.event_guests) {
+            booking.event_guests = bookingData.event_guests.map((guest, i) => ({
+                ...(booking.event_guests[i]?.toObject() || {}),
+                ...guest,
+            }));
+        }
+
+        // Merge top-level fields
+        for (const key of Object.keys(bookingData)) {
+            if (key !== 'invitee' && key !== 'event_guests') {
+                booking[key] = bookingData[key];
+            }
+        }
+
+        const updatedBooking = await booking.save();
+
+        sendClientUpsert(updatedBooking, 'updated', 'Bookings')
+            .catch(err => console.error('[webhook] booking.updated failed:', err?.message));
+
         res.status(200).json(updatedBooking);
     } catch (e) {
-        let response = {
-            msg: "Oops, something went wrong while updating the booking"
-        };
+        let response = { msg: "Oops, something went wrong while updating the booking" };
 
         if (e.name === "ValidationError") {
             response.details = {};
-            for (let field in e.errors) {
-                response.details[field] = e.errors[field].message;
-            }
+            for (let field in e.errors) response.details[field] = e.errors[field].message;
         }
 
         if (e.code === 11000) {
@@ -325,19 +480,29 @@ router.patch('/bookings/:id/editBooking', async (req, res) => {
     }
 });
 
+
+
+
 // ✅ Delete a booking by ID
 router.delete('/bookings/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const deletedBooking = await Booking.findByIdAndDelete(id);
+
         if (!deletedBooking) {
             return res.status(404).json({ msg: "The booking does not exist or cannot be fetched" });
         }
+
+
+        sendClientDelete(id, 'Bookings')
+            .catch(err => console.error('[webhook] booking.deleted failed:', err?.message));
+
         res.status(200).json({ msg: "The booking has been successfully deleted" });
     } catch (e) {
         res.status(400).json({ msg: "Oops, something went wrong while deleting the booking" });
     }
 });
+
 
 module.exports = {
     bookingRoutes: router

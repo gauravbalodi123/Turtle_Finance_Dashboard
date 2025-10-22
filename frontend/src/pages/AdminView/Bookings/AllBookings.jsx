@@ -30,6 +30,8 @@ const AllBookings = () => {
   const [pageIndex, setPageIndex] = useState(0);
 
   const [selectedBookingId, setSelectedBookingId] = useState(null);
+  const [showEditBookingModal, setShowEditBookingModal] = useState(false);
+
   const [sorting, setSorting] = useState([]);
 
   const [bookingStats, setBookingStats] = useState({
@@ -40,7 +42,16 @@ const AllBookings = () => {
   });
 
 
+  const openEditModal = (bookingId) => {
+    setSelectedBookingId(bookingId);
+    setShowEditBookingModal(true);
+  };
 
+  // ✅ Close modal
+  const closeEditModal = () => {
+    setShowEditBookingModal(false);
+    setSelectedBookingId(null);
+  };
 
 
 
@@ -96,21 +107,20 @@ const AllBookings = () => {
   }, []);
 
 
-  const openEditModal = (bookingId) => {
-    setSelectedBookingId(bookingId);
-  };
 
-  const handleBookingUpdate = (updatedBooking) => {
+
+  const handleBookingUpdate = (updatedBookingPartial) => {
     setBookings(prev =>
-      prev.map(b => b._id === updatedBooking._id ? updatedBooking : b)
+      prev.map(b => b._id === updatedBookingPartial._id ? { ...b, ...updatedBookingPartial } : b)
     );
 
     setFilteredBookings(prev =>
-      prev.map(b => b._id === updatedBooking._id ? updatedBooking : b)
+      prev.map(b => b._id === updatedBookingPartial._id ? { ...b, ...updatedBookingPartial } : b)
     );
 
     fetchStats();
   };
+
 
 
 
@@ -157,38 +167,38 @@ const AllBookings = () => {
   const columns = [
     // { accessorKey: "bookingId", header: "Booking ID", size: 200 },
     // { accessorKey: "event_type", header: "Event Type", size: 150 },
-    {
-      accessorKey: "start_time",
-      header: "Start Time",
-      size: 180,
-      cell: ({ row }) =>
-        row.original.start_time
-          ? new Date(row.original.start_time).toLocaleString("en-GB", {
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-            hour: "numeric",
-            minute: "numeric",
-            hour12: true
-          })
-          : "N/A",
-    },
-    {
-      accessorKey: "end_time",
-      header: "End Time",
-      size: 180,
-      cell: ({ row }) =>
-        row.original.end_time
-          ? new Date(row.original.end_time).toLocaleString("en-GB", {
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-            hour: "numeric",
-            minute: "numeric",
-            hour12: true
-          })
-          : "N/A",
-    },
+    // {
+    //   accessorKey: "start_time",
+    //   header: "Start Time",
+    //   size: 180,
+    //   cell: ({ row }) =>
+    //     row.original.start_time
+    //       ? new Date(row.original.start_time).toLocaleString("en-GB", {
+    //         day: "2-digit",
+    //         month: "2-digit",
+    //         year: "numeric",
+    //         hour: "numeric",
+    //         minute: "numeric",
+    //         hour12: true
+    //       })
+    //       : "N/A",
+    // },
+    // {
+    //   accessorKey: "end_time",
+    //   header: "End Time",
+    //   size: 180,
+    //   cell: ({ row }) =>
+    //     row.original.end_time
+    //       ? new Date(row.original.end_time).toLocaleString("en-GB", {
+    //         day: "2-digit",
+    //         month: "2-digit",
+    //         year: "numeric",
+    //         hour: "numeric",
+    //         minute: "numeric",
+    //         hour12: true
+    //       })
+    //       : "N/A",
+    // },
 
 
 
@@ -211,8 +221,8 @@ const AllBookings = () => {
     // { accessorKey: "location.type", header: "Location Type", size: 160 },
 
     // Timeline
-    { accessorKey: "created_at_timeline", header: "Created At (Timeline)", size: 180 },
-    { accessorKey: "updated_at_timeline", header: "Updated At (Timeline)", size: 180 },
+    // { accessorKey: "created_at_timeline", header: "Created At (Timeline)", size: 180 },
+    // { accessorKey: "updated_at_timeline", header: "Updated At (Timeline)", size: 180 },
 
     // Meeting Notes
     // { accessorKey: "meeting_notes_plain", header: "Meeting Notes", size: 300 },
@@ -238,14 +248,28 @@ const AllBookings = () => {
 
     // Event Guests (just showing first guest for simplicity)
 
-    { accessorKey: "name", header: "Event Name", size: 150 ,sortDescFirst: true,},
-    { accessorKey: "status", header: "Status", size: 100,sortDescFirst: true, },
-    { accessorKey: "inviteeFullName", header: "Client Name", size: 150 ,sortDescFirst: true,},
-    { accessorKey: "inviteeEmail", header: "Client Email", size: 200,sortDescFirst: true, },
-    { accessorKey: "cancellation.canceled_by", header: "Canceled By", size: 160 },
-    { accessorKey: "cancellation.reason", header: "Cancellation Reason", size: 200 },
+    { accessorKey: "name", header: "Event Name", size: 150, sortDescFirst: true, },
+    { accessorKey: "status", header: "Status", size: 100, sortDescFirst: true, },
+    { accessorKey: "simplifiedStatus", header: "Simplified Status", size: 180, sortDescFirst: true },
+    {
+      accessorKey: "is_completed",
+      header: "Completed?",
+      size: 130,
+      sortDescFirst: true,
+      cell: ({ row }) => {
+        const value = row.original.is_completed;
+        return value === "yes" ? (
+          <span style={{ color: "green", fontWeight: "bold" }}>Yes</span>
+        ) : (
+          <span style={{ color: "red", fontWeight: "bold" }}>No</span>
+        );
+      },
+    },
+    { accessorKey: "inviteeFullName", header: "Client Name", size: 150, sortDescFirst: true, },
+    { accessorKey: "inviteeEmail", header: "Client Email", size: 200, sortDescFirst: true, },
+    // { accessorKey: "cancellation.canceled_by", header: "Canceled By", size: 160 },
+    // { accessorKey: "cancellation.reason", header: "Cancellation Reason", size: 200 },
     // { accessorKey: "location.join_url", header: "Join URL", size: 250 },
-
     {
       accessorKey: "event_guests",
       header: "Event Guests",
@@ -273,28 +297,48 @@ const AllBookings = () => {
       }
     },
 
+    // {
+    //   accessorKey: "countryCode",
+    //   id: "countryCode", // Custom ID for sorting
+    //   header: "Country Code",
+    //   size: 140,
+    //   sortDescFirst: true,
+    //   cell: ({ row }) => {
+    //     const qa = row.original.invitee?.questionsAndAnswers || [];
+    //     const phoneQA = qa.find(q => q.question === "Phone Number");
+    //     return phoneQA?.countryCode || "N/A";
+    //   }
+    // },
+    // {
+    //   accessorKey: "phoneNumber",
+    //   id: "phoneNumber", // Custom ID for sorting
+    //   header: "Phone Number",
+    //   size: 150,
+    //   sortDescFirst: true,
+    //   cell: ({ row }) => {
+    //     const qa = row.original.invitee?.questionsAndAnswers || [];
+    //     const phoneQA = qa.find(q => q.question === "Phone Number");
+    //     return phoneQA?.phoneNumber || "N/A";
+    //   }
+    // },
+
     {
-      accessorKey: "countryCode",
-      id: "countryCode", // Custom ID for sorting
-      header: "Country Code",
-      size: 140,
-      sortDescFirst: true,
-      cell: ({ row }) => {
-        const qa = row.original.invitee?.questionsAndAnswers || [];
-        const phoneQA = qa.find(q => q.question === "Phone Number");
-        return phoneQA?.countryCode || "N/A";
-      }
-    },
-    {
-      accessorKey: "phoneNumber",
-      id: "phoneNumber", // Custom ID for sorting
+      accessorKey: "phoneDetails",
+      id: "phoneDetails",
       header: "Phone Number",
       size: 150,
       sortDescFirst: true,
       cell: ({ row }) => {
         const qa = row.original.invitee?.questionsAndAnswers || [];
         const phoneQA = qa.find(q => q.question === "Phone Number");
-        return phoneQA?.phoneNumber || "N/A";
+
+        const countryCode = phoneQA?.countryCode?.trim();
+        const phoneNumber = phoneQA?.phoneNumber?.trim();
+
+        // Combine only values that exist
+        const displayValue = [countryCode, phoneNumber].filter(Boolean).join(" ");
+
+        return displayValue || "N/A";
       }
     },
 
@@ -321,9 +365,7 @@ const AllBookings = () => {
           <button
             type="button"
             className="btn p-2 btn-outline-turtle-secondary"
-            data-bs-toggle="modal"
-            data-bs-target="#editBookingsModal"
-            onClick={() => openEditModal(row.original._id)}
+            onClick={() => openEditModal(row.original._id)} // ✅ No data-bs attributes
           >
             <FaRegEdit className="d-block fs-6" />
           </button>
@@ -449,9 +491,14 @@ const AllBookings = () => {
               /> */}
 
               <EditBookingsModal
+                show={showEditBookingModal}
+                onHide={closeEditModal}
                 id={selectedBookingId}
                 url={url}
-                onSuccess={handleBookingUpdate}
+                onSuccess={(updated) => {
+                  handleBookingUpdate(updated);
+                  closeEditModal();
+                }}
               />
 
 

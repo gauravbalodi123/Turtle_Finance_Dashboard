@@ -1,5 +1,5 @@
 import React from "react";
-import { FaStethoscope, FaIdCard, FaFileSignature, FaCreditCard } from "react-icons/fa";
+import { FaStethoscope, FaIdCard, FaFileSignature, FaCreditCard, FaPhone } from "react-icons/fa";
 import styles from '../../styles/SmallerComponents/OnboardingIntro.module.css';
 import { FiClock } from "react-icons/fi";
 
@@ -13,10 +13,10 @@ const OnboardingIntro = ({ onNext }) => {
                         Welcome to Turtle - Let us Get you Onboarded!
                     </h2>
                     <p className="text-secondary fs-5 mb-4">
-                        As per SEBI regulations we need to complete the following 4 steps to complete your onboarding:
+                        As per SEBI regulations we need to complete the following 5 steps to complete your onboarding:
                     </p>
 
-                    <div className="row row-cols-1 row-cols-md-4 g-4 justify-content-center mb-5">
+                    <div className="row row-cols-1 row-cols-md-5 g-4 justify-content-center mb-5">
                         {[
                             {
                                 step: 1,
@@ -46,6 +46,13 @@ const OnboardingIntro = ({ onNext }) => {
                                 desc: "Make the payment to activate your membership.",
                                 icon: <FaCreditCard size={30} color="#000" />,
                             },
+                            {
+                                step: 5,
+                                title: "Book Kick-off Call",
+                                time: "2-3 minutes",
+                                desc: "Schedule your introductory call with our advisor.",
+                                icon: <FaPhone size={30} color="#000" />,
+                            },
                         ].map(({ step, title, time, desc, icon }) => (
                             <div className="col" key={step}>
                                 <div className="card h-100 shadow border-0">
@@ -54,7 +61,6 @@ const OnboardingIntro = ({ onNext }) => {
                                             style={{
                                                 width: 60,
                                                 height: 60,
-
                                                 borderRadius: "50%",
                                                 display: "flex",
                                                 alignItems: "center",

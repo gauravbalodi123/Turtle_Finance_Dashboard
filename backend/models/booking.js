@@ -24,9 +24,22 @@ const BookingSchema = new mongoose.Schema(
         start_time: { type: Date, default: null },
         end_time: { type: Date, default: null },
         name: { type: String, required: true },
-        status: { type: String, enum: ['active', 'canceled', 'upcoming', 'completed', 'no-show', 'rescheduled'], default: 'null' },
-        uri: { type: String, required: true },
+        status: { type: String, enum: ['canceled', 'upcoming', 'rescheduled', 'rescheduled_canceled'], default: 'null' },
 
+        simplifiedStatus: {
+            type: String,
+            enum: [
+                'canceled',
+                'upcoming',
+                'completed',
+                'completed_rescheduled',
+                'rescheduled_canceled',
+                null,
+            ]
+        },
+
+        uri: { type: String, required: true },
+        rescheduled: { type: Boolean, default: false },
         event_guests: [
             {
                 created_at: { type: Date, default: null },
@@ -35,6 +48,11 @@ const BookingSchema = new mongoose.Schema(
             }
         ],
         advisors: [{ type: mongoose.Schema.Types.ObjectId, ref: "Advisor" }],
+        is_completed: {
+            type: String,
+            enum: ['yes', 'no'],
+            // default: 'no'
+        },
 
 
         event_type: { type: String, required: true },
@@ -62,7 +80,7 @@ const BookingSchema = new mongoose.Schema(
         ],
 
         invitee: {
-            email: { type: String},
+            email: { type: String },
             fullName: { type: String, required: true },
             firstName: { type: String, default: null },
             lastName: { type: String, default: null },
@@ -101,5 +119,47 @@ const BookingSchema = new mongoose.Schema(
     },
     { timestamps: true }
 );
+
+
+
+
+BookingSchema.pre('save', function (next) {
+    if (this.status === 'completed') {
+        this.simplifiedStatus = 'completed';
+    } else if (this.status === 'rescheduled') {
+        this.simplifiedStatus = 'completed_rescheduled';
+    } else if (this.status === 'rescheduled_canceled') {
+        this.simplifiedStatus = 'completed_rescheduled_canceled';
+    } else {
+        this.simplifiedStatus = this.status || null;
+    }
+    next();
+});
+
+
+BookingSchema.pre('findOneAndUpdate', function (next) {
+    const update = this.getUpdate();
+
+    // If the status is being updated
+    if (update.status) {
+        if (update.status === 'completed') {
+            update.simplifiedStatus = 'completed';
+        } else if (update.status === 'rescheduled') {
+            update.simplifiedStatus = 'completed_rescheduled';
+        } else if (update.status === 'rescheduled_canceled') {
+            update.simplifiedStatus = 'completed_rescheduled_canceled';
+        } else {
+            update.simplifiedStatus = update.status || null;
+        }
+
+        this.setUpdate(update);
+    }
+
+    next();
+});
+
+
+
+
 
 module.exports = mongoose.model("Booking", BookingSchema);

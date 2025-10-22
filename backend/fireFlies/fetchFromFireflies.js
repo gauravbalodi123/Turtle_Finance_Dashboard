@@ -4,6 +4,7 @@ const crypto = require("crypto");
 const axios = require("axios");
 const { seedTaskFromTranscript } = require('../tasksSeed')
 const { seedRowWiseTasksFromTranscript } = require('../seedRowWiseTasksFromTranscript')
+const { sendClientUpsert } = require('../webhooks/webhookClientSync');
 require("dotenv").config();
 
 const router = express.Router();
@@ -49,12 +50,15 @@ router.post("/fireflies-webhook-turtlebackend", async (req, res) => {
                 console.log("✅ Transcription data for meeting:", meetingId);
                 console.dir(transcriptData, { depth: null, colors: true });
 
-                const parentTaskId = await seedTaskFromTranscript(transcriptData); 
+                const parentTaskId = await seedTaskFromTranscript(transcriptData);
 
                 if (parentTaskId) {
-                    await seedRowWiseTasksFromTranscript(transcriptData, parentTaskId); 
+                    await seedRowWiseTasksFromTranscript(transcriptData, parentTaskId);
                 }
 
+                // Fire-and-forget webhook to sync sheet with transcript summary
+                sendClientUpsert(transcriptData, 'completed', 'Fireflies')
+                    .catch(err => console.error('[webhook] transcript.completed failed:', err?.message));
 
                 return res.status(200).send("Transcript fetched and logged.");
             } catch (error) {

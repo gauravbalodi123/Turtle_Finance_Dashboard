@@ -1,0 +1,4 @@
+.navbarDropdown :global(.dropdown-toggle.no-caret)::after {
+    display: none !important;
+    content: none !important;
+}

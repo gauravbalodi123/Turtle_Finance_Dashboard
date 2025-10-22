@@ -43,13 +43,10 @@ const ClientRiskProfile = () => {
 
   useEffect(() => {
     const controller = new AbortController();
-   // const [profile, setProfile] = useState(null);
 
     const fetchRiskProfile = async () => {
       try {
-       const res = await axios.get(`${url}/admin/clients/${clientId}/riskProfile`, { signal: controller.signal });
-
-       //const res = await axios.get(`${url}/admin/clients/${clientId}/riskProfile/${profileId}`, { signal: controller.signal });
+        const res = await axios.get(`${url}/admin/clients/${clientId}/riskProfile`, { signal: controller.signal });
         const data = res.data.data;
 
         const formatDate = (isoDate) => {
@@ -70,8 +67,8 @@ const ClientRiskProfile = () => {
     fetchRiskProfile();
 
     return () => controller.abort();
- }, [clientId]);
-//}, [clientId, profileId, url]);
+  }, [clientId]);
+  //}, [clientId, profileId, url]);
 
 
   const getValueOrNull = (ref) => {
@@ -111,6 +108,7 @@ const ClientRiskProfile = () => {
       investmentObjective: getValueOrNull(investmentObjectiveRef),
       holdingPeriodForLoss: getValueOrNull(holdingPeriodForLossRef),
       reactionToDecline: getValueOrNull(reactionToDeclineRef),
+      result: getValueOrNull(resultRef),
     };
 
     try {
@@ -363,17 +361,23 @@ const ClientRiskProfile = () => {
 
         <div className="mb-3">
           <label className="form-label">Holding Period for Loss</label>
-          <select className="form-select" ref={holdingPeriodForLossRef} defaultValue={formData.holdingPeriodForLoss} required>
+          <select
+            className="form-select"
+            ref={holdingPeriodForLossRef}
+            defaultValue={formData.holdingPeriodForLoss}
+            required
+          >
             <option value="Will not hold & cash in immediately if there is an erosion of my capital">
               Will not hold & cash in immediately if there is an erosion of my capital
             </option>
-            <option value="I'd hold for 3 months">I'd hold for 3 months</option>
-            <option value="I'd hold for 6 months">I'd hold for 6 months</option>
-            <option value="I'd hold for one year">I'd hold for one year</option>
-            <option value="I'd hold for up to two years">I'd hold for up to two years</option>
-            <option value="I'd hold for more than two years.">I'd hold for more than two years.</option>
+            <option value="I’d hold for 3 months">I’d hold for 3 months</option>
+            <option value="I’d hold for 6 months">I’d hold for 6 months</option>
+            <option value="I’d hold for one year">I’d hold for one year</option>
+            <option value="I’d hold for up to two years">I’d hold for up to two years</option>
+            <option value="I’d hold for more than two years.">I’d hold for more than two years.</option>
           </select>
         </div>
+
 
         <div className="mb-3">
           <label className="form-label">Reaction to Market Decline</label>

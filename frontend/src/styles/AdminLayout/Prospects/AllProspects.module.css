@@ -1,9 +1,9 @@
-h2.taskHeaderItem{
+h2.taskHeaderItem {
     margin: 0;
     font-weight: 500;
 }
 
-p.taskHeaderItem{
+p.taskHeaderItem {
     margin: 0;
     font-size: 1rem;
     color: #909cad;
@@ -11,12 +11,13 @@ p.taskHeaderItem{
 
 }
 
-.clientsPageTableWrapper .custom-style-table thead th {
-    color: #8d9aaa ;
+.prospectsTableWrapper .custom-style-table thead th {
+    color: #8d9aaa;
 }
 
 
-.clientsPageTableWrapper .custom-style-table tr .pending-status, .clientsPageTableWrapper .pending-status{
+.prospectsTableWrapper .custom-style-table tr .pending-status,
+.prospectsTableWrapper .pending-status {
     color: #E09238;
     font-size: 0.8rem;
     background-color: #FDF3E1;
@@ -25,7 +26,17 @@ p.taskHeaderItem{
     font-weight: 500;
 }
 
-.clientsPageTableWrapper .custom-style-table tr .completed-status,.clientsPageTableWrapper .completed-status{
+.prospectsTableWrapper .custom-style-table tr .Prospect-status,
+.prospectsTableWrapper .Prospect-status {
+    color: #1620df;
+    font-size: 0.8rem;
+    background-color: #def6e7;
+    border-radius: 24px;
+    padding: 2px 10px;
+}
+
+.prospectsTableWrapper .custom-style-table tr .completed-status,
+.prospectsTableWrapper .completed-status {
     color: #16A45E;
     font-size: 0.8rem;
     background-color: #def6e7;
@@ -34,7 +45,8 @@ p.taskHeaderItem{
     font-weight: 500;
 }
 
-.clientsPageTableWrapper .custom-style-table tr .overdue-status,.clientsPageTableWrapper .overdue-status{
+.prospectsTableWrapper .custom-style-table tr .overdue-status,
+.prospectsTableWrapper .overdue-status {
     color: #f0716d;
     font-size: 0.8rem;
     background-color: #fde3e3;

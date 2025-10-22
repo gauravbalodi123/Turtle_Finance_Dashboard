@@ -2,9 +2,9 @@
 import React, { useState } from "react";
 
 const BANK_DETAILS = {
-  "Account Name": "Mukund Lahoty",
-  "Account Number": "50100233410920",
-  "Ifsc Code": "HDFC0001098",
+  "Account Name": "Peace Valley Ventures Private Limited",
+  "Account Number": "50200108399258",
+  "Ifsc Code": "HDFC0000396",
   "Bank Name": "HDFC Bank",
 };
 

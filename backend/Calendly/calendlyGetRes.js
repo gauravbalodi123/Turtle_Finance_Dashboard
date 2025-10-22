@@ -5,6 +5,7 @@ const Bookings = require('../models/booking');
 const Advisor = require('../models/advisor');
 const Client = require('../models/client');
 require('dotenv').config();
+const { sendClientUpsert} = require('../webhooks/webhookClientSync');
 
 const calendlyApi = axios.create({
     baseURL: 'https://api.calendly.com',
@@ -21,7 +22,6 @@ const allowedNames = [
 ];
 
 router.post('/webhook', async (req, res) => {
-    const eventType = req.body.event;
     const payload = req.body.payload;
 
     const scheduledEventUri = payload?.scheduled_event?.uri;
@@ -39,8 +39,6 @@ router.post('/webhook', async (req, res) => {
         const eventRes = await calendlyApi.get(`/scheduled_events/${scheduledEventUUID}`);
         const eventData = eventRes.data.resource;
 
-        // console.log("✅ Event Data:", eventData);
-
         const inviteeRes = await calendlyApi.get(`${eventData.uri}/invitees`);
         const inviteeData = inviteeRes.data.collection[0];
 
@@ -49,17 +47,17 @@ router.post('/webhook', async (req, res) => {
             return res.status(400).json({ error: 'No invitee data found' });
         }
 
+        // Map timestamps
         eventData.created_at_timeline = eventData.created_at;
         eventData.updated_at_timeline = eventData.updated_at;
         delete eventData.created_at;
         delete eventData.updated_at;
 
+        // Parse name
         const [firstName, ...restName] = inviteeData?.name?.trim().split(' ') || [];
         const lastName = restName.join(' ');
 
-        const recentEvents = await Bookings.find({}).sort({ createdAt: -1 }).limit(2);
-        const transformedStatus = determineStatus(eventData, recentEvents);
-
+        // Phone number parsing
         const questionsAndAnswers = inviteeData?.questions_and_answers || [];
         for (const qa of questionsAndAnswers) {
             if (qa.question === "Phone Number" && typeof qa.answer === "string") {
@@ -71,56 +69,66 @@ router.post('/webhook', async (req, res) => {
             }
         }
 
+        // Validate email if not in allowed names
         const normalizedName = (eventData?.name || '').toLowerCase();
-
         if (!allowedNames.includes(normalizedName)) {
             const inviteeEmail = inviteeData?.email?.trim().toLowerCase();
             if (inviteeEmail) {
                 const matchedClient = await Client.findOne({ email: inviteeEmail }).select('_id');
-                if (matchedClient) {
-                    console.log(`✅ Invitee email found in client collection: ${inviteeEmail}`);
-                    // Do nothing
-                } else {
-                    console.log(`❌ Invitee email NOT found in client collection: ${inviteeEmail}. Clearing email.`);
-                    inviteeData.email = ''; // Set to empty string if not found
-                }
+                if (!matchedClient) inviteeData.email = '';
             } else {
-                console.log(`⚠️ Invitee email is empty or invalid.`);
                 inviteeData.email = '';
             }
         }
 
-        // 🔍 Event guests
-        const eventGuests = eventData.event_guests || [];
-        const guestEmails = eventGuests.map(guest => guest.email).filter(Boolean);
+        // Find advisors
+        const guestEmails = (eventData.event_guests || []).map(g => g.email).filter(Boolean);
+        let advisors = (await Advisor.find({ email: { $in: guestEmails } }).select('_id')).map(a => a._id);
 
-        if (guestEmails.length === 0) {
-            console.log("⚠️ No guest emails found to match with advisors.");
-        }
-
-        const advisorsFromGuests = await Advisor.find({ email: { $in: guestEmails } }).select('_id email');
-        let advisors = advisorsFromGuests.map(a => a._id);
-
-        // 🧠 Backfill from eventName if no advisors found from event_guests
         if (advisors.length === 0) {
             const normalizedEventName = (eventData?.name || '').trim().toLowerCase();
             const matchedByEventName = await Advisor.find({
                 eventName: { $elemMatch: { $regex: new RegExp(`^${normalizedEventName}$`, 'i') } }
-            }).select('_id email eventName');
+            }).select('_id');
 
-            if (matchedByEventName.length > 0) {
-                advisors = matchedByEventName.map(a => a._id);
-                console.log(`✅ Backfilled advisors from event name "${eventData?.name}" →`, advisors);
-            } else {
-                console.log(`⚠️ No advisor matched for event name: "${eventData?.name}"`);
-            }
+            advisors = matchedByEventName.map(a => a._id);
         }
 
+        // -----------------------
+        // Handle reschedule logic
+        // -----------------------
+        const externalId = eventData.calendar_event?.external_id;
+        const startTime = new Date(eventData.start_time);
 
-        console.log("🧠 Matching Advisors Found:", advisors);
+        if (externalId) {
+            // 1️⃣ Old canceled booking that was rescheduled
+            await Bookings.updateMany(
+                {
+                    "calendar_event.external_id": externalId,
+                    status: "canceled",
+                    rescheduled: true,
+                },
+                { $set: { status: "rescheduled_canceled" } }
+            );
+
+            // 2️⃣ Check if this booking is the new active/upcoming one
+            const oldCanceled = await Bookings.findOne({
+                "calendar_event.external_id": externalId,
+                status: "rescheduled_canceled",
+            });
+
+            if (oldCanceled && eventData.status === "active") {
+                transformedStatus = "rescheduled";
+            } else {
+                transformedStatus = determineStatus(eventData);
+            }
+        } else {
+            transformedStatus = determineStatus(eventData);
+        }
 
         const enrichedEvent = {
             ...eventData,
+            rescheduled: inviteeData?.rescheduled || false,
             invitee: {
                 email: inviteeData?.email || null,
                 fullName: inviteeData?.name || null,
@@ -134,9 +142,14 @@ router.post('/webhook', async (req, res) => {
             status: transformedStatus,
         };
 
-
         console.log("🧾 Final Enriched Event Saved:\n", JSON.stringify(enrichedEvent, null, 2));
-        await Bookings.create(enrichedEvent);
+        // await Bookings.create(enrichedEvent);
+        const newBooking = await Bookings.create(enrichedEvent);
+
+        //webhook to send data to excel
+        sendClientUpsert(newBooking, 'created', 'Bookings')
+            .catch(err => console.error('[webhook] booking.created failed:', err?.message));
+        ;
 
         return res.status(200).json({ message: 'Enriched event data saved with advisors' });
 
@@ -146,34 +159,20 @@ router.post('/webhook', async (req, res) => {
     }
 });
 
-
-function determineStatus(eventData, existingEvents = []) {
+function determineStatus(eventData) {
     const now = new Date();
     const start = new Date(eventData.start_time);
-    const end = new Date(eventData.end_time);
-    const externalId = eventData.calendar_event?.external_id;
-    const rawStatus = eventData.status;
 
-    if (rawStatus === "canceled") {
-        return "canceled";
+    if (eventData.status === "canceled") {
+        return eventData.rescheduled ? "rescheduled_canceled" : "canceled";
     }
 
-    if (rawStatus === "active") {
-        // Check if a recent canceled event exists with the same external_id
-        const wasRecentlyCanceled = existingEvents.find(
-            ev => ev.calendar_event?.external_id === externalId && ev.status === "canceled"
-        );
-        if (wasRecentlyCanceled) return "rescheduled";
-
-        if (start > now) return "upcoming";
-        if (end < now) return "completed";
-
-        return "active"; // fallback
+    if (eventData.status === "active") {
+        return start > now ? "upcoming" : "completed";
     }
 
-    return rawStatus; // fallback
+    return eventData.status;
 }
-
 
 module.exports = {
     calendlyRes: router

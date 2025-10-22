@@ -33,8 +33,8 @@ const ClientSchema = new mongoose.Schema(
         },
         subscriptionStatus: {
             type: String,
-            enum: ["Active", "Expired","Prospect", "Up for Renewal"],
-            default:"Prospect",
+            enum: ["Active", "Expired", "Prospect", "Up for Renewal", "Deadpool"],
+            default: "Prospect",
         },
         // caseType: {
         //     type: String,
@@ -43,7 +43,7 @@ const ClientSchema = new mongoose.Schema(
         // },
         clientType: {
             type: String,
-            enum: ["Indian", "NRI"],
+            enum: ["Indian", "NRI", 'Indian Renewal', 'NRI Renewal'],
             //default: null,
         },
         gender: {
@@ -61,16 +61,37 @@ const ClientSchema = new mongoose.Schema(
             unique: true,
             required: true,
         },
-        email: {
+        countryCode2: {
+            type: String,
+            maxlength: 4,
+            default: null,
+        },
+        phone2: {
             type: String,
             unique: true,
+            default: null,
+        },
+        email: {
+            type: [String],
             required: true,
+            validate: {
+                validator: function (emails) {
+                    return emails.every(email =>
+                        /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)   // validate each email
+                    );
+                },
+                message: props => `${props.value} contains an invalid email!`
+            }
         },
         address: {
             type: String,
             default: null,
         },
         subscriptionDate: {
+            type: Date,
+            default: null,
+        },
+        subscriptionDue: {
             type: Date,
             default: null,
         },
@@ -108,10 +129,6 @@ const ClientSchema = new mongoose.Schema(
             ref: "AuaData",
             default: null,
         },
-        subscriptionDue: {
-            type: Date,
-            default: null,
-        },
         riaData: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "RiaData",
@@ -143,8 +160,56 @@ const ClientSchema = new mongoose.Schema(
                 ref: "Advisor",
             },
         ],
+        bio: {
+            type: String,
+            default: null,
+
+        },
+        linkedinProfile: {
+            type: String,
+            default: null,
+        },
+        lastMilestoneSent: {
+            type: Number,
+            default: null,
+        },
+        lastMilestoneDate: {
+            type: Date,
+            default: null,
+        },
+        milestoneEmailBlocked: {
+            type: [Number],
+        },
     },
     { timestamps: true }
 );
+
+
+
+ClientSchema.pre("save", function (next) {
+    if (this.subscriptionDate) {
+        const dueDate = new Date(this.subscriptionDate);
+        dueDate.setFullYear(dueDate.getFullYear() + 1);
+        this.subscriptionDue = dueDate;
+    }
+    next();
+});
+
+
+ClientSchema.pre("findOneAndUpdate", function (next) {
+    const update = this.getUpdate();
+
+    if (update.subscriptionDate) {
+        const dueDate = new Date(update.subscriptionDate);
+        dueDate.setFullYear(dueDate.getFullYear() + 1);
+        update.subscriptionDue = dueDate;
+        this.setUpdate(update);
+    }
+
+    next();
+});
+
+
+
 
 module.exports = mongoose.model("Client", ClientSchema);

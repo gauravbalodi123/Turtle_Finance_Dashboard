@@ -1,0 +1,94 @@
+/* src/styles/AdminLayout/AdminLayout.module.css */
+
+body {
+  background-color: #f8fafc !important;
+  padding: 0;
+  margin: 0;
+  font-family: "Inter", sans-serif;
+}
+
+/* Main wrapper */
+.appWrapper {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  position: relative;
+  overflow-x: hidden;
+  overflow-y: hidden;
+}
+
+/* Main content wrapper navbar and main content */
+.mainContentWrapper {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: hidden;
+}
+
+/* Mobile styles */
+@media screen and (max-width: 767.98px) {
+  .mainContentWrapper {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .navbarSmallscreen {
+    position: fixed !important;
+    left: 0;
+    width: 100vw;
+    top: 0;
+    z-index: 1030;
+  }
+
+  .contentArea {
+    flex: 1;
+    padding: 1rem;
+    background-color: #f8fafc;
+    overflow-y: visible;
+    overflow-x: hidden;
+    width: 100%;
+    margin-top: 10vh;
+  }
+}
+
+/* Desktop styles */
+@media screen and (min-width: 768px) {
+  .navbarmdscreenHide {
+    position: fixed !important;
+    left: 100px;
+    width: calc(100vw - 100px);
+    top: 0;
+    z-index: 1030;
+  }
+
+  .contentAreaMdHide {
+    flex: 1;
+    padding: 1rem;
+    background-color: #f8fafc;
+    overflow-y: visible;
+    overflow-x: hidden;
+    width: calc(100vw - 100px);
+    margin-left: 100px;
+    margin-top: 10vh;
+  }
+
+  .navbarmdscreenShow {
+    position: fixed !important;
+    left: 280px;
+    width: calc(100vw - 280px);
+    top: 0;
+    z-index: 1030;
+  }
+
+  .contentAreaMdOpen {
+    flex: 1;
+    padding: 1rem;
+    background-color: #f8fafc;
+    overflow-y: visible;
+    overflow-x: hidden;
+    width: calc(100vw - 280px);
+    margin-left: 280px;
+    margin-top: 10vh;
+  }
+}

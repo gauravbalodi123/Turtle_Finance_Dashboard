@@ -62,6 +62,17 @@ const AllMeetings = () => {
     const [sorting, setSorting] = useState([]);
 
 
+    const [showEditModal, setShowEditModal] = useState(false);
+
+
+    const openEditModal = (meetingId) => {
+        setSelectedMeetingId(meetingId);
+        setShowEditModal(true);
+    };
+
+    const closeEditModal = () => {
+        setShowEditModal(false);
+    };
 
     // edit for the meetings modal itself
 
@@ -82,9 +93,9 @@ const AllMeetings = () => {
         fetchDropdownData();
     }, []);
 
-    const openEditModal = (meetingId) => {
-        setSelectedMeetingId(meetingId);
-    };
+    // const openEditModal = (meetingId) => {
+    //     setSelectedMeetingId(meetingId);
+    // };
 
     const handleMeetingUpdate = (updatedMeeting) => {
         // if (!updatedMeeting || !updatedMeeting.client || !updatedMeeting.advisor) {
@@ -105,7 +116,7 @@ const AllMeetings = () => {
             prev.map(m => m._id === updatedMeeting._id ? enrichedMeeting : m)
         );
 
-       
+
     };
 
 
@@ -160,6 +171,23 @@ const AllMeetings = () => {
             if (modal) modal.hide();
         } catch (err) {
             console.error("Failed to save edited action item", err);
+        }
+    };
+
+    const handleStatusChange = async (id, newStatus) => {
+        try {
+            await axios.patch(`${url}/admin/rowwisetasks/${id}/editRowWiseTasks`, {
+                status: newStatus,
+            });
+
+            // update state locally so UI feels instant
+            setCurrentActionItems((prev) =>
+                prev.map((item) =>
+                    item._id === id ? { ...item, status: newStatus } : item
+                )
+            );
+        } catch (err) {
+            console.error("Failed to update status", err);
         }
     };
 
@@ -228,31 +256,6 @@ const AllMeetings = () => {
             setIsLoading(false);
         }
     };
-
-    // useEffect(() => {
-    //     let filtered = tasks;
-
-    //     if (selectedClient) {
-    //         filtered = filtered.filter(task => task.client?.fullName === selectedClient);
-    //     }
-
-    //     if (selectedAdvisor) {
-    //         filtered = filtered.filter(task => task.advisor?.advisorFullName === selectedAdvisor);
-    //     }
-
-    //     if (columnFilter) {
-    //         const lowerCaseFilter = columnFilter.toLowerCase();
-    //         filtered = filtered.filter((task) =>
-    //             Object.values(task).some(
-    //                 (value) =>
-    //                     value &&
-    //                     value.toString().toLowerCase().includes(lowerCaseFilter)
-    //             )
-    //         );
-    //     }
-
-    //     setTasks(filtered);
-    // }, [selectedClient, selectedAdvisor, columnFilter, tasks]);
 
 
 
@@ -450,12 +453,11 @@ const AllMeetings = () => {
                         <button
                             type="button"
                             className="btn p-2 btn-outline-turtle-secondary"
-                            data-bs-toggle="modal"
-                            data-bs-target="#editMeetingModal"
                             onClick={() => openEditModal(row.original._id)}
                         >
                             <FaRegEdit className="d-block fs-6" />
                         </button>
+
 
 
                         <button
@@ -623,6 +625,7 @@ const AllMeetings = () => {
                                 setTargetId(itemId);
                                 setDeleteType("actionItem");
                             }}
+                            onStatusChange={handleStatusChange}
                             statusClasses={{
                                 completed: styles["completed-status"],
                                 pending: styles["pending-status"],
@@ -638,14 +641,16 @@ const AllMeetings = () => {
                         />
 
                         <EditMeetingModal
+                            show={showEditModal}
+                            onHide={closeEditModal}
                             meetingId={selectedMeetingId}
                             clients={clients}
                             advisors={advisors}
-                            onSuccess={handleMeetingUpdate}
+                            onSuccess={(updated) => {
+                                handleMeetingUpdate(updated);
+                                closeEditModal();
+                            }}
                         />
-
-
-
 
                     </div>
 
