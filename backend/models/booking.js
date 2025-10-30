@@ -102,6 +102,16 @@ const BookingSchema = new mongoose.Schema(
             ]
         },
 
+
+        tracking: {
+            utm_campaign: { type: String, default: null },
+            utm_source: { type: String, default: null },
+            utm_medium: { type: String, default: null },
+            utm_content: { type: String, default: null },
+            utm_term: { type: String, default: null },
+            salesforce_uuid: { type: String, default: null }
+        },
+
         backfillStatus: {
             type: String,
             enum: ['success', 'error', null],

@@ -3,8 +3,8 @@ const router = express.Router();
 const SubscriptionPlan = require('../../models/subscription');
 const RiskProfile = require('../../models/riskProfile');
 const { protect, authorizeRoles } = require('../../middleware/authMiddleware'); // Import middleware
-const File  = require('../../models/fileModel'); // Import your models
-const KYC  = require('../../models/kycData');
+const File = require('../../models/fileModel'); // Import your models
+const KYC = require('../../models/kycData');
 const DigioResponse = require('../../models/digioResponse');
 const Client = require('../../models/client')
 const User = require('../../models/user')
@@ -13,55 +13,55 @@ const multer = require('multer');
 
 
 router.put('/updatePlanByName/:planName', protect, authorizeRoles('admin'), async (req, res) => {
-    try {
-        const { priceRupees, priceDollar } = req.body;
-        const { planName } = req.params;
+  try {
+    const { priceRupees, priceDollar } = req.body;
+    const { planName } = req.params;
 
-        // List of valid plan names
-        const validPlans = ['Indian', 'NRI', 'Indian Renewal', 'NRI Renewal'];
+    // List of valid plan names
+    const validPlans = ['Indian', 'NRI', 'Indian Renewal', 'NRI Renewal'];
 
-        if (!validPlans.includes(planName)) {
-            return res.status(400).json({ msg: "Invalid planName. Must be one of: 'Indian', 'NRI', 'Indian Renewal', 'NRI Renewal'" });
-        }
-
-        // Validation based on plan
-        if (planName === 'Indian' || planName === 'Indian Renewal') {
-            if (priceRupees == null) {
-                return res.status(400).json({ msg: `${planName} plan requires priceRupees` });
-            }
-        }
-
-        if (planName === 'NRI' || planName === 'NRI Renewal') {
-            if (priceRupees == null || priceDollar == null) {
-                return res.status(400).json({ msg: `${planName} plan requires both priceRupees and priceDollar` });
-            }
-        }
-
-        const updateFields = { planName };
-        if (priceRupees != null) updateFields.priceRupees = priceRupees;
-        if (priceDollar != null) updateFields.priceDollar = priceDollar;
-
-        const updatedPlan = await SubscriptionPlan.findOneAndUpdate(
-            { planName },
-            updateFields,
-            {
-                new: true,
-                upsert: true,            // 🔥 Create if not exists
-                runValidators: true,
-                setDefaultsOnInsert: true
-            }
-        );
-
-        res.status(200).json({
-            msg: `Plan '${planName}' updated successfully`,
-            updatedPlan
-        });
-
-
-    } catch (e) {
-        console.error(e);
-        res.status(500).json({ msg: "Error updating subscription plan prices" });
+    if (!validPlans.includes(planName)) {
+      return res.status(400).json({ msg: "Invalid planName. Must be one of: 'Indian', 'NRI', 'Indian Renewal', 'NRI Renewal'" });
     }
+
+    // Validation based on plan
+    if (planName === 'Indian' || planName === 'Indian Renewal') {
+      if (priceRupees == null) {
+        return res.status(400).json({ msg: `${planName} plan requires priceRupees` });
+      }
+    }
+
+    if (planName === 'NRI' || planName === 'NRI Renewal') {
+      if (priceRupees == null || priceDollar == null) {
+        return res.status(400).json({ msg: `${planName} plan requires both priceRupees and priceDollar` });
+      }
+    }
+
+    const updateFields = { planName };
+    if (priceRupees != null) updateFields.priceRupees = priceRupees;
+    if (priceDollar != null) updateFields.priceDollar = priceDollar;
+
+    const updatedPlan = await SubscriptionPlan.findOneAndUpdate(
+      { planName },
+      updateFields,
+      {
+        new: true,
+        upsert: true,            // 🔥 Create if not exists
+        runValidators: true,
+        setDefaultsOnInsert: true
+      }
+    );
+
+    res.status(200).json({
+      msg: `Plan '${planName}' updated successfully`,
+      updatedPlan
+    });
+
+
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ msg: "Error updating subscription plan prices" });
+  }
 });
 
 
@@ -70,89 +70,88 @@ router.put('/updatePlanByName/:planName', protect, authorizeRoles('admin'), asyn
 
 
 router.get('/getPlanByName/:planName', protect, authorizeRoles('admin'), async (req, res) => {
-    try {
-        const { planName } = req.params;
+  try {
+    const { planName } = req.params;
 
-        // List of valid plan names
-        const validPlans = ['Indian', 'NRI', 'Indian Renewal', 'NRI Renewal'];
+    // List of valid plan names
+    const validPlans = ['Indian', 'NRI', 'Indian Renewal', 'NRI Renewal'];
 
-        if (!validPlans.includes(planName)) {
-            return res.status(400).json({ msg: "Invalid planName. Must be one of: 'Indian', 'NRI', 'Indian Renewal', 'NRI Renewal'" });
-        }
-
-        const plan = await SubscriptionPlan.findOne({ planName });
-
-        if (!plan) {
-            return res.status(404).json({ msg: "Plan not found" });
-        }
-
-        res.status(200).json({
-            msg: `Plan '${planName}' fetched successfully`,
-            plan
-        });
-
-    } catch (e) {
-        console.error(e);
-        res.status(500).json({ msg: "Error fetching subscription plan" });
+    if (!validPlans.includes(planName)) {
+      return res.status(400).json({ msg: "Invalid planName. Must be one of: 'Indian', 'NRI', 'Indian Renewal', 'NRI Renewal'" });
     }
+
+    const plan = await SubscriptionPlan.findOne({ planName });
+
+    if (!plan) {
+      return res.status(404).json({ msg: "Plan not found" });
+    }
+
+    res.status(200).json({
+      msg: `Plan '${planName}' fetched successfully`,
+      plan
+    });
+
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ msg: "Error fetching subscription plan" });
+  }
+});
+
+
+
+// ✅ Get one specific Risk Profile by its ID (admin view)
+router.get('/edit/:id/riskProfile', protect, authorizeRoles('admin'), async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const profile = await RiskProfile.findById(id);
+
+    if (!profile) {
+      return res.status(404).json({ msg: "Risk profile not found" });
+    }
+
+    res.status(200).json(profile);
+  } catch (e) {
+    console.error("Error fetching risk profile:", e);
+    res.status(500).json({
+      msg: "Oops, something went wrong while fetching the risk profile data."
+    });
+  }
+});
+
+// PATCH: update specific risk profile by its ID
+router.patch('/edit/:id/riskProfile', protect, authorizeRoles('admin'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updatedData = req.body;
+
+    // Find risk profile by its ID
+    const existingProfile = await RiskProfile.findById(id);
+
+    if (!existingProfile) {
+      return res.status(404).json({ msg: "Risk profile not found." });
+    }
+
+    // Update fields
+    Object.assign(existingProfile, updatedData);
+
+    const savedProfile = await existingProfile.save();
+
+    res.status(200).json({
+      msg: "Risk profile updated successfully.",
+      data: savedProfile,
+    });
+  } catch (e) {
+    console.error("Error updating risk profile:", e.message);
+    res.status(400).json({ msg: "Failed to update risk profile." });
+  }
 });
 
 
 
 
 
-// GET a specific client's risk profile by clientId (admin only)
-router.get('/clients/:clientId/riskProfile', protect, authorizeRoles('admin'), async (req, res) => {
-    try {
-        const { clientId } = req.params;
 
-        
-        const profile = await RiskProfile.findOne({ clientId })
-           // .populate('userId', 'email')  // optional: includes user's email
-            //.populate('clientId');        // optional: includes full client details
-
-        if (!profile) {
-            return res.status(404).json({ msg: "Risk profile not found for this client." });
-        }
-        res.status(200).json({ data: profile });
-    } catch (e) {
-        console.error("Error fetching risk profile:", e.message);
-        res.status(400).json({ msg: "Failed to fetch risk profile." });
-    }
-});
-
-
-
-
-
-// PATCH route to update risk profile
-router.patch('/clients/:clientId/riskProfile', protect, authorizeRoles('admin'), async (req, res) => {
-    try {
-        const { clientId } = req.params;
-        const updatedData = req.body;
-
-        // Find the risk profile for the given clientId
-        const existingProfile = await RiskProfile.findOne({ clientId });
-
-        if (!existingProfile) {
-            return res.status(404).json({ msg: "Risk profile not found for this client." });
-        }
-
-        // Update the fields
-        Object.assign(existingProfile, updatedData);
-
-        // Save the updated profile
-        const savedProfile = await existingProfile.save();
-
-        res.status(200).json({
-            msg: "Risk profile updated successfully.",
-            data: savedProfile,
-        });
-    } catch (e) {
-        console.error("Error updating risk profile:", e.message);
-        res.status(400).json({ msg: "Failed to update risk profile." });
-    }
-});
 
 
 
@@ -223,10 +222,18 @@ router.get('/clients/pan/download/:clientId', protect, authorizeRoles("admin"), 
 
 
 
+
+
+
+
+
+
+
+
 router.post('/clients/:clientId/digio-response', protect, authorizeRoles('admin'), async (req, res) => {
   try {
     const { clientId } = req.params;
-    const { digio_doc_id,  message } = req.body;
+    const { digio_doc_id, message } = req.body;
 
     if (!digio_doc_id) {
       return res.status(400).json({ msg: "digio_doc_id are required." });
@@ -266,22 +273,22 @@ router.post('/clients/:clientId/digio-response', protect, authorizeRoles('admin'
 
 // Configure Multer for file uploads
 const upload = multer({
-    limits: {
-      fileSize: 15 * 1024 * 1024 // 15MB limit (under MongoDB's 16MB)
-    },
-    fileFilter: (req, file, cb) => {
-      // Validate file types
-      const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
-      if (!allowedTypes.includes(file.mimetype)) {
-        return cb(new Error('Only JPEG, PNG, and PDF files are allowed'));
-      }
-      cb(null, true);
+  limits: {
+    fileSize: 15 * 1024 * 1024 // 15MB limit (under MongoDB's 16MB)
+  },
+  fileFilter: (req, file, cb) => {
+    // Validate file types
+    const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+    if (!allowedTypes.includes(file.mimetype)) {
+      return cb(new Error('Only JPEG, PNG, and PDF files are allowed'));
     }
-  });
+    cb(null, true);
+  }
+});
 
 
 
- 
+
 
 // GET: Get all digio responses for a client
 router.get('/clients/:clientId/digio-responses', async (req, res) => {
@@ -299,11 +306,11 @@ router.get('/clients/:clientId/digio-responses', async (req, res) => {
 
 
 const config = {
-    UPLOAD_FOLDER: 'uploads',
-    DIGIO_UPLOAD_URL: process.env.DIGIO_UPLOAD_URL,
-    DIGIO_CLIENT_ID: process.env.DIGIO_CLIENT_ID,
-    DIGIO_CLIENT_SECRET: process.env.DIGIO_CLIENT_SECRET,
-    DIGIO_RESPONSE_URL:  process.env.DIGIO_RESPONSE_URL
+  UPLOAD_FOLDER: 'uploads',
+  DIGIO_UPLOAD_URL: process.env.DIGIO_UPLOAD_URL,
+  DIGIO_CLIENT_ID: process.env.DIGIO_CLIENT_ID,
+  DIGIO_CLIENT_SECRET: process.env.DIGIO_CLIENT_SECRET,
+  DIGIO_RESPONSE_URL: process.env.DIGIO_RESPONSE_URL
 };
 const axios = require('axios');
 
@@ -337,8 +344,8 @@ router.get("/digioDownload", protect, authorizeRoles("admin"), async (req, res) 
     // Set headers for download
     res.set({
       'Content-Type': 'application/pdf',
-     // 'Content-Disposition': `attachment; filename="Digio-Document-${digio_doc_id}.pdf"`
-     'Content-Disposition': `inline; filename="Digio-Document-${digio_doc_id}.pdf"`
+      // 'Content-Disposition': `attachment; filename="Digio-Document-${digio_doc_id}.pdf"`
+      'Content-Disposition': `inline; filename="Digio-Document-${digio_doc_id}.pdf"`
     });
 
     res.send(digioRes.data);
@@ -454,7 +461,7 @@ router.post(
       }
 
       const client = await Client.findById(clientId);
-       console.log(client)
+      console.log(client)
       if (!client) {
         return res.status(404).json({ msg: 'Client not found.' });
       }

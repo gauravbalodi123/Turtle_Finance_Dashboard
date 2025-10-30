@@ -131,3 +131,10 @@ p.taskHeaderItem {
     outline: 3px solid #2be3b8;
 
 }
+
+/* Highlighted (selected) card */
+.selectedCard {
+    outline: 3px solid #2be3b8;
+    transform: translateY(-7px);
+    transition: all 0.3s ease;
+}

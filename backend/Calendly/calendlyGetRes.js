@@ -5,7 +5,7 @@ const Bookings = require('../models/booking');
 const Advisor = require('../models/advisor');
 const Client = require('../models/client');
 require('dotenv').config();
-const { sendClientUpsert} = require('../webhooks/webhookClientSync');
+const { sendClientUpsert } = require('../webhooks/webhookClientSync');
 
 const calendlyApi = axios.create({
     baseURL: 'https://api.calendly.com',
@@ -22,6 +22,16 @@ const allowedNames = [
 ];
 
 router.post('/webhook', async (req, res) => {
+
+    const userAgent = req.headers['user-agent'] || '';
+
+    // BLOCK everything that’s not from Calendly
+    if (!userAgent.toLowerCase().includes('calendly')) {
+        console.log(`🚫 Ignored webhook from non-Calendly source: ${userAgent}`);
+        return res.status(200).json({ msg: 'Ignored non-Calendly webhook' });
+    }
+
+
     const payload = req.body.payload;
 
     const scheduledEventUri = payload?.scheduled_event?.uri;
@@ -138,13 +148,60 @@ router.post('/webhook', async (req, res) => {
                 rescheduleUrl: inviteeData?.reschedule_url || null,
                 questionsAndAnswers,
             },
+            tracking: {
+                utm_campaign: inviteeData?.tracking?.utm_campaign || null,
+                utm_source: inviteeData?.tracking?.utm_source || null,
+                utm_medium: inviteeData?.tracking?.utm_medium || null,
+                utm_content: inviteeData?.tracking?.utm_content || null,
+                utm_term: inviteeData?.tracking?.utm_term || null,
+                salesforce_uuid: inviteeData?.tracking?.salesforce_uuid || null
+            },
             advisors,
             status: transformedStatus,
         };
 
+
+
+        // just a check so that i dont add same booking twice
+        // const existing = await Bookings.findOne({
+        //     "uri": eventData.uri
+        // });
+        // if (existing) {
+        //     console.log("⚠️ Duplicate booking detected for:", eventData.uri);
+        //     return res.status(200).json({ msg: "Duplicate booking skipped" });
+        // }
+
         console.log("🧾 Final Enriched Event Saved:\n", JSON.stringify(enrichedEvent, null, 2));
+        console.log("📊 Tracking data:", inviteeData?.tracking);
+
         // await Bookings.create(enrichedEvent);
         const newBooking = await Bookings.create(enrichedEvent);
+
+        //automatic advisor assigni g to client method starts here
+        const clientEmail = inviteeData?.email?.trim().toLowerCase();
+        if (clientEmail && advisors.length > 0) {
+            const client = await Client.findOne({ email: clientEmail });
+            if (client) {
+                const currentAdvisorIds = (client.advisors || []).map(id => id.toString());
+                const newAdvisorIds = advisors.map(id => id.toString());
+
+                // Find advisors not already in client
+                const advisorsToAdd = newAdvisorIds.filter(id => !currentAdvisorIds.includes(id));
+
+                if (advisorsToAdd.length > 0) {
+                    await Client.updateOne(
+                        { _id: client._id },
+                        { $addToSet: { advisors: { $each: advisorsToAdd } } }
+                    );
+                    console.log(`✅ Added ${advisorsToAdd.length} new advisor(s) to client ${client.fullName}`);
+                } else {
+                    console.log(`ℹ️ All advisors already assigned to client ${client.fullName}`);
+                }
+            } else {
+                console.log(`⚠️ No client found with email ${clientEmail}, skipping advisor sync`);
+            }
+        }
+        // automatic advisor assigning to client method ends here
 
         //webhook to send data to excel
         sendClientUpsert(newBooking, 'created', 'Bookings')

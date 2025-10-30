@@ -270,7 +270,7 @@ const AllProspects = () => {
                     </Link>
 
 
-                    <button
+                    {/* <button
                         type="button"
                         className="btn p-2 btn-outline-turtle-secondary"
                         data-bs-toggle="modal"
@@ -279,7 +279,7 @@ const AllProspects = () => {
                         disabled={loadingId === row.original._id}
                     >
                         {loadingId === row.original._id ? "Deleting..." : <RiDeleteBin6Line className="d-block fs-6" />}
-                    </button>
+                    </button> */}
                 </div>
             ),
 

@@ -3,6 +3,9 @@ const router = express.Router();
 const Client = require('../../models/client');
 const { protect, authorizeRoles } = require('../../middleware/authMiddleware'); // Import middleware
 const { sendClientUpsert, sendClientDelete } = require('../../webhooks/webhookClientSync');
+const RiskProfile = require('../../models/riskProfile');
+const KYC = require('../../models/kycData');
+const DigioResponse = require('../../models/digioResponse');
 
 
 // GET all clients (protected, only admins can access)
@@ -58,7 +61,6 @@ router.get("/clients", protect, authorizeRoles('admin'), async (req, res) => {
 //     }
 // });
 
-
 router.get("/selectiveClients", protect, authorizeRoles('admin'), async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
@@ -68,6 +70,7 @@ router.get("/selectiveClients", protect, authorizeRoles('admin'), async (req, re
         const search = req.query.search || "";
         const sortField = req.query.sortField;
         const sortOrder = req.query.sortOrder === "asc" ? 1 : -1;
+        const subscriptionStatus = req.query.subscriptionStatus || null; // 👈 new filter param
 
         // 🔍 Global search filter
         const searchFilter = search
@@ -82,10 +85,24 @@ router.get("/selectiveClients", protect, authorizeRoles('admin'), async (req, re
             }
             : {};
 
-        // 🚫 Exclude prospects
-        const finalFilter = { ...searchFilter, subscriptionStatus: { $ne: "Prospect" } };
+        // 🧠 Build main filter
+        const finalFilter = {
+            ...searchFilter,
+            // Always exclude prospects
+            subscriptionStatus: { $ne: "Prospect" },
+        };
 
-        const sortBy = sortField ? { [sortField]: sortOrder } : { subscriptionDate: -1 };
+        // 🧩 Add optional status filter
+        if (subscriptionStatus && subscriptionStatus !== "null") {
+            // Merge it with the exclusion rule
+            finalFilter.subscriptionStatus = {
+                $eq: subscriptionStatus
+            };
+        }
+
+        const sortBy = sortField
+            ? { [sortField]: sortOrder }
+            : { subscriptionDate: -1 };
 
         const [clients, total] = await Promise.all([
             Client.find(finalFilter)
@@ -93,12 +110,12 @@ router.get("/selectiveClients", protect, authorizeRoles('admin'), async (req, re
                 .skip(skip)
                 .limit(limit)
                 .populate('advisors', 'advisorFullName email'),
-            Client.countDocuments(finalFilter)
+            Client.countDocuments(finalFilter),
         ]);
 
         res.status(200).json({ clients, total });
     } catch (e) {
-        console.error(e);
+        console.error("Error fetching selective clients:", e);
         res.status(400).json({ msg: "Oops, something went wrong while fetching clients" });
     }
 });
@@ -199,41 +216,65 @@ router.post('/addClient', protect, authorizeRoles('admin'), async (req, res) => 
 
         res.status(200).json({ msg: "Client has been added successfully", client: newClient });
     } catch (e) {
-        res.status(400).json({ msg: "Oops , Something went Wrong while creating a client" });
+        console.error("Add Client Error:", e); // Log full error in backend console
+        res.status(400).json({
+            msg: "Client creation failed",
+            error: e.message,
+            details: e.errors || e,
+        });
     }
+
 });
 
 // GET client details for editing (protected, only admins can access)
 router.get('/clients/:id/editClients', protect, authorizeRoles('admin'), async (req, res) => {
     try {
         const { id } = req.params;
-        const client = await Client.findById(id);
+
+        // ✅ Populate advisors (only needed fields)
+        const client = await Client.findById(id)
+            .populate('advisors', 'advisorFullName email');
+
+        if (!client) {
+            return res.status(404).json({ msg: "Client not found" });
+        }
+
         res.status(200).json(client);
     } catch (e) {
-        res.status(400).json({ msg: "Oops , Something went Wrong while fetching the data for a client to edit it" });
+        console.error("Error fetching client details:", e);
+        res.status(500).json({
+            msg: "Oops, something went wrong while fetching the data for a client to edit it"
+        });
     }
 });
+
 
 // PATCH update client details (protected, only admins can access)
 router.patch('/clients/:id/editClients', protect, authorizeRoles('admin'), async (req, res) => {
     try {
         const { id } = req.params;
         const clientData = req.body;
+
+        // ✅ Update and populate advisors for immediate return
         const updatedClient = await Client.findByIdAndUpdate(id, clientData, {
             new: true,
             runValidators: true,
-        });
+        }).populate('advisors', 'advisorFullName email');
 
-        if (updatedClient) {
-            // fire-and-forget webhook without void
-            sendClientUpsert(updatedClient, 'updated', 'Clients')
-                .catch(err => console.error('[webhook] client.updated failed:', err?.message));
+        if (!updatedClient) {
+            return res.status(404).json({ msg: "Client not found" });
         }
+
+        // Fire-and-forget webhook
+        sendClientUpsert(updatedClient, 'updated', 'Clients')
+            .catch(err => console.error('[webhook] client.updated failed:', err?.message));
 
         res.status(200).json(updatedClient);
     } catch (e) {
+        console.error("Edit Client Error:", e);
+
         let response = {
-            msg: "Oops , Something went Wrong while editing the data for a client"
+            msg: "Oops, something went wrong while editing the data for a client"
         };
 
         if (e.name === "ValidationError") {
@@ -249,7 +290,6 @@ router.patch('/clients/:id/editClients', protect, authorizeRoles('admin'), async
             response.value = Object.values(e.keyValue);
         }
 
-        console.error("Edit Client Error:", e);
         res.status(400).json(response);
     }
 });
@@ -271,6 +311,91 @@ router.delete('/clients/:id/', protect, authorizeRoles('admin'), async (req, res
 
     res.status(200).json({ msg: "The Client has been successfully deleted" });
 });
+
+
+
+
+
+
+
+
+
+// ✅ GET General Info (aggregated data for one client)
+router.get('/clients/:id/general-info', protect, authorizeRoles('admin'), async (req, res) => {
+    try {
+        const clientId = req.params.id;
+
+        // --- 1️⃣ Fetch Client Basic Info ---
+        const client = await Client.findById(clientId)
+            .populate('advisors', 'advisorFullName email')
+            .lean();
+
+        if (!client) {
+            return res.status(404).json({ msg: "Client not found" });
+        }
+
+        // --- 2️⃣ Fetch Risk Profiles (Sorted by submittedAt, fallback to createdAt if missing) ---
+        const riskProfiles = await RiskProfile.find({ clientId })
+            .sort({ submittedAt: -1, createdAt: -1 }) // 👈 updated line
+            .lean();
+
+        const latestRiskProfile = riskProfiles[0] || null;
+        const olderRiskProfiles = riskProfiles.slice(1);
+
+        // --- 3️⃣ Fetch KYC Data ---
+        const kycs = await KYC.find({ clientId })
+            .populate('aadhaarFileId panFileId', 'filename createdAt')
+            .sort({ createdAt: -1 })
+            .lean();
+
+        const latestKYC = kycs[0] || null;
+        const olderKYC = kycs.slice(1);
+
+        // --- 4️⃣ Fetch Digio Responses ---
+        const digios = await DigioResponse.find({ clientId })
+            .sort({ timestamps: -1 })
+            .lean();
+
+        const latestDigio = digios[0] || null;
+        const olderDigio = digios.slice(1);
+
+        // --- 5️⃣ Construct Response ---
+        const generalInfo = {
+            client: {
+                fullName: client.fullName,
+                email: client.email,
+                phone: client.phone,
+                subscriptionStatus: client.subscriptionStatus,
+                subscriptionDate: client.subscriptionDate,
+                subscriptionDue: client.subscriptionDue,
+                advisors: client.advisors || [],
+            },
+            riskProfiles: {
+                latest: latestRiskProfile,
+                older: olderRiskProfiles,
+            },
+            kyc: {
+                latest: latestKYC,
+                older: olderKYC,
+            },
+            digio: {
+                latest: latestDigio,
+                older: olderDigio,
+            },
+        };
+
+        res.status(200).json(generalInfo);
+    } catch (err) {
+        console.error("Error fetching general info:", err);
+        res.status(500).json({
+            msg: "Failed to fetch client general info",
+            error: err.message,
+        });
+    }
+});
+
+
+
 
 
 module.exports = {

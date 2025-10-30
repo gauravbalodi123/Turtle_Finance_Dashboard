@@ -342,6 +342,53 @@ const AllBookings = () => {
       }
     },
 
+
+    // Add these UTM Tracking Columns (flattened)
+    {
+      accessorKey: "utm_source",
+      header: "UTM Source",
+      size: 150,
+      sortDescFirst: true,
+      cell: ({ row }) => row.original.utm_source || "N/A"
+    },
+    // {
+    //   accessorKey: "utm_medium",
+    //   header: "UTM Medium",
+    //   size: 150,
+    //   sortDescFirst: true,
+    //   cell: ({ row }) => row.original.utm_medium || "N/A"
+    // },
+    // {
+    //   accessorKey: "utm_campaign",
+    //   header: "UTM Campaign",
+    //   size: 150,
+    //   sortDescFirst: true,
+    //   cell: ({ row }) => row.original.utm_campaign || "N/A"
+    // },
+    // {
+    //   accessorKey: "utm_content",
+    //   header: "UTM Content",
+    //   size: 150,
+    //   sortDescFirst: true,
+    //   cell: ({ row }) => row.original.utm_content || "N/A"
+    // },
+    // {
+    //   accessorKey: "utm_term",
+    //   header: "UTM Term",
+    //   size: 150,
+    //   sortDescFirst: true,
+    //   cell: ({ row }) => row.original.utm_term || "N/A"
+    // },
+    // {
+    //   accessorKey: "salesforce_uuid",
+    //   header: "Salesforce UUID",
+    //   size: 180,
+    //   sortDescFirst: true,
+    //   cell: ({ row }) => row.original.salesforce_uuid || "N/A"
+    // },
+
+
+
     // {
     //   header: "Client Query",
     //   accessorKey: "invitee.questionsAndAnswers",

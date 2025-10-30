@@ -10,25 +10,6 @@ const sendEmail = require('../utils/sendOtpEmail');
 require('dotenv').config();
 
 
-// Helper: Create JWT and send it in cookie
-/*const sendTokenResponse = (user, res) => {
-  const token = jwt.sign(
-    { id: user._id, role: user.role },
-    process.env.JWT_SECRET,
-    { expiresIn: '1d' }
-  );
-
-  res.cookie('token', token, {
-    httpOnly: true,
-    secure: false,          // ⚠️ must be false for localhost (no https)
-    sameSite: 'Lax',        // 'Lax' is fine for most local setups nhi to "None"
-    maxAge: 24 * 60 * 60 * 1000, // 1 day
-  });
-
-  res.json({ success: true, role: user.role });
-};*/
-
-
 const sendTokenResponse = async (user, res) => {
   const token = jwt.sign(
     { id: user._id, role: user.role },
@@ -92,88 +73,98 @@ router.post('/login', (req, res, next) => {
 });
 
 
-// Register
-/*router.post('/register', async (req, res) => {
-  const { name, email, password, role } = req.body;
-
-  try {
-    let existingUser = await User.findOne({ email });
-    if (existingUser) return res.status(400).json({ message: 'User already exists' });
-
-    const user = await User.create({ name, email, password, role });
-    sendTokenResponse(user, res); // Sends cookie and user info
-  } catch (err) {
-    res.status(500).json({ message: 'Registration failed', error: err.message });
-  }
-});*/
-
 
 
 
 router.post('/register', async (req, res) => {
-  const { name, email, password, role, clientType, phone } = req.body;
-
-  if (!name || !email || !password || !role) {
-    return res.status(400).json({ message: 'All fields are required' });
-  }
-
-  const allowedRoles = ['admin', 'client', 'advisor'];
-  if (!allowedRoles.includes(role)) {
-    return res.status(400).json({ message: 'Invalid role specified' });
-  }
-
   try {
-    const existingUser = await User.findOne({ email });
+    const data = req.body;
+
+    // ✅ Normalize email depending on type (array or string)
+    const primaryEmail = Array.isArray(data.email)
+      ? data.email[0] // first email if array
+      : data.email;   // directly use if string
+
+    // Basic validation
+    if (!data.name || !primaryEmail || !data.password || !data.role) {
+      return res.status(400).json({ message: 'All fields are required' });
+    }
+
+    const allowedRoles = ['admin', 'client', 'advisor'];
+    if (!allowedRoles.includes(data.role)) {
+      return res.status(400).json({ message: 'Invalid role specified' });
+    }
+
+    // Check if a user already exists with this primary email
+    const existingUser = await User.findOne({ email: primaryEmail });
     if (existingUser) {
       return res.status(400).json({ message: 'User already exists' });
     }
 
-    const user = await User.create({ name, email, password, role, phone });
+    // ✅ Create User (always with a single string email)
+    const user = await User.create({
+      name: data.name,
+      email: primaryEmail,
+      password: data.password,
+      role: data.role,
+      phone: data.phone,
+    });
 
-    if (role === 'client') {
-      if (!phone) {
-        await User.findByIdAndDelete(user._id); // Clean up
+    // 🔹 Handle role-based creation
+    if (data.role === 'client') {
+      if (!data.phone) {
+        await User.findByIdAndDelete(user._id);
         return res.status(400).json({ message: 'Phone number is required for clients' });
       }
 
       try {
         await Client.create({
           userId: user._id,
-          fullName: name,
-          email: email,
-          phone: phone,             // ✅ now added
-          clientType: clientType    // ✅ still included
+          fullName: data.name,
+          email: primaryEmail, // ✅ single string
+          phone: data.phone,
+          clientType: data.clientType,
         });
       } catch (clientErr) {
         await User.findByIdAndDelete(user._id);
         return res.status(500).json({
           message: 'Client creation failed, user rolled back',
-          error: clientErr.message
+          error: clientErr.message,
         });
       }
-    } else if (role === 'advisor') {
+
+    } else if (data.role === 'advisor') {
       try {
+        // ✅ Normalize advisor email as an array
+        const advisorEmails = Array.isArray(data.email)
+          ? data.email.filter(Boolean) // remove empty ones
+          : [data.email];
+
         await Advisor.create({
+          ...data,
           userId: user._id,
-          advisorFullName: name,
-          email: email,
-          phone: phone
+          advisorFullName: data.name,
+          email: advisorEmails, // ✅ full list for advisor model
         });
       } catch (advisorErr) {
         await User.findByIdAndDelete(user._id);
         return res.status(500).json({
           message: 'Advisor creation failed, user rolled back',
-          error: advisorErr.message
+          error: advisorErr.message,
         });
       }
     }
 
-    sendTokenResponse(user, res);
+    // ✅ Send token
+    await sendTokenResponse(user, res);
+
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Registration failed' });
+    res.status(500).json({ message: 'Registration failed', error: err.message });
   }
 });
+
+
 
 
 

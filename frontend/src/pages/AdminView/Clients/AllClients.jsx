@@ -35,6 +35,9 @@ const AllClients = () => {
 
     const [selectedClientId, setSelectedClientId] = useState(null);
 
+    const [statusFilter, setStatusFilter] = useState(null);
+
+
 
 
 
@@ -44,18 +47,16 @@ const AllClients = () => {
 
 
     useEffect(() => {
-        fetchClients(pageIndex, pageSize, sorting, columnFilter);
-    }, [pageIndex, pageSize, sorting, columnFilter]);
+        fetchClients(pageIndex, pageSize, sorting, columnFilter, statusFilter);
+    }, [pageIndex, pageSize, sorting, columnFilter, statusFilter]);
 
 
-    const fetchClients = async (page = 0, size = 10, sorting = [], search = "") => {
+
+    const fetchClients = async (page = 0, size = 10, sorting = [], search = "", status = statusFilter) => {
         setIsLoading(true);
-
         try {
-
             const sortField = sorting[0]?.id || "";
             const sortOrder = sorting[0]?.desc ? "desc" : "asc";
-
 
             const res = await axios.get(`${url}/admin/selectiveClients`, {
                 params: {
@@ -64,10 +65,10 @@ const AllClients = () => {
                     search,
                     sortField,
                     sortOrder,
+                    subscriptionStatus: status, // 👈 add this line
                 },
             });
             setClients(res.data.clients);
-            // setFilteredClients(res.data.clients); 
             setTotalCount(res.data.total);
         } catch (err) {
             setError("Failed to fetch clients");
@@ -75,6 +76,7 @@ const AllClients = () => {
             setIsLoading(false);
         }
     };
+
 
     useEffect(() => {
         const fetchSummary = async () => {
@@ -154,7 +156,7 @@ const AllClients = () => {
         // { accessorKey: "salutation", header: "Salutation", enableResizing: true, size: 120, minSize: 80 },
         // { accessorKey: "leadSourceId", header: "Lead Source ID", enableResizing: true, size: 150, minSize: 120 },
         // { accessorKey: "leadSource", header: "Lead Source", enableResizing: true, size: 130, minSize: 140 },
-        // { accessorKey: "clientType", header: "Client Type", enableResizing: true, size: 130, minSize: 140 },
+        { accessorKey: "clientType", header: "Client Type", enableResizing: true, size: 115, minSize: 100 },
 
 
         // {
@@ -371,7 +373,7 @@ const AllClients = () => {
                             <FaRegEye className="d-block fs-6" title="View Risk Profile" />
                         </Link>
 
-                        <button
+                        {/* <button
                             type="button"
                             className="btn p-2 btn-outline-turtle-secondary"
                             data-bs-toggle="modal"
@@ -380,7 +382,7 @@ const AllClients = () => {
                             disabled={loadingId === row.original._id}
                         >
                             {loadingId === row.original._id ? "Deleting..." : <RiDeleteBin6Line className="d-block fs-6" />}
-                        </button>
+                        </button> */}
 
                         <a
                             href={linkedinUrl || "#"}
@@ -424,23 +426,37 @@ const AllClients = () => {
 
                     <div className='mb-4 row gx-3 gy-3 gy-lg-0'>
                         {[
-                            { title: "Total Clients", desc: "All registered clients", value: summary?.total },
-                            { title: "Active Membership", desc: "Currently active clients", value: summary?.active },
-                            { title: "Up for Renewal", desc: "Clients nearing renewal", value: summary?.upForRenewal },
-                            { title: "Expired Membership", desc: "Currently expired clients", value: summary?.expired },
-                            { title: "Deadpool", desc: "Clients marked as deadpool", value: summary?.deadpool }
-                        ].map((card, idx) => (
-                            <div key={idx} className="col-12 col-md text-center text-md-start">
-                                <div className={`card p-4 h-100 d-flex flex-column justify-content-between ${styles.cardHover}`} >
-                                    <div>
-                                        <h4 className="fs-5 fw-bold">{card.title}</h4>
-                                        <p className="fs-6 mb-2 text-secondary">{card.desc}</p>
+                            { key: null, title: "Total Clients", desc: "All registered clients", value: summary?.total },
+                            { key: "Active", title: "Active Membership", desc: "Currently active clients", value: summary?.active },
+                            { key: "Up for Renewal", title: "Up for Renewal", desc: "Clients nearing renewal", value: summary?.upForRenewal },
+                            { key: "Expired", title: "Expired Membership", desc: "Currently expired clients", value: summary?.expired },
+                            { key: "Deadpool", title: "Deadpool", desc: "Clients marked as deadpool", value: summary?.deadpool },
+                        ].map((card, idx) => {
+                            const isSelected = statusFilter === card.key;
+
+                            return (
+                                <div key={idx} className="col-12 col-md text-center text-md-start">
+                                    <div
+                                        className={`card p-4 h-100 d-flex flex-column justify-content-between ${styles.cardHover} ${isSelected ? styles.selectedCard : ""
+                                            }`}
+                                        onClick={() => {
+                                            setStatusFilter(prev => (prev === card.key ? null : card.key));
+                                        }}
+                                    >
+                                        <div>
+                                            <h4 className="fs-5 fw-bold">{card.title}</h4>
+                                            <p className="fs-6 mb-2 text-secondary">{card.desc}</p>
+                                        </div>
+                                        <h2 className='fs-4 m-0 fw-bolder'>
+                                            {loadingSummary ? '...' : card.value}
+                                        </h2>
                                     </div>
-                                    <h2 className='fs-4 m-0 fw-bolder'>{loadingSummary ? '...' : card.value}</h2>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
+
+
 
 
 
@@ -485,13 +501,12 @@ const AllClients = () => {
                             />
 
 
+
+
                             <ClientDetailedInfoModal
                                 clientId={selectedClientId}
                                 onClose={() => setSelectedClientId(null)}
                             />
-
-
-
 
 
                         </div>

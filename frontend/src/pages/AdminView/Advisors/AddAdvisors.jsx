@@ -31,7 +31,7 @@ const AddAdvisors = () => {
     const credentialsRef = useRef();
     const bioRef = useRef();
     const statusRef = useRef();
-
+    const passwordRef = useRef(); // ✅ added this
 
     const advisorDomainOptions = [
         { value: "Financial Planner", label: "Financial Planner" },
@@ -77,7 +77,7 @@ const AddAdvisors = () => {
         { value: "ITR Filing | Kick-off Conversation", label: "ITR Filing | Kick-off Conversation" },
         { value: "First Conversation with Turtle", label: "First Conversation with Turtle" },
         { value: "Insurance Advisory Conversation with Rohit", label: "Insurance Advisory Conversation with Rohit" },
-        { value: "Credit Card Advisory Conversation with Prashant", label: "Credit Card Advisory Conversation with Prashant" },
+        { value: "Credit Card Advisory Conversation with Prashant", label: "Credit Card Advisory Conversation with Prashant" },
     ];
 
     const getValueOrNull = (ref) => {
@@ -90,14 +90,16 @@ const AddAdvisors = () => {
         setLoading(true);
 
         const newAdvisor = {
-            advisorFullName: getValueOrNull(fullNameRef),
+            name: getValueOrNull(fullNameRef),
+            email: selectedEmails.map(e => e.value),
+            password: getValueOrNull(passwordRef),
+            role: "advisor",
+            phone: getValueOrNull(phoneRef),
             salutation: getValueOrNull(salutationRef),
             advisorDomain: selectedDomains.map(d => d.value),
             countryCode: getValueOrNull(countryCodeRef),
             countryCode2: getValueOrNull(countryCode2Ref),
-            phone: getValueOrNull(phoneRef),
             phone2: getValueOrNull(phone2Ref),
-            email: selectedEmails.map(e => e.value),
             address: getValueOrNull(addressRef),
             dob: getValueOrNull(dobRef),
             gender: getValueOrNull(genderRef),
@@ -110,13 +112,19 @@ const AddAdvisors = () => {
             status: getValueOrNull(statusRef),
         };
 
+        if (!newAdvisor.email || !newAdvisor.password) {
+            alert("Email and Password are required.");
+            setLoading(false);
+            return;
+        }
+
         try {
-            await axios.post(`${url}/admin/addAdvisor`, newAdvisor);
-            alert("Advisor added successfully!");
+            await axios.post(`${url}/auth/register`, newAdvisor);
+            alert("Advisor created successfully!");
             navigate("/adminautharized/admin/advisors");
         } catch (error) {
             console.error("Error adding advisor:", error);
-            alert("Failed to add advisor. Please try again.");
+            alert(error.response?.data?.message || "Failed to add advisor.");
         } finally {
             setLoading(false);
         }
@@ -126,6 +134,8 @@ const AddAdvisors = () => {
         <div className="container my-4">
             <div className="card p-4">
                 <h2 className="mb-4">Add Advisor</h2>
+
+
                 <form onSubmit={handleSubmit}>
                     <div className="row mb-3">
                         <div className="col-md-6">
@@ -135,6 +145,24 @@ const AddAdvisors = () => {
                         <div className="col-md-6">
                             <label className="form-label">Salutation</label>
                             <input type="text" ref={salutationRef} className="form-control" />
+                        </div>
+
+                    </div>
+
+                    <div className="row mb-3">
+                        <div className="col-md-6">
+                            <label className="form-label">Password*</label>
+                            <input type="password" ref={passwordRef} className="form-control" required />
+                        </div>
+
+                        <div className="col-md-6">
+                            <label className="form-label">Gender</label>
+                            <select ref={genderRef} className="form-select">
+                                <option value="">Select</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
                         </div>
                     </div>
 
@@ -204,15 +232,7 @@ const AddAdvisors = () => {
 
                     {/* Gender + LinkedIn */}
                     <div className="row mb-3">
-                        <div className="col">
-                            <label className="form-label">Gender</label>
-                            <select ref={genderRef} className="form-select">
-                                <option value="">Select</option>
-                                <option value="Male">Male</option>
-                                <option value="Female">Female</option>
-                                <option value="Other">Other</option>
-                            </select>
-                        </div>
+
                         <div className="col">
                             <label className="form-label">LinkedIn Profile</label>
                             <input type="url" ref={linkedinRef} className="form-control" placeholder="https://linkedin.com/in/..." />
@@ -261,6 +281,7 @@ const AddAdvisors = () => {
                         </button>
                     </div>
                 </form>
+
             </div>
         </div>
     );

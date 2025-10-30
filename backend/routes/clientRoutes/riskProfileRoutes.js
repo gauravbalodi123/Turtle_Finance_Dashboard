@@ -45,7 +45,7 @@ router.get("/allRiskData", protect, authorizeRoles('admin'), async (req, res) =>
 
 
 
-
+// in order to see the risk profile of the client logged in for seeing purpose mostly
 router.get("/riskData", protect, authorizeRoles('client'), async (req, res) => {
     try {
         const userId = req.user._id;
@@ -615,55 +615,55 @@ router.post('/upload-document', protect, authorizeRoles('client'), upload.single
 
         const sixteenthPage = pages[15];
         sixteenthPage.drawText(String(Score1), {
-            x: 551 + offsetX -70,
-            y: height - 278 -10,
+            x: 551 + offsetX - 70,
+            y: height - 278 - 10,
             size: 12,
             color: rgb(0, 0, 0),
         });
         sixteenthPage.drawText(String(Score2), {
-            x: 551 + offsetX -70,
-            y: height - 304 -5,
+            x: 551 + offsetX - 70,
+            y: height - 304 - 5,
             size: 12,
             color: rgb(0, 0, 0),
         });
         sixteenthPage.drawText(String(Score3), {
-            x: 551 + offsetX -70,
+            x: 551 + offsetX - 70,
             y: height - 354,
             size: 12,
             color: rgb(0, 0, 0),
         });
         sixteenthPage.drawText(String(Score4), {
-            x: 551 + offsetX -70,
-            y: height - 383 +10,
+            x: 551 + offsetX - 70,
+            y: height - 383 + 10,
             size: 12,
             color: rgb(0, 0, 0),
         });
         sixteenthPage.drawText(String(Score5), {
-            x: 551 + offsetX -70,
-            y: height - 417 +10,
+            x: 551 + offsetX - 70,
+            y: height - 417 + 10,
             size: 12,
             color: rgb(0, 0, 0),
         });
         sixteenthPage.drawText(String(Score6), {
-            x: 551 + offsetX -70,
-            y: height - 457 +10,
+            x: 551 + offsetX - 70,
+            y: height - 457 + 10,
             size: 12,
             color: rgb(0, 0, 0),
         });
         sixteenthPage.drawText(String(Score7), {
-            x: 551 + offsetX -70,
-            y: height - 511 +20,
+            x: 551 + offsetX - 70,
+            y: height - 511 + 20,
             size: 12,
             color: rgb(0, 0, 0),
         });
         sixteenthPage.drawText(String(Score8), {
-            x: 551 + offsetX -70,
+            x: 551 + offsetX - 70,
             y: height - 534,
             size: 12,
             color: rgb(0, 0, 0),
         });
         sixteenthPage.drawText(String(Total_Score), {
-            x: 541 + offsetX -60,
+            x: 541 + offsetX - 60,
             y: height - 555,
             size: 12,
             color: rgb(0, 0, 0),
@@ -695,7 +695,7 @@ router.post('/upload-document', protect, authorizeRoles('client'), upload.single
         lines.forEach((line, i) => {
             sixteenthPage.drawText(line, {
                 x: startX + offsetX - 25,
-                y: startY - i * 9 -10, // 12 is the line height. Adjust as needed.
+                y: startY - i * 9 - 10, // 12 is the line height. Adjust as needed.
                 size: 9,
                 color: rgb(0, 0, 0),
             });
@@ -709,8 +709,8 @@ router.post('/upload-document', protect, authorizeRoles('client'), upload.single
 
         lines4.forEach((line, i) => {
             sixteenthPage.drawText(line, {
-                x: startX + offsetX - 25 ,
-                y: startY - i * 9 +10, // 12 is the line height. Adjust as needed.
+                x: startX + offsetX - 25,
+                y: startY - i * 9 + 10, // 12 is the line height. Adjust as needed.
                 size: 9,
                 color: rgb(0, 0, 0),
             });
@@ -726,7 +726,7 @@ router.post('/upload-document', protect, authorizeRoles('client'), upload.single
         lines5.forEach((line, i) => {
             sixteenthPage.drawText(line, {
                 x: startX + offsetX - 25,
-                y: startY - i * 9 +10, // 12 is the line height. Adjust as needed.
+                y: startY - i * 9 + 10, // 12 is the line height. Adjust as needed.
                 size: 9,
                 color: rgb(0, 0, 0),
             });
@@ -742,7 +742,7 @@ router.post('/upload-document', protect, authorizeRoles('client'), upload.single
         lines6.forEach((line, i) => {
             sixteenthPage.drawText(line, {
                 x: startX + offsetX - 25,
-                y: startY - i * 9 , // 12 is the line height. Adjust as needed.
+                y: startY - i * 9, // 12 is the line height. Adjust as needed.
                 size: 9,
                 color: rgb(0, 0, 0),
             });
@@ -819,43 +819,43 @@ router.post('/upload-document', protect, authorizeRoles('client'), upload.single
         const fifteenthPage = pages[14];
         fifteenthPage.drawText(String(Age), {
             x: 39 + offsetX,
-            y: height - 272 -12,
+            y: height - 272 - 12,
             size: 9,
             color: rgb(0, 0, 0),
         });
         fifteenthPage.drawText(String(clientRiskData.maritalStatus), {
             x: 121 + offsetX,
-            y: height - 272 -12,
+            y: height - 272 - 12,
             size: 9,
             color: rgb(0, 0, 0),
         });
         fifteenthPage.drawText(String(clientRiskData.daughters), {
             x: 206 + offsetX,
-            y: height - 272 -12,
+            y: height - 272 - 12,
             size: 9,
             color: rgb(0, 0, 0),
         });
         fifteenthPage.drawText(String(clientRiskData.sons), {
             x: 274 + offsetX,
-            y: height - 272 -12,
+            y: height - 272 - 12,
             size: 9,
             color: rgb(0, 0, 0),
         });
         fifteenthPage.drawText(String(clientRiskData.dependentParents), {
             x: 352 + offsetX,
-            y: height - 272 -12,
+            y: height - 272 - 12,
             size: 9,
             color: rgb(0, 0, 0),
         });
         fifteenthPage.drawText(String(clientRiskData.dependentParentsInLaw), {
             x: 442 + offsetX,
-            y: height - 272 -12,
+            y: height - 272 - 12,
             size: 9,
             color: rgb(0, 0, 0),
         });
         fifteenthPage.drawText(String(clientRiskData.dependentSiblings), {
             x: 552 + offsetX - 65,
-            y: height - 272 -12,
+            y: height - 272 - 12,
             size: 9,
             color: rgb(0, 0, 0),
         });
@@ -958,7 +958,7 @@ router.post('/upload-document', protect, authorizeRoles('client'), upload.single
 
         fifteenthPage.drawText(`${LOE_Date.day}-${LOE_Date.month}-${LOE_Date.year}`, {
             x: 259 + offsetX + 100,
-            y: height - 153 -5 ,
+            y: height - 153 - 5,
             size: 10,
             color: rgb(0, 0, 0),
         });
@@ -973,7 +973,7 @@ router.post('/upload-document', protect, authorizeRoles('client'), upload.single
         const eleventhPage = pages[10];
         eleventhPage.drawText(Salutation, {
             x: 37 + offsetX,
-            y: height - 644 -10,
+            y: height - 644 - 10,
             size: 12,
             color: rgb(0, 0, 0),
         });
@@ -981,7 +981,7 @@ router.post('/upload-document', protect, authorizeRoles('client'), upload.single
 
         const thirdPage = pages[2];
         thirdPage.drawText(`${LOE_Date.day} of ${LOE_Date.month} ${LOE_Date.year}`, {
-            x: 278 + offsetX -18,
+            x: 278 + offsetX - 18,
             y: height - 77 - 34,
             size: 10,
             color: rgb(0, 0, 0),
@@ -989,23 +989,23 @@ router.post('/upload-document', protect, authorizeRoles('client'), upload.single
 
 
         thirdPage.drawText(Salutation, {
-            x: 313 + offsetX -40,
-            y: height - 207 -22,
+            x: 313 + offsetX - 40,
+            y: height - 207 - 22,
             size: 10,
             color: rgb(0, 0, 0),
         });
 
 
         thirdPage.drawText(Salutation, {
-            x: 87 + offsetX -50,
-            y: height - 94 -33,
+            x: 87 + offsetX - 50,
+            y: height - 94 - 33,
             size: 10,
             color: rgb(0, 0, 0),
         });
 
         subscriptionPrice = wrapText(subscriptionPrice, 20);
         thirdPage.drawText(subscriptionPrice, {
-            x: 283 + offsetX -30,
+            x: 283 + offsetX - 30,
             y: height - 728 + 35,
             size: 10,
             color: rgb(0, 0, 0),
