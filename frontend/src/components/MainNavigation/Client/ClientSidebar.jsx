@@ -71,7 +71,7 @@ const Sidebar = ({
             <span className={`${isSidebarOpen ? "d-inline-block" : "d-none"}`} >Dashboard</span>
           </div>
         </Link>
-        <Link to={`${basePath}/client/discussionNotes`} className={`${styles.navLinks} ${isSidebarOpen ? "d-flex align-items-center w-100 px-2 py-3  mb-2" : "d-flex  align-items-center justify-content-center w-100 px-2 py-3  mb-2"} ${location.pathname === `${basePath}/client/discussionNotes` ? styles.active : ""}`}>
+        <Link to={`${basePath}/client/meetingNotes`} className={`${styles.navLinks} ${isSidebarOpen ? "d-flex align-items-center w-100 px-2 py-3  mb-2" : "d-flex  align-items-center justify-content-center w-100 px-2 py-3  mb-2"} ${location.pathname === `${basePath}/client/meetingNotes` ? styles.active : ""}`}>
           <div className={styles.navLinksIcons}>
             <FaRegMessage className={` ${isSidebarOpen ? "me-3" : ""}`} />
             <span className={`${isSidebarOpen ? "d-inline-block" : "d-none"}`}>Discussion Notes</span>

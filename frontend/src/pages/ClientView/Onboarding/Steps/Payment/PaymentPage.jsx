@@ -115,7 +115,7 @@ const PaymentPage = ({ onNext }) => {
       <div className="container py-5 d-flex flex-column align-items-center justify-content-center">
         {/* Header */}
         <div className="w-100 text-center mb-4 position-relative">
-          <h1 style={{color: "rgb(13, 211, 168)"}} className="h2 fw-bold  mb-3">Complete Your Payment</h1>
+          <h1 style={{ color: "rgb(13, 211, 168)" }} className="h2 fw-bold  mb-3">Complete Your Payment</h1>
 
           {loadingPrice ? (
             <p>Loading subscription charges...</p>

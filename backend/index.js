@@ -31,17 +31,18 @@ const { processedBookingRoutes } = require('./routes/adminRoutes/processedBookin
 const { prospectRoutes } = require('./routes/adminRoutes/prospectRoutes')
 const { adminMemberRoutes } = require('./routes/adminRoutes/memberRoutes')
 const { emailRoutes } = require('./routes/adminRoutes/emailRoutes')
-const { emailTrackerRoutes }= require('./routes/adminRoutes/emailTrackerRoutes')
+const { emailTrackerRoutes } = require('./routes/adminRoutes/emailTrackerRoutes')
 
 
-// himanshu's client routes
+//  client routes
 const { riskProfileRoutes } = require('./routes/clientRoutes/riskProfileRoutes')
 const kycRoutes = require("./routes/clientRoutes/kycRoutes");
 const subscriptionPlan = require("./routes/adminRoutes/subscriptionPlan");
 const payment = require("./routes/clientRoutes/paymentRoutes");
 const files = require("./routes/files");
 
-const {clientAdvisorRoutes}  = require("./routes/clientRoutes/clientAdvisorRoutes")
+const { clientAdvisorRoutes } = require("./routes/clientRoutes/clientAdvisorRoutes")
+const { clientTasksRoutes } = require("./routes/clientRoutes/clientMeetingRoutes")
 
 
 
@@ -51,9 +52,9 @@ const {clientAdvisorRoutes}  = require("./routes/clientRoutes/clientAdvisorRoute
 
 
 // advisors routes
-const {advisorTasksRoutes} = require('./routes/advisorRoutes/advisorMeetingRoutes');
-const {advisorBookingsRoutes} = require('./routes/advisorRoutes/advisorBookingRoutes');
-const {advisorClientRoutes} = require('./routes/advisorRoutes/advisorClientRoutes');
+const { advisorTasksRoutes } = require('./routes/advisorRoutes/advisorMeetingRoutes');
+const { advisorBookingsRoutes } = require('./routes/advisorRoutes/advisorBookingRoutes');
+const { advisorClientRoutes } = require('./routes/advisorRoutes/advisorClientRoutes');
 
 // const  AssignAdvisorToClient  = require('./routes/adminRoutes/assignAdvisorToClient');
 
@@ -126,6 +127,7 @@ app.use("/client", kycRoutes);
 // app.use("/client", formRoutes);
 app.use("/client", payment);
 app.use("/client", clientAdvisorRoutes);
+app.use("/client", clientTasksRoutes);
 
 
 app.use("/advisor", advisorTasksRoutes);
